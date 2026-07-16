@@ -19,6 +19,12 @@ calibration skill and shared agent definitions.
 
 Each folder has its own `README.md` with a bit more detail.
 
+## Available tools
+
+| Tool | Type | Description |
+|------|------|-------------|
+| [og-country-calibration](skills/og-country-calibration/SKILL.md) | skill | Calibrate or refine an OG-Core country model (single- or multi-industry): macro/open-economy parameters, capital share, earnings e-matrix, demographics, tax rates, SAM-based multi-industry splits, and steady-state validation. |
+
 ## What not to commit
 
 Keep this repo shareable. Do **not** commit:
