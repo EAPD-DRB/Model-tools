@@ -61,9 +61,11 @@ code. Open the file; don't trust memory or a sibling's citation.
    - *Self-sufficient file* **[ZAF]**: the builder merges base + multi-industry overrides and writes
      the *full* file, so it loads standalone in one step exactly like the single-industry default. Pro:
      matches the "one file = one calibration" expectation, no footgun. Con: it duplicates the base's
-     economy-wide values (including the multi-MB demographic arrays), so it can drift if the base is
-     recalibrated and this file isn't regenerated — **mandatory drift-guard test** asserting every
-     non-multi-industry key equals the base (fails CI on divergence, tells you to regenerate).
+     economy-wide values (including the multi-MB demographic arrays), so it can **silently drift** from
+     the base if the base is recalibrated and this file isn't regenerated. Mitigate with the discipline
+     of regenerating on every base change (ZAF's choice), optionally backed by a drift-guard test
+     asserting every non-multi-industry key equals the base — cheap insurance against a silent, hard-to-
+     spot divergence, though some prefer to keep the test surface minimal.
    Never let the single-industry default carry multi-industry values, whichever you pick. **The
    deliverable per representation is exactly one thing loaded one way:** one self-sufficient JSON that
    carries every value the model needs + one example script (baseline + one representative reform),
@@ -432,6 +434,31 @@ treat a sibling's multisector JSON as a worked example without checking `input_o
 - **Ask before push, ask before PR — never in the same step.** PR style: narrative, plain language,
   explain the *why*, push detail to the docs; a changed-parameters table + a steady-state-lands table +
   an example macro-results table.
+
+### Preparing the calibration PR — what maintainers actually ask for [PHL #63 review, jdebacker]
+
+- **Show the before/after of every calibrated object the PR changes — upfront, don't make them ask.**
+  On PHL #63 the maintainer's first request was a *new-vs-old side-by-side of the `io_matrix`*. For each
+  changed array/matrix (`io_matrix`, `gamma`, `Z`, tax params), put an old→new table in the PR (or a
+  reply thread) with the largest shifts called out and explained *by mechanism* — e.g. household energy
+  spending moving off manufacturing onto electricity (54%→4% / 11%→74%) because the value-added method
+  traces demand to the industry that makes it, not to the numeraire. The diff of a packaged JSON is
+  unreadable; the side-by-side is how a reviewer verifies the change does what you claim.
+- **Pre-empt the `gamma_g` question.** The maintainer flagged that the SAM books all non-labor income as
+  capital with no public-capital attribution, so subtracting `gamma_g` implicitly from *labor* is wrong.
+  State the construction explicitly: rescale the SAM's total capital shares to the economy-wide total,
+  then subtract `gamma_g` so public capital comes out of *capital* (the SAM measures labor's share
+  well). If `gamma_g = 0` (e.g. ZAF), say so — private = total, no carve-out — so the reviewer needn't
+  raise it.
+- **PR-explanation visuals are not docs visuals.** The maintainer asked that a figure's "what's changing
+  in this PR" annotation (a dashed old-vs-new line) be *removed from the version committed to the docs*.
+  Keep delta/before-after annotations in the PR conversation; the docs figure shows the calibrated state
+  cleanly, because the docs describe the calibration as it *is*, not the PR's delta.
+- **Explain derived mechanical corrections in plain language a non-specialist can follow.** A non-obvious
+  fix (the chi/`p_tilde` units conversion; a Z-level factor rescale) needs: what was off, the arithmetic
+  that causes it, and that the constant is *derived, not fitted*. Same for version-driven fixes — if an
+  ogcore bump broke the example and you regenerated demographics/params to fix it, say so and give the
+  before/after residual-constraint numbers.
 
 ## End-to-end sequence for a new country
 
