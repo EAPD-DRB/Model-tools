@@ -22,6 +22,26 @@ every number below is an *example*; you re-derive it for your country. Each item
 - **[emerging]** — a good practice in only 1–2 repos (usually OG-IDN/OG-ETH); adopt and propagate it.
 - **[net-new]** — not done in any repo yet; do it anyway because it prevents real errors.
 
+Two reading rules:
+
+- **Country tags are provenance, not scope.** `[ZAF]`/`[ETH]`/`[PHL]` record *where a lesson was
+  learned and battle-tested* — the evidence trail — never *which country it applies to*. Every method
+  here is on the menu for every country. Where applicability genuinely is conditional, the condition
+  is a country **characteristic** stated in the item itself (agrarian/informal, aid- or
+  remittance-dependent, distressed sovereign, rectangular vs diagonal make matrix) — never a country
+  name.
+- **Best effort on every block, graded honestly.** Most blocks have a ladder from minimal to ideal
+  (flat → progressive → microdata PIT; narrative → structural informality; borrowed → re-tilted
+  `chi_n`; naive → value-added `io_matrix`; direct solve → continuation). Calibrate each block at the
+  **highest rung the country's data supports**; when the data isn't there, take the lower rung *and
+  say so in the docs* — a documented fallback ("chi_n borrowed from OG-USA, uncalibrated") is a
+  legitimate calibration, while an **undocumented placeholder is the pitfall half this file exists to
+  prevent** (the 0.9 `zeta_K`, the flat 22% PIT, the stray bequest tax). Never let one block's missing
+  data stall the rest of the calibration. And for every number — calibration input or validation
+  anchor — **actively search for the most authoritative source that exists for this country**,
+  starting with the official national institution that owns the number (see the sourcing hierarchy in
+  Validation); named sources in this file are roles to search by, not a closed menu.
+
 Always verify a claim against the **actual checked-out ref** of the repo in front of you — sibling
 docs sometimes cite a *cousin repo's feature branch* as if it were canonical, and docs drift from
 code. Open the file; don't trust memory or a sibling's citation.
@@ -190,28 +210,34 @@ Method → pitfall → exemplar.
 - **PIT functional form — three paths, in increasing fidelity:**
   1. *Flat `linear`* ("given limited data"): a single ETR + MTR number. Cheapest, no progressivity.
      PHL/IDN/BRA pick the number; only ETH *derives* it (revenue identity). Fine as a first pass.
-  2. *`HSV` fit to the statutory schedule* **[emerging: ZAF — the best data-poor option]**: gets
-     genuine progressivity with **no microdata** — you only need the country's statutory PIT schedule
-     plus a collections target. Strongly prefer this over flat-linear whenever a statutory schedule
-     exists (i.e. almost always). Recipe below.
+  2. *Progressive parametric form fit to the statutory schedule* **[ZAF — the best data-poor
+     option]**: genuine progressivity with **no microdata** — you only need the country's statutory
+     PIT schedule plus a collections target. Strongly prefer this over flat-linear whenever a
+     statutory schedule exists (i.e. almost always). **Default to the GS (Gouveia-Strauss) form, not
+     HSV.** GS floors the ETR at exactly zero — faithful wherever a statutory threshold + rebates
+     exempt the bottom (most schedules), and numerically robust. HSV's ETR goes *negative* below the
+     threshold, and that implicit bottom-end subsidy is **not cosmetic: on ZAF it drained transition
+     revenue and helped push the TPI into a debt runaway, where GS with the same targets converged.**
+     Recipe below.
   3. *Microdata-estimated nonlinear* (OG-USA via Tax-Calculator): a 12-parameter form fit by
      age×year to microsimulated ETR/MTR. Only feasible with a Tax-Calculator-equivalent + filer
      microdata.
-- **HSV recipe (verified against ogcore `txfunc.py`).** Set `tax_func_type = "HSV"`. On **total
-  income** `y = X + Y` with `λ = coef0`, `τ = coef1`: `ETR = 1 − λ·y^(−τ)` and
-  `MTR = 1 − λ(1−τ)·y^(−τ)`. So `etr_params`, `mtrx_params`, `mtry_params` share the *same* (λ, τ) and
-  are analytically consistent — MTR is the true derivative of the HSV tax, and mtrx = mtry (both are
-  the total-income MTR). Calibrate in two steps, exploiting that **τ (progressivity) is
-  scale-invariant and λ absorbs the income scale**:
-  1. **Fit τ (and a close λ) to the statutory schedule** — τ from the schedule's *shape*, λ from its
-     level. The model's income units are already local currency (matched to `mean_income_data`), so τ
-     fits directly. (ZAF: τ≈0.14 tracks SARS 2025/26 — ETR 6→21→35% across the range, MTR ramping
-     18→45%.)
-  2. **Fine-tune λ in-model to hit the PIT/GDP collections target.** This is where the
-     effective-rate/informality wedge enters: τ carries the *statutory progressivity*, λ pulls the
-     *level* down to actual collections (depressed by exemptions/informality). One clean lever each.
-  - **HSV pitfall to document:** ETR goes *mildly negative below the tax threshold* (a small implicit
-    subsidy at the very bottom) — a known property of the form, worth a sentence in the docs.
+- **Progressive-fit recipe (verified against ogcore `txfunc.py`).** Both forms calibrate the same
+  way — the statutory schedule pins the *shape*, the collections target pins the *level* — and both
+  use the *same* parameter triple/pair for `etr_params`, `mtrx_params`, `mtry_params` (analytically
+  consistent; mtrx = mtry, the total-income MTR):
+  - **GS** (`tax_func_type = "GS"`, params `(φ0, φ1, φ2)`): tax `T(y) = φ0·(y − (y^−φ1 + φ2)^(−1/φ1))`
+    on total income. ETR = 0 exactly at the bottom and asymptotes to `φ0` at the top — so set
+    **`φ0` = the statutory top marginal rate** (an anchor, not a fit), fit **`φ1`** (curvature) to the
+    schedule's shape, and tune **`φ2`** (scale) in-model to the PIT/GDP collections target — the
+    effective-rate/informality wedge enters here, pulling the level down to actual collections.
+    (ZAF: `[0.464, 1.39288, 1.43e-8]` → PIT 10.1% of GDP, top MTR 45%.)
+  - **HSV** (`tax_func_type = "HSV"`, `λ = coef0`, `τ = coef1`): `ETR = 1 − λ·y^(−τ)`,
+    `MTR = 1 − λ(1−τ)·y^(−τ)`. τ (progressivity) is scale-invariant — fit it to the schedule's shape;
+    λ absorbs the income scale — tune it to collections. (ZAF's HSV fit: τ≈0.14 tracked SARS — before
+    the GS switch.) **Use only where a bottom-end subsidy is harmless:** below the tax threshold HSV's
+    ETR goes negative, and in a tightly-balanced fiscal block that subsidy bleeds transition revenue —
+    it contributed to a TPI debt runaway on ZAF. If the budget has no slack, use GS.
 - **Informality — the maturity ladder** (choose the rung the data supports):
   1. *Narrative only* **[BRA]**: name informality as the reason effective ≪ statutory, pick a stylized
      flat rate, flag as provisional. No mechanism.
@@ -295,9 +321,43 @@ model's transition blows up. **[net-new: ZAF, proven by TPI sims]**
 
 ## Multi-industry (M>1) — the SAM method
 
-Build it as a non-destructive overlay: a `create_multisector_calibration.py` that writes a static
-JSON, a separate `run_..._multi_industry*.py`, and shared constants (`TOTAL_CAPITAL_SHARE`,
-`PUBLIC_CAPITAL_SHARE`) in one `constants.py` so the builder and the live Calibration can't drift.
+Build it as its own builder-regenerated file (packaging choices: mental model item 3): a
+`create_multisector_calibration.py` that writes the static JSON, **one** example script
+(`run_og_<xxx>_multiple_industry.py`), and shared constants (`TOTAL_CAPITAL_SHARE`,
+`PUBLIC_CAPITAL_SHARE`, `CAPITAL_OUTPUT_RATIO`) in one `constants.py` so the builder and the live
+Calibration can't drift.
+
+**Finding the SAM — the sourcing hierarchy applies here too; search, don't assume one exists or
+doesn't:**
+- Search order: (1) the **national statistics office / central bank** — some publish an official SAM,
+  and many more publish **supply-and-use tables (SUTs) / IO tables**, which are enough: the make/use
+  algebra below runs on them directly (BRA: IBGE SUTs via the Alves-Passoni–Freitas annual IO
+  series). (2) **Research institutes that build SAMs with the national authorities** — **UNU-WIDER**
+  (country SAM program; ZAF's 2019 SASAM, distributed with a technical note) and **IFPRI** (the
+  *Nexus* country-SAM program on the IFPRI Dataverse — standardized ~42-activity SAMs with
+  labour-by-education/land/capital factor rows and 10 household groups; PHL's 2018 SAM) are the
+  family's two workhorses, free and documented, covering many developing countries. (3) **Global harmonized/modeled databases** only as a last resort, marked
+  lower-confidence: GTAP (licensed — one-time tiered fee for the current version, older versions
+  free; has factor detail, being a CGE database), EORA (190-country MRIO; free for academic use,
+  licensed otherwise), OECD ICIO (free; built from national SUTs but harmonized/balanced). Their
+  estimation/balancing steps go beyond the national accounts, and most lack the SAM's full
+  household/factor account detail — which is why they rank below a national SUT or an institute SAM.
+- **What qualifies:** separate factor rows (labour — ideally disaggregated — and a capital/operating-
+  surplus row), household expenditure columns, activity (and possibly commodity) accounts, an
+  imports/rest-of-world account, and production-tax rows. Note whether the make is **diagonal or
+  rectangular** — it decides the `io_matrix` algebra below. **Match the vintage to the rest of the
+  calibration**: the employment survey year must equal the SAM year (ZAF: 2019 SASAM ↔ QLFS 2019),
+  and the SAM must reproduce the same-year national accounts (structural validation, below).
+- **Delivery: never read the publisher's URL at runtime** — publisher links move and break. Either
+  mirror the file in the family's `EAPD-DRB/SAM-files` GitHub repo and read the raw URL (ZAF), or
+  ship a compact extract in the package's `data/` (PHL, BRA). Either way record publisher, technical
+  note, and year in the reader's docstring and the docs.
+
+**Assert the concordances partition the SAM before anything else:** every activity in exactly one
+`PROD_DICT` industry and every commodity in exactly one `CONS_DICT` good — a one-line set-equality
+check. ZAF shipped two silently-wrong commodity codes (`colig` for `coilg`, `ccmemb` for `cmemb`)
+that just dropped those commodities from every aggregation; the assert catches the whole error class.
+**[net-new: ZAF]**
 
 **Defining the industries (`PROD_DICT`) — grouping rules that prevent degenerate capital shares:**
 - **Manufacturing / the capital-goods producer goes LAST** (it must be the numeraire — see structural
@@ -315,7 +375,13 @@ JSON, a separate `run_..._multi_industry*.py`, and shared constants (`TOTAL_CAPI
   `gamma_m` — a second reason raw SAM capital shares come out biased high (needing the VA-weighted
   rescale) and why rent-dominated activities need grouping.
 
-**The four SAM-derived inputs** (`input_output.py`; OG-PHL is the reference, OG-BRA the most advanced):
+**The five SAM-derived inputs** (`input_output.py`; OG-PHL is the reference, OG-BRA the most advanced):
+0. **`alpha_c`** — household expenditure shares over the I consumption goods, from the SAM's
+   **household columns** (purchaser prices — the budget households actually allocate), summing to 1.
+   Not the legacy `total − row` shortcut (that's total commodity demand, not household spending).
+   Keep the legacy naive `get_io_matrix` in place for the live `Calibration(update_from_api=True)`
+   path and its unit tests — the builder uses the value-added version below; both PHL and ZAF follow
+   this split.
 1. **`gamma_m`** — `(capital+land)/(labor+capital+land)` per industry from SAM factor rows, then
    **rescaled** so the VA-weighted mean equals an independent economy-wide capital share (keeps the
    cross-industry pattern, fixes the level). BRA adds a per-industry mixed-income (Gollin) split first.
@@ -346,8 +412,10 @@ JSON, a separate `run_..._multi_industry*.py`, and shared constants (`TOTAL_CAPI
    sub-industry produces a wild TFP outlier (ZAF Water&Waste `Z` fell 5.3→3.5 once split by labour
    compensation instead of a guessed 77/23).
 4. **`Z_m` sector TFP** — Solow residual `Y_m/(K_m^γm · Kg^γg · L_m^(1−γm−γg))`, normalized so the
-   **numeraire (last) industry = 1**. Reject establishment-survey capital (omits informal capital,
-   inverts the ranking).
+   **numeraire (last) industry = 1**. `K_m` allocates a national stock (PWT capital-output ratio ×
+   total VA) across industries by capital-income share; the ratio's *level* is a weak lever (with the
+   numeraire normalization it enters relative Z only through the γ dispersion) — take it from the PWT
+   and move on. Reject establishment-survey capital (omits informal capital, inverts the ranking).
 
 **OG-Core structural facts:**
 - The **last industry (index M−1) is the numeraire and the only non-consumption producer** — all
@@ -379,8 +447,12 @@ JSON, a separate `run_..._multi_industry*.py`, and shared constants (`TOTAL_CAPI
 - **The `chi_n`/`chi_b` units conversion is THE alignment lever:** scale both by `k^(σ−1)`, derived
   (not fitted) from FOC-invariance under the composite-consumption units change. In PHL this closed
   44–80% of the r / K_f/K / B/Y / K/Y gaps.
-- **One set of solver seeds, in the base JSON, shared by both models** — never give the overlay its
-  own seed copy (drift trap).
+- **Solver seeds are the single-industry model's — never separately tune seeds for the multi.** Lean
+  overlay: don't copy them in (inherit from the base at load). Self-sufficient file: the builder's
+  merge copies them verbatim and regeneration keeps them synced. Either way the multi cold-starts from
+  the single's seeds — which works because the multi's flat anchor *is* the shared aggregate economy.
+- **Final acceptance: run the SAME reform through both models** and compare the percent-change tables —
+  same signs, similar magnitudes (ZAF: CIT 27→30% through M=1 and M=8; all six aggregates agreed).
 - **Comparison dashboard:** must-match (D/Y, tax rates); close (K/Y, `factor` — a big factor gap means
   a level misalignment upstream); ballpark with a written reason (r, K_f/K, B/Y); never compare raw
   (Y/w/C levels, raw C/Y in multi — use `p_tilde·C/Y`, the numeraire's nominal share).
@@ -392,18 +464,21 @@ close), so reach for continuation only if the direct solve fails:
 1. Solve a **flat anchor**: all `gamma = economy-wide mean`, `Z = 1`.
 2. Walk `t: 0→1`, morphing `gamma(t)` and `Z(t)` **together** to the calibrated values, each step a
    warm-started reform off the previous; grow the step on success, halve on failure.
-3. Use **heavier TPI damping, `TPI_NU ≈ 0.2`** (the default 0.4 oscillates; 0.3 is marginal).
+3. Use **heavier TPI damping, `TPI_NU ≈ 0.2`** (the default 0.4 oscillates; 0.3 is marginal). ogcore
+   ≥0.16.4 adds opt-in Anderson acceleration (`TPI_outer_method="anderson"`) as a further lever for
+   stiff multi-industry TPI — but remember neither damping nor Anderson fixes a *fiscal* runaway
+   (see Fiscal consistency); solver knobs treat oscillation, not an unbalanced budget.
 4. Reuse the continuation's converged SS for the baseline TPI (hand-place the pickle) — only the
    reform re-solves its own SS.
 
 **Maturity honesty:** OG-PHL is the reference (the complete version, with the chi conversion, lives on
-its `feature/multi-industry-calibration` branch, not `main`); OG-BRA is the most advanced port;
-**OG-ZAF has now executed the full SAM-Solow method** (make/use-Leontief value-added `io_matrix`,
-VA-mean-rescaled `gamma`, Solow-residual `Z` with QLFS employment, the chi conversion, and a
-factor-aligning Z-level rescale — a lean overlay built by `create_multisector_calibration.py`, on its
-`feature/multi-industry-calibration` branch). OG-IDN and OG-ETH have **not** — their shipped multisector
-JSONs are partial or placeholder (OG-IDN even ships the flat *anchor* gamma/Z as if calibrated). Don't
-treat a sibling's multisector JSON as a worked example without checking `input_output.py` has the real
+PR EAPD-DRB/OG-PHL#63's branch, not `main`); OG-BRA is the most advanced port; **OG-ZAF has now
+executed the full SAM-Solow method** (make/use-Leontief value-added `io_matrix`, VA-mean-rescaled
+`gamma`, Solow-residual `Z` with QLFS employment, the chi conversion, and a factor-aligning Z-level
+rescale — a self-sufficient JSON regenerated by `create_multisector_calibration.py`; PR
+EAPD-DRB/OG-ZAF#142). OG-IDN and OG-ETH have **not** — their shipped multisector JSONs are partial or
+placeholder (OG-IDN even ships the flat *anchor* gamma/Z as if calibrated). Don't treat a sibling's
+multisector JSON as a worked example without checking `input_output.py` has the real
 `get_gamma`/`get_Z`/value-added `get_io_matrix` functions.
 
 ## Validation — test the joint steady state
@@ -415,8 +490,53 @@ treat a sibling's multisector JSON as a worked example without checking `input_o
   the real test is whether the steady state they jointly produce resembles the economy."*
 - **Revenue by instrument:** don't just check total tax/GDP — check PIT, CIT, VAT, payroll each against
   collections. Offsetting errors can make the total look right while the composition is wrong.
+- **Source the data side by actively searching for the most authoritative source that exists — never
+  fill the dashboard from memory, and never treat any source list (including this one) as closed.**
+  A wrong data anchor silently fails an otherwise-correct calibration, so treat the data column as
+  carefully as the model column. For each moment, search in descending order of authority and stop at
+  the highest rung that has the number:
+  1. **The official national institution that *owns* the number** — the agency that administers it:
+     revenue service for collections, treasury/finance ministry (budget review, fiscal framework,
+     debt bulletin) for spending/debt/debt-service, statistics office for GDP-by-industry / HFCE /
+     the labour force survey, central bank (quarterly bulletin, IIP) for external and monetary data.
+     Institution *names* differ by country — search by **role** ("who administers this number
+     here?"), and expect to find ministries, debt-management offices, planning commissions, or
+     social-security agencies you didn't know existed. Their publications outrank everything else.
+  2. **Official international compilations of national data** — IMF (Article IV statistical
+     appendix, GFS, WEO), World Bank, UN, ILO, PWT — often the same national numbers, re-published
+     with a lag and on standardized definitions (useful for cross-checks, weaker on vintage).
+  3. **Regional development banks and bodies** — AfDB/ADB/IADB/EBRD country diagnostics, regional
+     statistical commissions — frequently carry country detail (sector data, informality, fiscal
+     risk) that neither the national site nor the IMF publishes cleanly.
+  Typical role→moment map to start from: tax ratios ← revenue service *tax statistics* + budget
+  review; debt / foreign-share / effective `r_gov` (= debt-service ÷ gross debt, deflated) ← budget
+  review / debt office; sector value-added shares ← GDP-by-industry release; household consumption
+  shares ← HFCE / expenditure survey / CPI weights; employment by industry ← labour force survey;
+  `K/Y` ← PWT. Adversarially re-check the load-bearing numbers against a second, independent source.
+  When the search genuinely comes up empty at every rung, use the best lower-rung number, note the
+  vintage, and mark the moment lower-confidence rather than dropping it from the dashboard.
+- **Mind the GDP vintage — the silent ratio trap.** When the statistics office *rebases* GDP, every
+  `x/GDP` ratio moves without anything real changing (South Africa's 2021 rebasing shifted tax-to-GDP
+  ~2.6 pp: 23.7% on the rebased base vs 26.3% on the old base, *same year*). Compare a model ratio to a
+  data ratio on **one consistent GDP vintage**, and say which — a calibration tuned to an old-vintage
+  ratio will look ~2–3 pp off against current data for no real reason.
+- **Read the model side from the solved SS object** (`safe_read_pickle` on `SS_vars.pkl`), don't
+  eyeball it: fiscal ratios are revenue lines over `Y` — PIT `iit_revenue/Y`, CIT
+  `business_tax_revenue/Y`, indirect `cons_tax_revenue/Y`, total `total_tax_revenue/Y`; `D/Y`, `D_f/D`,
+  `K/Y` from the aggregates over `Y`; `r`, `r_gov`, `factor` directly; consumption share as
+  `p_tilde·C/Y` (never raw `C/Y` when `I>1`).
+- **Structural validation (multi-industry) — check the SAM reproduces the national accounts before
+  trusting it.** The SAM's value-added shares by broad sector should track the statistics office's
+  GDP-by-industry (a 2019 SA SAM matched Stats SA to ~0.5 pp on primary/secondary/tertiary); employment
+  shares should match the LFS (they are the source); `alpha_c` should match HFCE's goods/services
+  split. A SAM that doesn't reproduce the national accounts' sector structure is the wrong vintage or
+  mis-aggregated — fix that before reading anything else off the multi-industry SS.
 - **Note derived quantities honestly:** e.g. "net exports" is a balance-of-payments *residual* of the
   resource constraint (OG-Core has no trade sector), not a modeled export/import.
+- **Know the family traits before "fixing" them:** the model's endogenous `K/Y` runs high against the
+  PWT across the whole family (ZAF 4.5 vs 3.7; PHL 4.3) — a structural feature of the saving/return
+  block, not a country-calibration error. Report it with a written reason in the dashboard's ballpark
+  tier; don't distort a country parameter to chase it.
 - **Fast value-pinning test [emerging: ETH — adopt it].** A `test_default_parameters.py` that loads the
   shipped JSON and pins specific calibrated values with inline source citations, explicitly *not*
   asserting anything that needs a solve. Separate this from the slow example smoke test.
@@ -428,7 +548,9 @@ treat a sibling's multisector JSON as a worked example without checking `input_o
 
 - **uv only, run as a user would.** Don't hand-pick a Python; let uv resolve Python + ogcore.
 - **Never commit a `uv.lock` change** from calibration work; keep it out of the PR diff.
-- **Non-destructive:** the single-industry default must keep working; ship multi-industry as an overlay.
+- **Non-destructive:** the single-industry default must keep working; ship multi-industry as its own
+  builder-regenerated file (lean overlay or self-sufficient — see the packaging choices in the mental
+  model), never by editing the single-industry JSON.
 - **Document every calibrated value with a source** — even stylized placeholders (family norm; a few
   repos' tax docs still lack inline citations — add them when you touch those docs).
 - **Ask before push, ask before PR — never in the same step.** PR style: narrative, plain language,
@@ -481,12 +603,16 @@ reform + output tables); the earnings tilt is solved inside `income.py`'s
    debt-elastic premium, `initial_Kg_ratio` if `gamma_g > 0`.
 6. Capital share: `1 − labor_share`, Gollin-adjusted if agrarian/informal; **remove gamma from the
    live-API path** so it can't be clobbered.
-7. Taxes: for PIT, prefer **HSV fit to the statutory schedule** (τ from the shape, λ tuned to
-   collections) over a flat rate whenever a schedule exists; take VAT/CIT/payroll as effective rates
-   from collections; pick the informality rung the data supports.
+7. Taxes: for PIT, prefer a **progressive form fit to the statutory schedule** over a flat rate
+   whenever a schedule exists — **GS by default** (φ0 = statutory top rate, φ1 to the shape, φ2 to
+   collections; floors ETR at 0); take VAT/CIT/payroll as effective rates from collections; pick the
+   informality rung the data supports.
 8. `chi_n`: leave at the US values but **document it as uncalibrated**, or re-tilt to an hours target.
 9. Validate: build the steady-state dashboard; check revenue by instrument; add the value-pinning test.
-10. (Optional) Multi-industry: build the 4 SAM inputs, numeraire industry last, continuation solve at
-    `nu≈0.2`, verify single↔multi agreement via the comparison dashboard (chi units conversion first).
+10. (Optional) Multi-industry: source the SAM (national SUTs → UNU-WIDER/IFPRI → modeled databases;
+    vintage matched to the LFS year); assert the concordances partition it; build the 5 SAM inputs,
+    numeraire industry last; try the direct solve first (`nu≈0.2`; continuation only as fallback);
+    apply the chi units conversion, then a Z-level rescale if `factor` is still off; verify
+    single↔multi agreement via the comparison dashboard and the same-reform acceptance test.
 11. Wrap up: `make format`, `pytest -m 'not local'`, CHANGELOG entry (before→after + citation), docs
     with glue-from-JSON. Ask before pushing; ask before the PR.
