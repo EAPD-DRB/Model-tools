@@ -25,6 +25,7 @@ Each folder has its own `README.md` with a bit more detail.
 |------|------|-------------|
 | [og-country-calibration](skills/og-country-calibration/SKILL.md) | skill | Calibrate or refine an OG-Core country model (single- or multi-industry): macro/open-economy parameters, capital share, earnings e-matrix, demographics, tax rates, SAM-based multi-industry splits, and steady-state validation. |
 | [fable-mode](skills/fable-mode/SKILL.md) | skill | Fable 5's working discipline as a reusable loop — scope, gather evidence, attack the answer, verify, report. Applies to any model on multi-step, debugging, model-run, or review tasks. |
+| [clews-model-review](skills/clews-model-review/SKILL.md) | skill | Review a MUIO/OSeMOSYS CLEWs model for structure and data consistency against the NamibiaCLEWs benchmark: referential integrity, orphaned IDs, dangling/stranded technologies, unit discipline, sector coverage, and solve status — via a bundled `audit.py` checker plus a rubric. |
 
 ## What not to commit
 
