@@ -18,4 +18,6 @@ cp -r skills/og-country-calibration ~/.claude/skills/
 ```
 
 Claude discovers it by the `name` and `description` in the `SKILL.md`
-frontmatter — no other registration needed.
+frontmatter — no other registration needed. Codex users can copy the same
+directory into their configured Codex skills folder; skills that include
+`agents/openai.yaml` also expose Codex interface metadata.
