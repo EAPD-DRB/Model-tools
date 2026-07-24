@@ -46,8 +46,10 @@ The generator should:
 7. Support `--dry-run`; write formatted UTF-8 JSON to a temporary sibling and atomically rename only after validation.
 8. Validate the generated case and an allowlisted structural diff.
 9. Re-fingerprint the source and fail if it changed.
+10. Derive expected technology, commodity, and constraint counts from the account definitions rather than hardcoding totals.
+11. Assert that explicitly excluded names and IDs do not appear in the generated accounting structures.
 
-Make target replacement explicit with an `--overwrite` flag. Preserve saved results separately before overwriting a derived case. Validate a staged sibling first; if a target exists, rename it to a recoverable backup, rename the stage into place, and restore the backup on failure. Remove the backup only after post-rename validation succeeds.
+Make target replacement explicit with an `--overwrite` flag. Preserve saved results, validation reports, and model-fix documents separately before overwriting a derived case. Validate a staged sibling first; if a target exists, rename it to a recoverable backup, rename the stage into place, and restore the backup on failure. Retain the backup until the promoted case passes generation, preprocessing, matrix validation, optimization, closure, and regression checks. If generation and computational validation are separate commands, leave the backup in place and report its path until acceptance. Write timestamped or uniquely labeled validation reports so a rerun cannot erase baseline-control or disposable-run evidence.
 
 ## 3. Parameter coverage
 
@@ -103,6 +105,8 @@ Add the terminal's IAR first, then derive the coefficient map so it naturally re
 
 For a zero-right-hand-side equality, scaling every coefficient by the same value preserves the identity. Use scaling only to improve conditioning and validate closure from unscaled physical results.
 
+Keep account selection separate from coefficient provenance. Build each balance's producer and consumer membership from the actual commodity links and effective ratios, not from the list of technologies that receive environmental terminals. Use the complete physical contributor set when deriving coefficients and finite activity/capacity envelopes.
+
 ## 6. Regeneration
 
 Discover the host command with repository search, for example:
@@ -126,6 +130,8 @@ Do not paste this blindly. Confirm import paths, solver names, case metadata, an
 
 Generated artifacts may include `data.txt`, `data_processed.txt`, a linear-program file, `results.txt`, CSV result variables, and Pivot/view data. Generate all of them through MUIO.
 
+Do not infer a result key or view-file path from an abbreviation. Read the host `Variables.json` and result-viewer generation code. In forks using the common mapping, `Total Annual Technology Activity By Mode` is stored as `TATABM` in `view/RYTM.json`; `TTMPA` denotes model-period activity and is not a substitute for an annual-by-mode Pivot. Verify the mapping in the target fork before asserting that visualization output exists.
+
 ## 7. Validation
 
 ### Structural
@@ -136,6 +142,8 @@ Generated artifacts may include `data.txt`, `data_processed.txt`, a linear-progr
 - all parameter families contain every new technology/commodity/constraint for every scenario;
 - base ratios and constraint multipliers have expected signs and values;
 - policy scenario rows follow inheritance rules;
+- generated counts equal the lengths derived from the account definitions;
+- explicitly excluded names and IDs are absent from new accounting structures;
 - result case metadata has valid timestamps.
 
 ### Physical
@@ -143,12 +151,15 @@ Generated artifacts may include `data.txt`, `data_processed.txt`, a linear-progr
 - terminal activity equals its unscaled physical identity;
 - parallel land outputs equal physical land activity;
 - original services remain connected and unchanged;
+- technologies excluded from the accounting additions retain their original links and physical contributions to other environmental balances;
 - units are internally consistent;
 - backstop/dummy production is excluded or separately reported.
 
 ### Regression
 
-Compare against saved results from immediately before the change. Filter only explicitly new account rows. Check:
+Compare against saved results from immediately before the change only after verifying that their generated and processed solver inputs match the current source and preprocessing chain. If either differs, label the saved outputs stale and solve a fresh unchanged control. Record the compared hashes, result timestamps, and reason for selecting or rejecting the saved baseline. Store each validation pass under a timestamped or unique label rather than overwriting earlier evidence.
+
+Filter only explicitly new account rows. For every intentionally excluded technology or commodity, check that its original links, annual/model-period activity, production, use, costs, and emissions remain unchanged. Also check:
 
 - objective value;
 - annual and model-period technology activity;

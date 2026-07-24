@@ -54,6 +54,7 @@ Use raw resource-pool commodities for residual water. Do not sum both raw water 
 - **Dummy land technologies:** inspect their UDC coefficients, activity-change limits, and emissions ratios. Report the signed/net identity; do not call dummy activity physical land.
 - **Backstops/deficits:** report separately and exclude from natural resource availability.
 - **Shared provenance:** if natural and synthetic/backstop sources produce the same commodity, a simple residual terminal cannot distinguish them. Add a provenance-preserving parallel commodity, calculate a defensible reporting identity, or leave a documented gap.
+- **Account membership versus flow provenance:** determine terminal membership separately from physical-flow membership. Derive every active producer and consumer from the commodity graph; a technology excluded from an environmental terminal may still contribute runoff, recharge, evapotranspiration, emissions, or another environmental flow.
 - **Marker commodities:** a produced commodity with no consumer or demand may be only a scenario/reporting marker. Do not create an environmental terminal for it without a physical interpretation.
 - **Missing targets:** distinguish intentional terminal output, capacity-only consumption, broken links, and genuine environmental residuals.
 
@@ -93,11 +94,15 @@ Create a model-specific generator in the target model repository. It must:
 - derive balance coefficients from the model's effective IAR/OAR data rather than transcribing them;
 - stop when one shared constraint cannot represent different effective saved-case combinations;
 - uniformly scale a zero-right-hand-side equality if coefficients are badly conditioned;
+- derive expected structural counts from the account definitions rather than hardcoding numeric totals;
+- assert that intentionally excluded technologies, commodities, and constraints are absent from the accounting additions; and
 - validate counts, references, ratios, constraint membership, and scenario coverage before writing success.
 
 Set terminal capacity parameters only after reading the host solver equations. Prohibit new investment when residual capacity is intended; ensure residual capacity, capacity-to-activity conversion, capacity factors, and annual/model-period bounds cannot bind the physical account. Record the derivation of every bound. If no finite defensible upper envelope can be proven, stop or use reporting-only accounting instead of inserting an arbitrary large number.
 
 Do not add a generic terminal named `ENVIRONMENT` that combines unrelated flows into one activity level. Use separate terminal technologies grouped under `ENVIRONMENT` so independent quantities and units remain visible.
+
+When replacing an existing derived case, preserve its results, validation reports, model-fix documents, and a recoverable backup until the promoted case passes the full generation, matrix, solve, closure, and regression chain. Use timestamped or uniquely labeled validation reports; do not overwrite evidence from an earlier baseline or disposable run.
 
 ### 6. Regenerate and solve normally
 
@@ -120,12 +125,13 @@ For every case, region, and year, verify:
 - backstop water is not counted as natural water remaining;
 - vapor and liquid water remain separate and use documented units;
 - native demand and emissions remain unchanged;
+- every intentionally excluded pathway retains its original links, annual/model-period activity, production, use, costs, and emissions;
 - no original technology or commodity link disappeared;
 - the source case hashes are unchanged.
 
 Before solving, require an allowlisted structural diff: every original JSON value and link must match, with differences limited to the new accounting records and derived-case metadata.
 
-Before regenerating, preserve the existing results as the baseline. Compare them with:
+Before regenerating, preserve the existing results as the baseline. Verify that their generated and processed solver inputs match the current source and preprocessing chain. If they do not, mark them stale and solve a fresh unchanged control, retaining the hashes and reason for rejecting the saved baseline. Compare the accepted baseline with:
 
 ```bash
 python scripts/compare_muio_results.py \
@@ -138,6 +144,7 @@ Supply every newly added technology, commodity, and constraint value. Examine ob
 ### 8. Verify visualization and hand off
 
 - In the Dynamic Graph, confirm each physical source connects through its account commodity to the correct terminal and that original service links remain.
+- Resolve result keys and view-file locations from the host `Variables.json` and viewer-generation code; do not infer them from abbreviations. In forks using the common mapping, `Total Annual Technology Activity By Mode` is `TATABM` in `view/RYTM.json`, while `TTMPA` is model-period activity and is not the annual Pivot.
 - In Pivot, verify terminal activities under `Total Annual Technology Activity By Mode`, with year as rows and case as columns.
 - Explain constants, discontinuities, dummy activity, and any scenario invariance from source equations—not from chart appearance alone.
 - Deliver the generator, derived case location, validation results, accounting dictionary, limitations, and exact viewing instructions.
@@ -150,6 +157,7 @@ Do not claim completion unless:
 - every configured scenario solves;
 - environmental identities close within solver/result precision;
 - original physical services are preserved;
+- intentionally excluded pathways are proven unchanged and absent from the accounting additions;
 - regression differences are quantified honestly;
 - dummy/backstop flows are labeled as diagnostics rather than Earth-system stocks;
 - every new account has a documented physical meaning and unit.

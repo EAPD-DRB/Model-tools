@@ -62,6 +62,8 @@ Do not add raw water and distributed water: that double-counts the same water at
 
 If land technologies output evapotranspiration, route that commodity to a vapor terminal. Water vapor is a return to the atmosphere, not useful residual liquid water.
 
+Account membership and flow provenance are independent. A land, industrial, or other technology can remain outside an environmental terminal classification while its runoff, recharge, evapotranspiration, or emissions still contributes to an environmental balance. Discover contributors from the commodity graph and effective ratios, not from the list of technologies selected for environmental terminals.
+
 ### Backstops
 
 A high-cost groundwater or surface-water deficit technology is synthetic feasibility supply. Report its activity as water stress. Exclude it from natural availability and verify whether its output can enter a residual terminal.
