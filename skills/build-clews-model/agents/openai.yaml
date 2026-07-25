@@ -1,4 +1,4 @@
 interface:
-  display_name: "Build CLEWs Model"
-  short_description: "Build an uncalibrated country CLEWs model"
-  default_prompt: "Use $build-clews-model to build a technically valid, uncalibrated CLEWs Global model for a specific country."
+  display_name: "Build CLEWs Model for MUIO"
+  short_description: "Build a raw CLEWs model and import it to MUIO"
+  default_prompt: "Use $build-clews-model to build a technically valid, uncalibrated CLEWs Global country model and deliver it as a solved, portable MUIO case."
