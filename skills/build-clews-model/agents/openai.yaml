@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build CLEWs Model"
+  short_description: "Build an uncalibrated country CLEWs model"
+  default_prompt: "Use $build-clews-model to build a technically valid, uncalibrated CLEWs Global model for a specific country."

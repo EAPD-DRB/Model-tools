@@ -23,6 +23,8 @@ Each folder has its own `README.md` with a bit more detail.
 
 | Tool | Type | Description |
 |------|------|-------------|
+| [build-clews-model](skills/build-clews-model/SKILL.md) | skill | Build a technically valid, uncalibrated OSeMOSYS/CLEWs full-nexus country model from CLEWs Global, permitting documented technical corrections and country adaptations while prohibiting historical forcing. |
+| [assess-clews-calibration](skills/assess-clews-calibration/SKILL.md) | skill | Evaluate technical validity, historical adequacy, forcing, evidence coverage, and fitness for purpose of an OSeMOSYS or full CLEWs country model. |
 | [og-country-calibration](skills/og-country-calibration/SKILL.md) | skill | Calibrate or refine an OG-Core country model (single- or multi-industry): macro/open-economy parameters, capital share, earnings e-matrix, demographics, tax rates, SAM-based multi-industry splits, and steady-state validation. |
 | [fable-mode](skills/fable-mode/SKILL.md) | skill | Fable 5's working discipline as a reusable loop — scope, gather evidence, attack the answer, verify, report. Applies to any model on multi-step, debugging, model-run, or review tasks. |
 | [clews-model-review](skills/clews-model-review/SKILL.md) | skill | Review a MUIO/OSeMOSYS CLEWs model for structure and data consistency against the NamibiaCLEWs benchmark: referential integrity, orphaned IDs, dangling/stranded technologies, unit discipline, sector coverage, and solve status — via a bundled `audit.py` checker plus a rubric. |
