@@ -60,6 +60,33 @@ Apply a correction only when all are true:
 - Correct paths, encodings, line endings, or platform behavior without changing
   parameter values.
 
+Run a dependency preflight before the workflow. It must import the required
+Python modules, invoke Snakemake and otoole version commands, locate an open
+solver, and load the MUIO importer/registry/formulation without mutating them.
+Record the interpreter path, exact versions, and every compatibility pin.
+
+## Minimum regression-fixture catalogue
+
+Create only the fixtures relevant to corrections actually applied, but retain
+each fixture and command in the country package. The reusable catalogue is:
+
+| Failure class | Minimum fixture assertion |
+|---|---|
+| Multipart/island boundary | Every component is retained once |
+| Missing coastal raster cells | Missing values are handled deterministically without overwriting measured cells |
+| Constant raster column | Normalization is finite and deterministic |
+| Cache contamination | Unexpected country/crop/scenario files are rejected |
+| Crop/proxy duplication | Explicit and aggregate groups contain no duplicated physical proxy |
+| Exact crop join | Similar names do not match accidentally |
+| Duplicate parameter index | Producer emits a unique full index |
+| Rerun idempotence | A second run does not append duplicate rows |
+| Excel worksheet truncation | A nondefault probe row survives import/export |
+| Temporal import | Every timeslice matches all authoritative conversion matrices |
+| Unsupported reserve tags | Native support is proven or the documented checker blocks stale data |
+
+The fixture must fail on the pinned uncorrected revision and pass after the
+patch. Do not accept a fixture that only checks a country result.
+
 ## Not technical corrections
 
 Do not describe any of the following as bug fixes:

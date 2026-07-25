@@ -24,6 +24,12 @@ by MUIO. Support requires all of:
 
 Create a compatibility inventory before conversion.
 
+For every populated parameter, record explicit and nondefault row counts,
+registry/storage/import/export/formulation support, worksheet name and alias,
+and probe evidence. Cache this inventory only while importer, registry,
+formulation, and otoole-configuration checksums remain unchanged. Follow
+`import-quality-gates.md`.
+
 ## 2. Convert the CLEWs CSVs
 
 Use otoole with the configuration matching the generated CLEWs data:
@@ -35,6 +41,11 @@ otoole convert csv excel INPUT_DIRECTORY OUTPUT.xlsx \
 
 Preserve this unmodified workbook. Fail if conversion drops populated files,
 duplicates indices, or changes values.
+
+Before the full import, calculate the actual Excel worksheet name for every
+populated parameter. Excel limits names to 31 characters. Test every uncertain
+full or truncated alias with a nondefault probe row and fail if the importer
+does not recognize it.
 
 ## 3. Prepare a MUIO workbook
 
@@ -129,7 +140,12 @@ Classify every source row:
 | Error | Unexpected loss or numerical change |
 
 Errors block completion. Unsupported non-default values require a documented
-decision or workaround.
+active representation or the specific reserve-margin workaround defined by
+this skill. Otherwise the whole-country import is blocked.
+
+Also compare source and imported technology-mode, technology-commodity,
+input/output, emission, and scenario association counts. Stop on unexplained
+dense Cartesian expansion.
 
 ## 8. Check result parity
 
@@ -149,6 +165,10 @@ model inputs merely to make results agree.
 Run result parity again after any formulation workaround and label each report
 with the run it assesses.
 
+Keep the authoritative upstream solve, complete MUIO import, and final MUIO
+solve statuses separate. A later success must not overwrite an earlier
+capability, parity, or import failure.
+
 ## 9. Package for another laptop
 
 The country handoff must include:
@@ -158,6 +178,9 @@ The country handoff must include:
 - import, temporal-repair, parity, reserve-check, and export scripts;
 - pre-repair backups;
 - compatibility inventory;
+- worksheet-alias probe report;
+- association-expansion report;
+- resource estimate and actual measurements;
 - input and result parity reports;
 - pre-workaround and final solve statuses;
 - `MUIO_IMPORT.md`;

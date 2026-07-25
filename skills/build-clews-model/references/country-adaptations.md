@@ -87,13 +87,19 @@ not exist.
 For every proxy, record:
 
 - original crop;
+- exact source item/code, selection rank/value/year/unit, and source quality
+  flag;
 - model crop code and GAEZ layer;
 - reason for the mapping;
+- climate model, pathway, period, water-supply condition, input level, and
+  available-water-capacity assumption used by the layer;
 - expected differences in yield, water demand, management, and climate
   sensitivity;
 - whether results must be labelled as an aggregate/proxy.
 
-Prevent proxy crops from also entering an `other` category.
+Use exact source-item joins. Prevent proxy crops from also entering an `other`
+category, reject duplicate proxy rasters, and ensure that multiple source items
+mapped to one proxy do not duplicate its physical potential.
 
 Do not calculate yield multipliers, water factors, land coefficients, or
 management shares by solving backward from observed production or harvested
@@ -127,3 +133,6 @@ For each adaptation, provide:
 | Uncertainty | Known ambiguity |
 | Sensitivity candidate | Alternative to test later |
 | Historical fit used? | Must be `No` |
+
+Also complete the exact source and government-review fields required by
+`source-and-government-review.md`.

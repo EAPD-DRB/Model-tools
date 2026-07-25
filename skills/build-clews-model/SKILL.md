@@ -1,6 +1,6 @@
 ---
 name: build-clews-model
-description: Build from scratch a technically valid, uncalibrated OSeMOSYS/CLEWs full-nexus country model with the upstream CLEWs Global workflow, then import, repair, verify, solve, and package it as a usable MUIO model. Use when creating a new country CLEWs model; adapting CLEWs Global or GeoCLEWs; preparing country configuration and geospatial inputs; applying documented technical corrections and country adaptations; converting CLEWs CSVs through otoole and MUIO; repairing season/day/time mappings; handling unsupported reserve-margin tags with a documented UDC workaround; checking import and result parity; or delivering a portable MUIO case for later calibration. Never tune parameters or impose constraints to reproduce historical observations during this build stage.
+description: Build from scratch a technically valid, uncalibrated OSeMOSYS/CLEWs whole-country full-nexus model with the upstream CLEWs Global workflow, then import the complete country model, repair, verify, solve, and package it as a usable MUIO case. Use when creating a new country CLEWs model; adapting CLEWs Global or GeoCLEWs; preparing country configuration and geospatial inputs; documenting exact source choices and crop proxies; converting complete CLEWs CSV sets through otoole and MUIO; checking importer capabilities, temporal mappings, input and result parity, and resource requirements; handling unsupported reserve-margin tags with a documented UDC workaround; or delivering a solved portable MUIO country case for later calibration. Never tune parameters or impose constraints to reproduce historical observations during this build stage.
 ---
 
 # Build a CLEWs country model through MUIO
@@ -16,6 +16,10 @@ nexus integration, the upstream OSeMOSYS formulation, and an open solver.
 Treat MUIO import as a separate representation and verification phase. Do not
 describe MUIO conversion fixes or formulation workarounds as country
 calibration.
+
+The authoritative deliverables are the complete solved upstream country model
+and its complete MUIO representation. Keep both reusable for later, separately
+scoped modelling work.
 
 ## Non-negotiable boundary
 
@@ -58,7 +62,18 @@ Read:
 - [references/muio-import.md](references/muio-import.md) before preparing the
   MUIO workbook or touching a MUIO case;
 - [references/reserve-margin-workaround.md](references/reserve-margin-workaround.md)
-  whenever reserve-margin tags are present or native support is uncertain.
+  whenever reserve-margin tags are present or native support is uncertain;
+- [references/source-and-government-review.md](references/source-and-government-review.md)
+  before recording source data, crop selections, proxies, or questions for
+  national reviewers;
+- [references/geospatial-preflight.md](references/geospatial-preflight.md)
+  before running GeoCLEWs or reusing a raster cache;
+- [references/import-quality-gates.md](references/import-quality-gates.md)
+  before creating the import workbook, capability inventory, or parity report;
+- [references/resource-and-packaging.md](references/resource-and-packaging.md)
+  before full MUIO data generation and final packaging;
+- [references/handoff-templates.md](references/handoff-templates.md) when
+  creating the mandatory delivery artifacts and validation summary.
 
 ## Required workflow
 
@@ -71,8 +86,10 @@ Read:
      change the model architecture or prevent completion.
    - Label the scenario `raw` or `uncalibrated`.
    - Separate build questions from future calibration and policy questions.
-   - Define two completion targets: a solved upstream package and a solved
-     portable MUIO case.
+   - Confirm that the authoritative build target represents the complete
+     upstream CLEWs country model.
+   - Define three separately reported targets: a solved upstream model, a
+     complete and explained MUIO import, and a solved portable MUIO case.
 
 2. **Pin and inspect both codebases**
    - Clone CLEWs Global recursively and record the root and submodule commits.
@@ -83,12 +100,26 @@ Read:
    - Preserve an untouched upstream reference or reproducible clean checkout.
    - Record checksums of shared MUIO importer/formulation files that the
      country workflow must not modify.
+   - Run a dependency preflight for Python, Snakemake, otoole, geospatial
+     libraries, open solvers, and required MUIO modules. Record exact versions
+     and justified compatibility pins.
+   - Cache importer capability results by the importer, registry, formulation,
+     and otoole-configuration checksums. Recompute them when any checksum
+     changes.
    - Never copy a previously calibrated country model as the hidden starting
      point.
 
 3. **Prepare authoritative structural inputs**
    - Obtain country boundaries and required administrative layers.
-   - Record every source URL, version, access date, unit, geography, and license.
+   - Create `DATA_SOURCE_REGISTER.md` from the bundled template. For every
+     external dataset, record provider, exact product, edition, reference
+     year/period/scenario, variable, unit, geography, model use, transformation,
+     quality flag, proxy, source URL, license, and a possible national
+     replacement. Raw-data copies and byte-level checksums are not required
+     unless reproducibility or licensing separately requires them.
+   - Include a government-review table identifying consequential source and
+     proxy choices, the agency that could validate them, and the parameters
+     that would change if a better national source is supplied.
    - Use observed geography, time zone, seasons, administrative structure, and
      technology applicability only as structural inputs.
    - Keep historical performance data in a calibration-candidate inventory;
@@ -99,16 +130,45 @@ Read:
    - Set country identifiers, nodes, horizon, seasons, dayparts, climate
      pathway, clustering resolution, projections, trade topology, and
      structurally applicable technologies.
-   - Make each consequential choice explicit in a model card.
+   - Create `MODEL_CARD.md` from the bundled template and make each
+     consequential choice explicit.
 
-5. **Apply only necessary technical corrections**
+5. **Run preflights before the expensive workflow**
+   - Inspect the raster cache for stale country/crop/scenario files, zero-byte
+     or corrupt files, missing crop-variable-water-input combinations, and
+     metadata inconsistent with the country configuration.
+   - Measure raster coverage over all boundary components. Report missing-cell
+     and missing-area shares by raster and cluster candidate.
+   - Detect multipart, island, coastal, antimeridian, invalid-geometry,
+     constant-column, and missing-value conditions before clustering.
+   - Produce a configuration-level resource estimate using years, timeslices,
+     clusters, crops, technologies, and modes. Run
+     `python scripts/estimate_resources.py` when its input assumptions apply.
+   - Stop on failed structural inputs. Do not discover a missing raster or
+     incompatible environment late in model generation.
+
+6. **Apply only necessary technical corrections**
    - First reproduce the defect on the pinned upstream version.
    - Prefer a minimal, general correction over a country-result override.
-   - Add a regression check and retain a patch/diff.
+   - Add a minimal fixture and regression check that fail before the correction
+     and pass after it. Cover the applicable failure class listed in
+     `references/technical-corrections.md`.
+   - Retain the patch/diff, fixture, command, and before/after result.
    - Prove that the correction addresses software behavior, not historical fit.
 
-6. **Run the native workflow**
+7. **Run the native workflow**
    - Build GeoCLEWs outputs.
+   - Use NaN-aware normalization and explicit constant-column handling.
+   - When defensible, impute only missing island/coastal raster attributes from
+     the nearest valid projected land cell. Never overwrite measured cells.
+     Report the affected cell and area shares and stop when they exceed the
+     declared acceptance threshold.
+   - Permit a documented sample for dendrogram visualization only. Use every
+     retained land cell in production clustering.
+   - Select crops by exact source-item joins. Write a machine-readable crop
+     mapping containing source rank/value/quality flag, explicit or aggregate
+     membership, GAEZ code, proxy rationale, and expected limitation. Reject
+     duplicate proxy rasters and explicit/aggregate double counting.
    - Build OSeMOSYS Global inputs.
    - Integrate the full model with `clewsy`.
    - Convert the data, generate the optimization problem, solve it, and export
@@ -116,7 +176,7 @@ Read:
    - Stop on non-zero subprocess status. Never continue from a partially failed
      stage.
 
-7. **Validate technical and nexus integrity**
+8. **Validate technical and nexus integrity**
    - Confirm solver feasibility/optimality, schema conformance, unique parameter
      indices, complete sets, valid units, balanced time slices, and sensible
      bounds.
@@ -129,15 +189,23 @@ Read:
    - Compare with observations only to create a transparent gap table. Mark
      every comparison as **diagnostic—not fitted**.
 
-8. **Package the upstream raw model**
+9. **Package the upstream raw model**
    - Include the pinned commits, country configuration, generated raw inputs,
      results, geospatial outputs, technical patches, source manifest, solver
      status, technical QA, model card, and reproduction commands.
-   - Include `CALIBRATION_HANDOFF.md` listing historical datasets, mismatches,
-     suspected drivers, and candidate future constraints. Apply none of them.
+   - Include `DATA_SOURCE_REGISTER.md`, `MODEL_CARD.md`, and
+     `CALIBRATION_HANDOFF.md` created from the bundled templates. The
+     calibration handoff must list historical datasets, mismatches, suspected
+     drivers, and candidate future constraints. Apply none of them.
    - Preserve a machine-readable no-forcing audit.
 
-9. **Prepare the MUIO import workbook**
+10. **Build the MUIO capability inventory and import workbook**
+   - Create a capability inventory for every populated source parameter. Prove
+     registration, JSON storage mapping, import/export handling, active
+     formulation declaration, and an equation that uses it.
+   - Test the installed workbook sheet aliases before the full import. Account
+     for Excel's 31-character worksheet-name limit and fail on an unrecognized
+     truncated name.
    - Convert the complete CLEWs CSV input folder to Excel using otoole and the
      matching CLEWs/otoole configuration.
    - Add MUIO-required `TECHGROUP` definitions and assign every technology.
@@ -149,7 +217,7 @@ Read:
      misinterprets an empty sheet as populated.
    - Save the untouched otoole workbook and the prepared MUIO workbook.
 
-10. **Import without modifying shared MUIO code**
+11. **Import the complete country model without modifying shared MUIO code**
     - Use a country-local one-off import driver around MUIO's existing
       `ImportTemplate.py`.
     - Hash the importer before and after and fail if it changes.
@@ -159,7 +227,7 @@ Read:
     - Do not change `ImportTemplate.py`, `Parameters.json`, or the shared
       OSeMOSYS formulation merely to accommodate this country.
 
-11. **Repair and verify temporal structure**
+12. **Repair and verify temporal structure**
     - After import, reconstruct each MUIO timeslice's season, day type, and
       daily time bracket from `Conversionls.csv`, `Conversionld.csv`, and
       `Conversionlh.csv`.
@@ -169,18 +237,27 @@ Read:
       set/year coverage.
     - Generate a MUIO data file and verify the resulting conversion matrices,
       `YearSplit`, and `DaySplit`.
+    - Compare every imported membership and split against the authoritative
+      CLEWs CSVs. Solver success does not excuse a temporal mismatch.
 
-12. **Run import parity before adding workarounds**
+13. **Run import parity before adding workarounds**
     - Round-trip the generated MUIO data through otoole after removing only
       MUIO-only sets and parameters from an analysis copy.
     - Classify every source row as exact, implicit default, intentionally
       transformed representation, unsupported, or erroneous.
-    - Treat unexplained loss or change as an import failure.
+    - Treat every unexplained loss or change as an import failure. Any lost or
+      changed nondefault source row is a hard failure unless it has an explicit,
+      tested native or documented formulation representation.
+    - Report the count and expansion ratio of technology-mode,
+      technology-commodity, and parameter associations. Stop on unexplained
+      dense Cartesian expansion.
     - Compare upstream and MUIO results on overlapping outputs. Explain
       formulation differences, defaults, units, and objectives; never tune the
       model to make parity pass.
+    - Report `upstream_raw`, `muio_import`, and `muio_final` statuses separately.
+      Never let a later solve overwrite or hide an earlier import failure.
 
-13. **Handle reserve-margin tags**
+14. **Handle reserve-margin tags**
     - First test whether the installed MUIO version supports native
       `ReserveMargin`, `ReserveMarginTagFuel`, and
       `ReserveMarginTagTechnology` parameters and an active reserve constraint.
@@ -199,7 +276,16 @@ Read:
       derived UDC.
     - Require a `CURRENT` zero-mismatch check before solving.
 
-14. **Solve, validate, and package the MUIO model**
+15. **Estimate resources, solve, and validate the MUIO model**
+    - Re-run the resource estimate using actual imported active modes,
+      associations, scenario rows, and formulation dimensions before generating
+      the full MUIO data and LP.
+    - Report estimated rows, columns, nonzeros, memory, working disk, LP size,
+      and a broad runtime range with assumptions and confidence. Use
+      Green/Amber/Red thresholds from
+      `references/resource-and-packaging.md`.
+    - Never reduce years, timeslices, clusters, or technologies automatically.
+      A structural simplification requires an explicit modelling decision.
     - Preserve a pre-workaround run for diagnosis and create a separate
       reserve-proxy run when the workaround is needed.
     - Generate MUIO data, solve with an available supported open solver, and
@@ -207,13 +293,25 @@ Read:
     - Verify all UDC rows appear in generated data and results and that credited
       capacity satisfies the annual requirement within solver tolerance.
     - Re-run technical/no-forcing checks and the reserve-proxy stale check.
+    - Record actual matrix, disk, generation, and solve measurements beside the
+      estimate for later estimator improvement.
+
+16. **Package and validate the delivery**
     - Export a MUIO-compatible case ZIP that includes the model JSON,
       configuration marker, check fingerprint, runs, and results while
       respecting MUIO's backup layout.
+    - Exclude regenerable LP/MPS files from the portable archive unless the user
+      explicitly requests them. Retain the generation command and solver log.
     - Include the prepared workbook, otoole config, one-off scripts, backups,
       parity reports, solve status, and `MUIO_IMPORT.md` in the country package.
-    - Verify the ZIP and provide exact reproduction, check, update, solve, and
-      restore commands.
+    - Include `DATA_SOURCE_REGISTER.md`, `MODEL_CARD.md`,
+      `CALIBRATION_HANDOFF.md`, `MUIO_IMPORT.md`,
+      `diagnostics/no_forcing_audit.json`,
+      `diagnostics/validation_summary.json`, and
+      `diagnostics/resource_estimate.json`.
+    - Run `python scripts/validate_delivery.py` against the package. Verify the
+      ZIP, required artifact names, machine-readable status separation, and
+      exact reproduction, check, update, solve, and restore commands.
 
 ## Permitted changes
 
@@ -227,6 +325,9 @@ Permit:
 - MUIO-only technology groups and descriptions;
 - one-off repair of importer-created time references using authoritative CLEWs
   conversion matrices;
+- sampled diagnostic plots when production computations retain all data;
+- nearest-valid-land-cell imputation only under the documented geospatial
+  coverage rules and thresholds;
 - an explicit 5% discount-rate fallback only when CLEWs Global supplies no
   value;
 - the documented reserve-margin UDC workaround when native MUIO support is
@@ -247,16 +348,31 @@ Do not call the task complete until:
 - nexus and technical integrity checks pass;
 - the no-forcing audit has zero failures;
 - all country corrections and adaptations are documented;
+- the exact source register and government-review questions are complete;
+- the geospatial cache, coverage, multipart/island, missing-value, and area
+  preflights pass;
+- each applied technical correction has a retained regression fixture;
+- the dependency preflight and resource estimate pass or have an explicitly
+  accepted Amber warning;
+- the MUIO capability inventory covers every populated source parameter;
+- all populated worksheet names are recognized after Excel truncation;
 - MUIO contains the complete sets and parameters expected after supported
   defaults and documented transformations;
+- no nondefault source row is lost or changed without an explicit tested
+  representation;
+- association expansion ratios contain no unexplained dense import;
 - timeslice season/day/bracket mappings exactly match CLEWs conversions;
 - unsupported inputs are explicitly inventoried;
 - reserve tags are either imported natively or represented by a validated,
   clearly labelled workaround;
 - the reserve workaround checker reports `CURRENT` with zero mismatches;
 - the final MUIO run solves;
+- upstream, import, and final MUIO statuses are reported separately;
 - parity differences are explained rather than hidden;
-- the portable MUIO ZIP passes an archive integrity check; and
+- actual resource use is recorded against the preflight estimate;
+- the portable MUIO ZIP passes an archive integrity check;
+- `python scripts/validate_delivery.py` passes with every required handoff
+  artifact; and
 - shared MUIO code checksums are unchanged unless the user separately
   authorized a general MUIO software change.
 
