@@ -24,6 +24,7 @@ Each folder has its own `README.md` with a bit more detail.
 | Tool | Type | Description |
 |------|------|-------------|
 | [build-clews-model](skills/build-clews-model/SKILL.md) | skill | Build a technically valid, uncalibrated CLEWs Global country model and carry it through otoole into a solved, verified, portable MUIO case, including temporal repairs and an unsupported reserve-tag workaround. |
+| [add-fisheries-sector](skills/add-fisheries-sector/SKILL.md) | skill | Add a complete, source-traceable, non-forcing Fisheries sector to an existing solved OSeMOSYS/CLEWs/MUIO country model, including residual stock, boundary reconciliation, unchanged-solver validation, and policymaker-ready number lineage. |
 | [assess-clews-calibration](skills/assess-clews-calibration/SKILL.md) | skill | Evaluate technical validity, historical adequacy, forcing, evidence coverage, and fitness for purpose of an OSeMOSYS or full CLEWs country model. |
 | [og-country-calibration](skills/og-country-calibration/SKILL.md) | skill | Calibrate or refine an OG-Core country model (single- or multi-industry): macro/open-economy parameters, capital share, earnings e-matrix, demographics, tax rates, SAM-based multi-industry splits, and steady-state validation. |
 | [fable-mode](skills/fable-mode/SKILL.md) | skill | Fable 5's working discipline as a reusable loop — scope, gather evidence, attack the answer, verify, report. Applies to any model on multi-step, debugging, model-run, or review tasks. |
