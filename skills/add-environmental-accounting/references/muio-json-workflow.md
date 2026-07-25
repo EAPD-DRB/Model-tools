@@ -51,17 +51,24 @@ The generator should:
 
 Make target replacement explicit with an `--overwrite` flag. Preserve saved results, validation reports, and model-fix documents separately before overwriting a derived case. Validate a staged sibling first; if a target exists, rename it to a recoverable backup, rename the stage into place, and restore the backup on failure. Retain the backup until the promoted case passes generation, preprocessing, matrix validation, optimization, closure, and regression checks. If generation and computational validation are separate commands, leave the backup in place and report its path until acceptance. Write timestamped or uniquely labeled validation reports so a rerun cannot erase baseline-control or disposable-run evidence.
 
+When migrating an older environmental-accounting case, treat category-specific terminals as an explicit replacement set. Preserve their physical input commodities, remap those commodities to the documented modes of `ENV_WATER` or `ENV_LAND`, and remove only the superseded technologies and their parameter rows. Reconstruct the aggregate constraints from effective source ratios instead of summing or copying old terminal-specific multipliers blindly.
+
 ## 3. Parameter coverage
 
 Adding a technology or commodity to `genData.json` is insufficient. Append complete rows for every parameter family that MUIO expects.
 
 For terminal technologies:
 
+- add exactly `ENV_WATER` and `ENV_LAND`, with one documented operating mode per category;
+- require every input to a given terminal to use the same physical unit;
+- set exactly one IAR of 1 for each active terminal mode and no terminal output;
 - use zero capital, fixed, and variable costs;
 - use availability/capacity factors consistent with unconstrained annual accounting;
 - provide sufficient residual capacity and nonbinding activity limits;
 - prevent investment when residual accounting capacity is intended;
 - populate every year, timeslice, mode, and scenario record expected by the host model.
+
+Increase the global operating-mode count if either terminal needs a higher mode ID than the source model provides. Inspect the host generation loops and densify every mode-indexed JSON family they traverse—not only rows belonging to the new terminals. Common examples are `RYTM.json`, `RYTCM.json`, `RYTEM.json`, and any storage-mode table. Use the host parameter defaults for inactive base rows and its normal `null` convention for inheriting scenarios. After preprocessing, verify `MODEperTECHNOLOGY`: every original technology retains exactly its intended modes, while `ENV_WATER` and `ENV_LAND` contain only their documented modes.
 
 Derive capacity settings from the host equations: the maximum feasible terminal activity must remain below residual capacity multiplied by capacity-to-activity conversion and effective availability/capacity factors. Set investment limits to zero when the terminal is not an investment option, and keep annual/model-period activity bounds nonbinding unless implementing a proven-fixed account. If no finite defensible upper envelope exists, stop or use reporting-only accounting.
 
@@ -95,17 +102,32 @@ Inspect the host MUIO scenario resolver (for example `getScOrder` and the parame
 
 ## 5. Constraint construction
 
-For commodity `c`, derive the net coefficient for every connected region, technology, and mode:
+For each environmental domain `D`, first define the set of same-unit commodities consumed by the modes of `ENV_WATER` or `ENV_LAND`. For every connected region, technology, mode, and year, derive:
 
 ```text
-net[r,t,m,y] = effective_OAR[r,t,c,m,y] - effective_IAR[r,t,c,m,y]
+net[D,r,t,m,y]
+  = sum[c in D] (
+      effective_OAR[r,t,c,m,y] - effective_IAR[r,t,c,m,y]
+    )
 ```
 
-Add the terminal's IAR first, then derive the coefficient map so it naturally receives `-1`. Include only technologies in the constraint membership list that have a nonzero net coefficient in at least one year.
+The common MUIO CAM (Constraint Activity Multiplier) is technology-level, not mode-level. For each original technology, require `net[D,r,t,m,y]` to be identical in every active mode. That common value is the technology's aggregate coefficient. If the values differ by mode, stop: a single technology-level CAM cannot reproduce the commodity balances exactly.
+
+Add every terminal mode's IAR first. Because each is 1, the total-activity coefficient of the corresponding terminal is `-1`. Construct one zero-right-hand-side equality per domain:
+
+```text
+sum[t] alpha[D,r,t,y] * TotalAnnualTechnologyActivity[r,t,y]
+- TotalAnnualTechnologyActivity[r,ENV_D,y]
+= represented demand/capacity/trade terms
+```
+
+Individual commodity balances make every category residual nonnegative. The aggregate equality sets the sum of residuals to zero, forcing every terminal mode to consume its full mapped residual. Include only original technologies with a nonzero aggregate coefficient in at least one year, plus the corresponding terminal.
+
+This proof is valid only when all non-activity balance terms are represented. Inspect annual demand, accumulated demand, trade, new-capacity inputs, total-capacity inputs, and any fork-specific terms. If the UDC cannot represent one of them, use reporting-only accounting or request a mode-aware code extension.
 
 For a zero-right-hand-side equality, scaling every coefficient by the same value preserves the identity. Use scaling only to improve conditioning and validate closure from unscaled physical results.
 
-Keep account selection separate from coefficient provenance. Build each balance's producer and consumer membership from the actual commodity links and effective ratios, not from the list of technologies that receive environmental terminals. Use the complete physical contributor set when deriving coefficients and finite activity/capacity envelopes.
+Keep account selection separate from coefficient provenance. Build each domain's producer and consumer membership from the actual commodity links and effective ratios, not from the list of technologies assigned to environmental groups. Use the complete physical contributor set when deriving coefficients and finite activity/capacity envelopes.
 
 ## 6. Regeneration
 
@@ -132,6 +154,8 @@ Generated artifacts may include `data.txt`, `data_processed.txt`, a linear-progr
 
 Do not infer a result key or view-file path from an abbreviation. Read the host `Variables.json` and result-viewer generation code. In forks using the common mapping, `Total Annual Technology Activity By Mode` is stored as `TATABM` in `view/RYTM.json`; `TTMPA` denotes model-period activity and is not a substitute for an annual-by-mode Pivot. Verify the mapping in the target fork before asserting that visualization output exists.
 
+Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technologies must retain their source modes; `ENV_WATER` and `ENV_LAND` must expose only their documented category modes. Treat a missing, duplicated, or unintended mode as a generation failure.
+
 ## 7. Validation
 
 ### Structural
@@ -140,7 +164,15 @@ Do not infer a result key or view-file path from an abbreviation. Read the host 
 - new IDs and names are unique;
 - all metadata links reference defined IDs;
 - all parameter families contain every new technology/commodity/constraint for every scenario;
+- exactly two physical environmental terminal technologies exist: `ENV_WATER` and `ENV_LAND`;
+- no superseded category-specific terminal technologies remain;
+- terminal mode dictionaries, input commodities, descriptions, and same-unit requirements agree;
+- every terminal mode has exactly one IAR of 1 and no output;
+- all mode-indexed JSON families are dense enough for the host generator;
+- processed `MODEperTECHNOLOGY` retains original modes and contains only documented terminal modes;
 - base ratios and constraint multipliers have expected signs and values;
+- every connected original technology has one domain net coefficient across all active modes;
+- aggregate UDC terms cover every non-activity term in the represented commodity balances;
 - policy scenario rows follow inheritance rules;
 - generated counts equal the lengths derived from the account definitions;
 - explicitly excluded names and IDs are absent from new accounting structures;
@@ -148,8 +180,9 @@ Do not infer a result key or view-file path from an abbreviation. Read the host 
 
 ### Physical
 
-- terminal activity equals its unscaled physical identity;
-- parallel land outputs equal physical land activity;
+- every terminal mode equals the unscaled residual of its mapped commodity;
+- the sum of category residuals equals the unscaled domain UDC identity;
+- parallel land-stock outputs equal physical land activity;
 - original services remain connected and unchanged;
 - technologies excluded from the accounting additions retain their original links and physical contributions to other environmental balances;
 - units are internally consistent;
@@ -158,6 +191,8 @@ Do not infer a result key or view-file path from an abbreviation. Read the host 
 ### Regression
 
 Compare against saved results from immediately before the change only after verifying that their generated and processed solver inputs match the current source and preprocessing chain. If either differs, label the saved outputs stale and solve a fresh unchanged control. Record the compared hashes, result timestamps, and reason for selecting or rejecting the saved baseline. Store each validation pass under a timestamped or unique label rather than overwriting earlier evidence.
+
+Run the unchanged control and candidate in the same software and solver environment. When preprocessing traverses unordered sets, use the same explicit `PYTHONHASHSEED` and retain both processed-input hashes. A highly degenerate model may select a different cost-identical basis even in the unchanged control; distinguish this from a physical-accounting effect.
 
 Filter only explicitly new account rows. For every intentionally excluded technology or commodity, check that its original links, annual/model-period activity, production, use, costs, and emissions remain unchanged. Also check:
 
@@ -173,6 +208,14 @@ Filter only explicitly new account rows. For every intentionally excluded techno
 Use both absolute and relative tolerances chosen for each unit, reject non-finite values, retain duplicate dimension keys as errors, and record exact changed keys. Parse every `results.txt` (or host equivalent) and fail on missing or non-optimal status before interpreting numeric comparisons.
 
 When differences occur, identify exact rows, quantify absolute and relative changes, and distinguish physical changes from alternate cost-identical routing.
+
+Assess runtime separately. Compare matrix or LP dimensions and repeated solve timings; do not attribute a one-run timing change to the accounting layer.
+
+### Results interface
+
+- In the Dynamic Graph, verify each mapped commodity feeds the correct mode of `ENV_WATER` or `ENV_LAND` while the original service links remain.
+- In Pivot, select `Total Annual Technology Activity By Mode`, filter `Tech` to `ENV_WATER` and `ENV_LAND`, include `Mo Id`, and interpret the numeric modes with the documented dictionaries.
+- For water, report vapor separately from the sum of useful liquid-water modes. Never interpret total `ENV_WATER` activity as useful liquid water.
 
 Primary references:
 

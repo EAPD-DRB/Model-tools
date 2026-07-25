@@ -205,9 +205,32 @@ def build_report(model: Path) -> dict[str, Any]:
         if classify(commodity.get("Comm", ""), commodity.get("Desc", ""))
     }
     ratio_overrides = []
+    base_input_modes_by_technology: dict[str, list[dict[str, Any]]] = defaultdict(
+        list
+    )
     activity_ratio_path = model / "RYTCM.json"
     if activity_ratio_path.exists():
         activity_ratios = load_json(activity_ratio_path)
+        for row in activity_ratios.get("IAR", {}).get(base_scenario, []) or []:
+            values = [
+                row.get(year)
+                for year in years
+                if isinstance(row.get(year), (int, float))
+            ]
+            if not values or not any(value != 0 for value in values):
+                continue
+            base_input_modes_by_technology[row.get("TechId", "")].append(
+                {
+                    "mode": row.get("MoId"),
+                    "commodity": commodity_by_id.get(
+                        row.get("CommId", ""), {}
+                    ).get("Comm", row.get("CommId", "")),
+                    "first": row.get(years[0]) if years else None,
+                    "last": row.get(years[-1]) if years else None,
+                    "min": min(values),
+                    "max": max(values),
+                }
+            )
         for parameter in ("IAR", "OAR"):
             for scenario_id, scenario_rows in activity_ratios.get(parameter, {}).items():
                 if scenario_id == base_scenario:
@@ -292,6 +315,14 @@ def build_report(model: Path) -> dict[str, Any]:
                 commodity_by_id.get(cid, {}).get("Comm", cid)
                 for cid in technology.get("OAR", []) or []
             ],
+            "input_modes": sorted(
+                base_input_modes_by_technology.get(technology["TechId"], []),
+                key=lambda row: (
+                    row["mode"] is None,
+                    row["mode"] if row["mode"] is not None else 0,
+                    row["commodity"],
+                ),
+            ),
             "constraints": constraints_by_technology.get(technology["TechId"], []),
             "constraint_coefficients": constraint_coefficients.get(
                 technology["TechId"], []
@@ -441,6 +472,7 @@ def print_report(report: dict[str, Any]) -> None:
     for row in report["existing_environmental_terminals"]:
         print(
             f"  {row['code']}: in={row['inputs'] or '-'} out={row['outputs'] or '-'} "
+            f"modes={row['input_modes'] or '-'} "
             f"constraints={row['constraints'] or '-'}"
         )
 

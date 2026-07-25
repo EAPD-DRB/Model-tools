@@ -5,7 +5,7 @@ Use this reference while interpreting flows and choosing accounts. Values and id
 ## Contents
 
 1. Accounting boundary
-2. Exact terminal pattern
+2. Two-terminal multimode pattern
 3. Water
 4. Land
 5. Emissions
@@ -25,7 +25,7 @@ Environmental accounting should distinguish:
 
 Do not combine flows and stocks in one total. Do not label a residual “available” unless the model represents accessibility, quality, timing, and ecological reserve requirements.
 
-## 2. Exact terminal pattern
+## 2. Two-terminal multimode pattern
 
 Standard MUIO/OSeMOSYS annual and timeslice commodity balances are inequalities:
 
@@ -33,15 +33,28 @@ Standard MUIO/OSeMOSYS annual and timeslice commodity balances are inequalities:
 production >= demand + use
 ```
 
-A zero-cost terminal consumer can therefore stay at zero. Force an exact account with a zero-right-hand-side equality over net commodity coefficients:
+A zero-cost terminal consumer can therefore stay at zero. Use two zero-cost terminals:
 
 ```text
-sum[t,m] (OAR[t,c,m,y] - IAR[t,c,m,y]) * Activity[t,m,y] = 0
+ENV_WATER: one mode per water category
+ENV_LAND:  one mode per land category
 ```
 
-The terminal has IAR 1, so its contribution is negative and its activity equals the residual. Here IAR is Input Activity Ratio and OAR is Output Activity Ratio.
+Each mode consumes exactly one category commodity at IAR 1. Here IAR is Input Activity Ratio and OAR is Output Activity Ratio. All commodities entering one terminal must use the same unit.
 
-Include every active producer and consumer and resolve scenario inheritance before constructing coefficients. If scenario overrides alter ratios, build coefficients for each effective scenario combination or stop and explain why the simple pattern is unsafe.
+The common MUIO UDC (User-Defined Constraint) multiplier applies to total annual technology activity, not individual modes. Force closure with one aggregate equality for all water commodities and one for all land commodities:
+
+```text
+sum[t] alpha[D,t,y] * TotalAnnualTechnologyActivity[t,y]
+- TotalAnnualTechnologyActivity[ENV_D,y]
+= represented non-activity balance terms
+```
+
+Each category commodity balance ensures its unconsumed residual is nonnegative. The aggregate equality sets the sum of those residuals to zero, which forces every residual to zero.
+
+This construction is exact only if every connected original technology has the same domain net coefficient in every active mode. If coefficients differ by mode, one technology-level multiplier cannot reproduce `sum[m] beta[t,m] * Activity[t,m]`. Also represent annual demand, trade, and new/total-capacity inputs when they occur in the commodity balances. Stop or use reporting-only accounting when the host constraint cannot represent every term.
+
+Include every active producer and consumer and resolve scenario inheritance before constructing coefficients. If scenario overrides alter ratios, build coefficients for each effective scenario combination or stop and explain why the pattern is unsafe.
 
 Uniformly multiplying all coefficients in a zero-right-hand-side equality by the same nonzero factor does not change its mathematics. Use this only for conditioning, and document it.
 
@@ -60,13 +73,25 @@ Do not add raw water and distributed water: that double-counts the same water at
 
 ### Water vapor
 
-If land technologies output evapotranspiration, route that commodity to a vapor terminal. Water vapor is a return to the atmosphere, not useful residual liquid water.
+If land technologies output evapotranspiration, route that commodity to the vapor mode of `ENV_WATER`. Water vapor is a return to the atmosphere, not useful residual liquid water.
 
 Account membership and flow provenance are independent. A land, industrial, or other technology can remain outside an environmental terminal classification while its runoff, recharge, evapotranspiration, or emissions still contributes to an environmental balance. Discover contributors from the commodity graph and effective ratios, not from the list of technologies selected for environmental terminals.
 
 ### Backstops
 
-A high-cost groundwater or surface-water deficit technology is synthetic feasibility supply. Report its activity as water stress. Exclude it from natural availability and verify whether its output can enter a residual terminal.
+A high-cost groundwater or surface-water deficit technology is synthetic feasibility supply. Report its activity as water stress. Exclude it from natural availability and verify whether its output can enter an `ENV_WATER` mode.
+
+### Water mode dictionary
+
+Use a stable model-specific dictionary, normally beginning with:
+
+| Technology | Mode | Meaning |
+|---|---:|---|
+| `ENV_WATER` | 1 | Water vapor returned to the atmosphere |
+| `ENV_WATER` | 2 | Groundwater remaining after abstraction |
+| `ENV_WATER` | 3 | Surface water remaining after abstraction |
+
+Add wastewater, brine, or other returns only when their units and physical coefficients are documented. Interpret useful residual liquid water as the sum of the relevant liquid modes, never as total `ENV_WATER` activity.
 
 ### Wastewater and desalination
 
@@ -86,7 +111,7 @@ Do not derive brine from desalinated output unless feedwater and recovery are kn
 When a land technology already produces pasture, crops, runoff, or evapotranspiration, preserve those outputs and add a parallel stock commodity:
 
 ```text
-LNDGRS --OAR 1--> LNDGRSSTK --IAR 1--> ENVLNDGRS
+LNDGRS --OAR 1--> LNDGRSSTK --IAR 1--> ENV_LAND mode 2
        --existing--> pasture and water flows
 ```
 
@@ -100,9 +125,18 @@ The stock output reports area; it does not create another area or consume the pa
 - Unallocated land exists only if the model has an explicit full-endowment closure and a residual category. Do not infer it by subtracting incomparable land activities.
 - Solar or infrastructure land is a capacity-linked use only if a footprint coefficient is present.
 
-### Fixed terminals
+### Land mode dictionary
 
-A fixed terminal is acceptable only when all current scenarios and years prove the source activity equals a common exogenous bound. Copy the bound through JSON, preserve the parallel commodity, validate terminal-to-source equality after every run, and document that future endogenous behavior requires an equality account.
+Use a stable model-specific dictionary, normally beginning with:
+
+| Technology | Mode | Meaning |
+|---|---:|---|
+| `ENV_LAND` | 1 | Forest |
+| `ENV_LAND` | 2 | Grassland |
+| `ENV_LAND` | 3 | Other land |
+| `ENV_LAND` | 4 | Barren/savannah land |
+
+Extend it for cropland, built land, or water bodies only when the model has compatible area commodities. A fixed mode value is acceptable only when every scenario and year proves the physical source equals the same exogenous bound; otherwise keep the account endogenous.
 
 ## 5. Emissions
 
@@ -141,14 +175,14 @@ A scenario may give a technology an otherwise unused output solely to make activ
 
 ## 7. Numerical behavior
 
-Adding a zero-cost variable or redundant equality preserves the feasible objective mathematically but can change the basis selected in a degenerate linear program. Typical symptoms include:
+Adding zero-cost modes or aggregate equalities preserves the intended feasible objective mathematically but can change the basis selected in a degenerate linear program. Typical symptoms include:
 
 - switching between equal-cost groundwater and surface-water routes;
 - changes in unused capacity variables;
 - small rounded cost differences;
 - identical demand/emissions with different technology-level activity.
 
-Compare both row-level results and invariant aggregates. Never hide this distinction. Prefer a reporting-only account when the user requires byte-for-byte identity.
+Compare both row-level results and invariant aggregates. Rerun an unchanged control in the same environment because the control itself may select a different optimum. Never hide this distinction. Prefer a reporting-only account when the user requires byte-for-byte identity.
 
 ## 8. Extension checklist
 
