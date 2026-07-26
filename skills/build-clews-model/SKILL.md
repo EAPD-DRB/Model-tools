@@ -177,9 +177,9 @@ Read:
    - For pinned CLEWs Global revisions containing the sample-country
      transmission block, run `python
      scripts/fix_clewsy_grid_mapping.py
-     CHECKOUT/workflow/scripts/clewsy.py`. This makes transmission technology
-     and electricity-carrier identifiers use the configured grid-node mapping
-     and emits each mapped grid node once.
+     CHECKOUT/workflow/scripts/clewsy.py`. This makes end-use electricity
+     carriers use each unique configured grid node and avoids adding a parallel
+     transmission already supplied by OSeMOSYS Global.
    - Prefer a minimal, general correction over a country-result override.
    - Add a minimal fixture and regression check that fail before the correction
      and pass after it. Cover the applicable failure class listed in

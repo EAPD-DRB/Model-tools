@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fix CLEWs Global transmission generation to use mapped grid-node codes."""
+"""Map CLEWs electricity demand to grid nodes without duplicate transmission."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ BUGGY = '''    for i in data["EndUseFuels"]:
             'PWRTRNA01', f'ELC{j}01', '1.11', f'ELC{j}02', '1', 'Power transmission', '1'])
 '''
 
-FIXED = '''    grid_regions = list(dict.fromkeys(region_codes.values()))
+INTERMEDIATE = '''    grid_regions = list(dict.fromkeys(region_codes.values()))
     for i in data["EndUseFuels"]:
         fuel_list = data["EndUseFuels"][i]
         for grid_region in grid_regions:
@@ -39,34 +39,54 @@ FIXED = '''    grid_regions = list(dict.fromkeys(region_codes.values()))
     ]
 '''
 
+FIXED = '''    grid_regions = list(dict.fromkeys(region_codes.values()))
+    for i in data["EndUseFuels"]:
+        fuel_list = data["EndUseFuels"][i]
+        for grid_region in grid_regions:
+            fuel_list.append(f"ELC{grid_region}02")
+        data["EndUseFuels"][i] = fuel_list
+    # OSeMOSYS Global already supplies the PWRTRN technology and its
+    # ELC<grid>01 -> ELC<grid>02 ratios. Adding it here would duplicate them.
+    data["TransformationTechnologies"] = []
+'''
+
 
 def fix(path: Path, check_only: bool = False) -> str:
     text = path.read_text(encoding="utf-8")
-    if FIXED in text and BUGGY not in text:
+    if FIXED in text and BUGGY not in text and INTERMEDIATE not in text:
         return "already fixed"
-    if BUGGY not in text:
+    source = (
+        BUGGY
+        if BUGGY in text
+        else INTERMEDIATE
+        if INTERMEDIATE in text
+        else None
+    )
+    if source is None:
         raise ValueError(
             "The pinned CLEWs Global transmission block was not recognized; "
             "inspect the upstream revision before changing it."
         )
     if check_only:
-        raise ValueError("The land-code transmission-generation defect is present.")
-    path.write_text(text.replace(BUGGY, FIXED, 1), encoding="utf-8")
+        raise ValueError(
+            "The land-code or duplicate-transmission defect is present."
+        )
+    path.write_text(text.replace(source, FIXED, 1), encoding="utf-8")
     return "fixed"
 
 
 def self_test() -> None:
     with tempfile.TemporaryDirectory() as directory:
-        path = Path(directory) / "clewsy.py"
-        path.write_text("before\n" + BUGGY + "after\n", encoding="utf-8")
-        assert fix(path) == "fixed"
-        corrected = path.read_text(encoding="utf-8")
-        assert BUGGY not in corrected
-        assert FIXED in corrected
-        assert "PWRTRN{grid_region}" in corrected
-        assert "ELC{grid_region}01" in corrected
-        assert "ELC{grid_region}02" in corrected
-        assert fix(path, check_only=True) == "already fixed"
+        for name, source in (("upstream", BUGGY), ("intermediate", INTERMEDIATE)):
+            path = Path(directory) / f"{name}_clewsy.py"
+            path.write_text("before\n" + source + "after\n", encoding="utf-8")
+            assert fix(path) == "fixed"
+            corrected = path.read_text(encoding="utf-8")
+            assert source not in corrected
+            assert FIXED in corrected
+            assert 'f"ELC{grid_region}02"' in corrected
+            assert 'data["TransformationTechnologies"] = []' in corrected
+            assert fix(path, check_only=True) == "already fixed"
 
 
 def main() -> None:

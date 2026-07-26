@@ -33,9 +33,9 @@ Apply a correction only when all are true:
 
 - Replace hard-coded sample-country names, ISO codes, nodes, paths, acronyms,
   time slices, or modes with values derived from configuration.
-- Generate transmission technologies and their electricity carriers from each
-  unique configured grid-node value, not from a land-region key or a
-  hard-coded sample transmission name.
+- Generate end-use electricity carriers from each unique configured grid-node
+  value, not from a land-region key. Do not synthesize a parallel transmission
+  when OSeMOSYS Global already supplies that grid-node conversion.
 - Remove stale sample-country values from generated files.
 - Fix comparisons or inverted conditions that cause generated country values to
   be replaced by example values.
