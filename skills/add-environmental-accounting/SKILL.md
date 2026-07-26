@@ -1,6 +1,6 @@
 ---
 name: add-environmental-accounting
-description: Design, implement, regenerate, and validate environmental accounting for a MUIO/OSeMOSYS CLEWS model using multimode ENV_WATER and ENV_LAND terminal technologies. Use when asked to add Earth-system return flows, residual liquid water, water vapor, land-state accounts, forest or other natural land, emissions, wastewater, brine, backstop diagnostics, or an ENVIRONMENT accounting layer to models such as Zambia, Philippines, or Namibia, especially when edits must originate in the model JSON rather than generated data.txt files.
+description: Design, implement, regenerate, and validate environmental accounting for a MUIO/OSeMOSYS CLEWS model using one or both multimode ENV_WATER and ENV_LAND terminal technologies as their independent exactness proofs allow. Use when asked to add Earth-system return flows, residual liquid water, water vapor, land-state accounts, forest or other natural land, emissions, wastewater, brine, backstop diagnostics, or an ENVIRONMENT accounting layer to models such as Zambia, Philippines, or Namibia, especially when edits must originate in the model JSON rather than generated data.txt files.
 ---
 
 # Add Environmental Accounting
@@ -58,7 +58,7 @@ Use raw resource-pool commodities for residual water. Do not sum both raw water 
 - **Marker commodities:** a produced commodity with no consumer or demand may be only a scenario/reporting marker. Do not create an environmental terminal for it without a physical interpretation.
 - **Missing targets:** distinguish intentional terminal output, capacity-only consumption, broken links, and genuine environmental residuals.
 
-### 4. Use two multimode terminals
+### 4. Use domain-specific multimode terminals
 
 Use this default architecture:
 
@@ -74,6 +74,13 @@ ENV_LAND
   mode 3: other land
   mode 4: barren/savannah
 ```
+
+Evaluate the exactness proof independently for each domain. A failed
+`ENV_WATER` proof does not block an exact `ENV_LAND`, and a failed `ENV_LAND`
+proof does not block an exact `ENV_WATER`. When only one domain passes, use a
+documented mixed architecture: add only the safe in-model terminal and keep
+the failed domain reporting-only. Never turn one domain's failure into an
+all-or-nothing decision for both terminals.
 
 Extend the mode dictionaries only for physically documented accounts such as wastewater, brine, cropland, built land, or water bodies. Keep the mapping stable and record it in technology descriptions and the accounting dictionary because MUIO commonly exposes numeric mode IDs without mode labels.
 
@@ -98,7 +105,11 @@ Use this proof only when:
 - every connected original technology has the same domain net coefficient in each active mode, so one technology-level UDC multiplier is exact; and
 - no omitted provenance, trade, demand, or capacity term can create an unrepresented residual.
 
-If any condition fails, stop and use reporting-only accounting or request authorization for a mode-aware model extension. Do not generate a plausible-looking but inexact multimode terminal.
+If any condition fails for domain `D`, stop the in-model implementation for
+that domain and use reporting-only accounting for `D`, or request
+authorization for a mode-aware model extension. Continue assessing the other
+domain independently. Do not generate a plausible-looking but inexact
+multimode terminal.
 
 When strict row-for-row result identity is required, prefer reporting-only accounts. Added solver variables or equalities can change the selected basis of a degenerate optimum even when objective and physical aggregates are unchanged.
 
@@ -111,12 +122,17 @@ Create a model-specific generator in the target model repository. It must:
 - support a dry run, reject unsafe/symlinked path relationships, and write through a temporary target followed by an atomic rename;
 - generate collision-free internal IDs;
 - add an `ENVIRONMENT` technology group;
-- add `ENV_WATER` and `ENV_LAND` as the only physical environmental terminal technologies;
+- add the safe subset of `ENV_WATER` and `ENV_LAND` as the only physical
+  environmental terminal technologies; if both domains pass, add both, and if
+  only one passes, omit the unsafe terminal and document its reporting-only
+  account;
 - assign one stable operating mode per documented water or land category;
 - append technologies, commodities, ratios, constraints, and complete default parameter rows across all years, timeslices, modes, and scenarios;
 - increase the global mode count when necessary and densify every mode-indexed JSON family expected by the host MUIO generator, including inactive default rows for pre-existing technologies;
 - put base values in the base scenario and preserve the model's null/inheritance convention in other scenarios;
-- derive the two aggregate balance coefficient maps from effective IAR/OAR data and every representable non-activity balance term rather than transcribing them;
+- derive each implemented domain's aggregate balance coefficient map from
+  effective IAR/OAR data and every representable non-activity balance term
+  rather than transcribing it;
 - reject source technologies whose domain coefficients differ by active mode when the host UDC is technology-level;
 - stop when one shared constraint cannot represent different effective saved-case combinations;
 - uniformly scale a zero-right-hand-side equality if coefficients are badly conditioned;
@@ -128,7 +144,7 @@ Set terminal capacity parameters only after reading the host solver equations. P
 
 Do not add a generic terminal named `ENVIRONMENT`. Use `ENV_WATER` and `ENV_LAND`, grouped under `ENVIRONMENT`, and preserve their categories as operating modes.
 
-If an older derived case already has one terminal per environmental category, migrate it through the JSON generator: preserve the physical accounting commodities, map each one to the documented mode of `ENV_WATER` or `ENV_LAND`, and remove only the superseded terminal technologies and their terminal-specific parameter rows. Rebuild the two aggregate constraints from the effective source ratios; do not reuse the old per-terminal coefficient maps without proving the aggregate identities.
+If an older derived case already has one terminal per environmental category, migrate it through the JSON generator: preserve the physical accounting commodities, map each one to the documented mode of `ENV_WATER` or `ENV_LAND`, and remove only the superseded terminal technologies and their terminal-specific parameter rows. Rebuild each implemented domain's aggregate constraint from the effective source ratios; do not reuse the old per-terminal coefficient maps without proving the aggregate identities.
 
 When replacing an existing derived case, preserve its results, validation reports, model-fix documents, and a recoverable backup until the promoted case passes the full generation, matrix, solve, closure, and regression chain. Use timestamped or uniquely labeled validation reports; do not overwrite evidence from an earlier baseline or disposable run.
 
@@ -174,9 +190,15 @@ Measure runtime separately from correctness. Compare generated matrix or LP size
 
 ### 8. Verify visualization and hand off
 
-- In the Dynamic Graph, confirm each physical source connects through its account commodity to `ENV_WATER` or `ENV_LAND` and that original service links remain.
+- In the Dynamic Graph, confirm each in-model domain's physical source
+  connects through its account commodity to the implemented `ENV_WATER` or
+  `ENV_LAND` terminal and that original service links remain. Confirm that a
+  reporting-only domain has no misleading terminal.
 - Resolve result keys and view-file locations from the host `Variables.json` and viewer-generation code; do not infer them from abbreviations. In forks using the common mapping, `Total Annual Technology Activity By Mode` is `TATABM` in `view/RYTM.json`, while `TTMPA` is model-period activity and is not the annual Pivot.
-- In Pivot, verify `ENV_WATER` and `ENV_LAND` under `Total Annual Technology Activity By Mode`, include `Mo Id`, and check every mode against the documented category mapping.
+- In Pivot, verify each implemented `ENV_WATER` or `ENV_LAND` terminal under
+  `Total Annual Technology Activity By Mode`, include `Mo Id`, and check every
+  mode against the documented category mapping. View reporting-only domains
+  in their generated ledger instead.
 - Explain constants, discontinuities, dummy activity, and any scenario invariance from source equations—not from chart appearance alone.
 - Deliver the generator, derived case location, validation results, accounting dictionary, limitations, and exact viewing instructions.
 
@@ -184,11 +206,13 @@ Measure runtime separately from correctness. Compare generated matrix or LP size
 
 Do not claim completion unless:
 
-- all changes originate in JSON or a generator that writes JSON;
+- all in-model changes originate in JSON or a generator that writes JSON;
 - every configured scenario solves;
 - environmental identities close within solver/result precision;
 - the generated case has no superseded category-specific environmental terminal technologies;
-- `ENV_WATER` and `ENV_LAND` mode mappings and units are documented and validated;
+- every implemented terminal's mode mapping and units are documented and
+  validated, and every omitted unsafe domain has a documented reporting-only
+  mapping and failed-proof evidence;
 - original physical services are preserved;
 - intentionally excluded pathways are proven unchanged and absent from the accounting additions;
 - regression differences are quantified honestly;

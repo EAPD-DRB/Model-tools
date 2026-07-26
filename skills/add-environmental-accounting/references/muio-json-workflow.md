@@ -57,9 +57,12 @@ When migrating an older environmental-accounting case, treat category-specific t
 
 Adding a technology or commodity to `genData.json` is insufficient. Append complete rows for every parameter family that MUIO expects.
 
-For terminal technologies:
+For each terminal technology whose domain independently passes the exactness
+proof:
 
-- add exactly `ENV_WATER` and `ENV_LAND`, with one documented operating mode per category;
+- add the safe subset of `ENV_WATER` and `ENV_LAND`, with one documented
+  operating mode per category; add both when both domains pass, and never add
+  a terminal for a failed domain merely to preserve symmetry;
 - require every input to a given terminal to use the same physical unit;
 - set exactly one IAR of 1 for each active terminal mode and no terminal output;
 - use zero capital, fixed, and variable costs;
@@ -68,7 +71,7 @@ For terminal technologies:
 - prevent investment when residual accounting capacity is intended;
 - populate every year, timeslice, mode, and scenario record expected by the host model.
 
-Increase the global operating-mode count if either terminal needs a higher mode ID than the source model provides. Inspect the host generation loops and densify every mode-indexed JSON family they traverse—not only rows belonging to the new terminals. Common examples are `RYTM.json`, `RYTCM.json`, `RYTEM.json`, and any storage-mode table. Use the host parameter defaults for inactive base rows and its normal `null` convention for inheriting scenarios. After preprocessing, verify `MODEperTECHNOLOGY`: every original technology retains exactly its intended modes, while `ENV_WATER` and `ENV_LAND` contain only their documented modes.
+Increase the global operating-mode count if an implemented terminal needs a higher mode ID than the source model provides. Inspect the host generation loops and densify every mode-indexed JSON family they traverse—not only rows belonging to the new terminals. Common examples are `RYTM.json`, `RYTCM.json`, `RYTEM.json`, and any storage-mode table. Use the host parameter defaults for inactive base rows and its normal `null` convention for inheriting scenarios. After preprocessing, verify `MODEperTECHNOLOGY`: every original technology retains exactly its intended modes, while each implemented `ENV_WATER` or `ENV_LAND` terminal contains only its documented modes.
 
 Derive capacity settings from the host equations: the maximum feasible terminal activity must remain below residual capacity multiplied by capacity-to-activity conversion and effective availability/capacity factors. Set investment limits to zero when the terminal is not an investment option, and keep annual/model-period activity bounds nonbinding unless implementing a proven-fixed account. If no finite defensible upper envelope exists, stop or use reporting-only accounting.
 
@@ -154,7 +157,7 @@ Generated artifacts may include `data.txt`, `data_processed.txt`, a linear-progr
 
 Do not infer a result key or view-file path from an abbreviation. Read the host `Variables.json` and result-viewer generation code. In forks using the common mapping, `Total Annual Technology Activity By Mode` is stored as `TATABM` in `view/RYTM.json`; `TTMPA` denotes model-period activity and is not a substitute for an annual-by-mode Pivot. Verify the mapping in the target fork before asserting that visualization output exists.
 
-Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technologies must retain their source modes; `ENV_WATER` and `ENV_LAND` must expose only their documented category modes. Treat a missing, duplicated, or unintended mode as a generation failure.
+Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technologies must retain their source modes; each implemented `ENV_WATER` or `ENV_LAND` terminal must expose only its documented category modes. Treat a missing, duplicated, or unintended mode as a generation failure.
 
 ## 7. Validation
 
@@ -164,7 +167,10 @@ Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technolog
 - new IDs and names are unique;
 - all metadata links reference defined IDs;
 - all parameter families contain every new technology/commodity/constraint for every scenario;
-- exactly two physical environmental terminal technologies exist: `ENV_WATER` and `ENV_LAND`;
+- the physical environmental terminal set exactly matches the domains that
+  independently passed the proof; it is `{ENV_WATER, ENV_LAND}` when both
+  pass, a one-terminal subset in a mixed architecture, or empty when both are
+  reporting-only;
 - no superseded category-specific terminal technologies remain;
 - terminal mode dictionaries, input commodities, descriptions, and same-unit requirements agree;
 - every terminal mode has exactly one IAR of 1 and no output;
@@ -213,8 +219,13 @@ Assess runtime separately. Compare matrix or LP dimensions and repeated solve ti
 
 ### Results interface
 
-- In the Dynamic Graph, verify each mapped commodity feeds the correct mode of `ENV_WATER` or `ENV_LAND` while the original service links remain.
-- In Pivot, select `Total Annual Technology Activity By Mode`, filter `Tech` to `ENV_WATER` and `ENV_LAND`, include `Mo Id`, and interpret the numeric modes with the documented dictionaries.
+- In the Dynamic Graph, verify each in-model mapped commodity feeds the
+  correct implemented terminal mode while the original service links remain;
+  confirm no terminal exists for a reporting-only domain.
+- In Pivot, select `Total Annual Technology Activity By Mode`, filter `Tech`
+  to the implemented `ENV_WATER` and/or `ENV_LAND` terminal, include `Mo Id`,
+  and interpret the numeric modes with the documented dictionaries. Use the
+  generated ledger for reporting-only domains.
 - For water, report vapor separately from the sum of useful liquid-water modes. Never interpret total `ENV_WATER` activity as useful liquid water.
 
 Primary references:
