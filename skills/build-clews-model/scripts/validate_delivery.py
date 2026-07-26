@@ -10,16 +10,31 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+from validate_provenance import validate as validate_provenance
+
 
 REQUIRED_FILES = (
-    "DATA_SOURCE_REGISTER.md",
-    "MODEL_CARD.md",
-    "CALIBRATION_HANDOFF.md",
-    "MUIO_IMPORT.md",
+    "README.md",
+    "config/upstream_versions.json",
+    "config/baseline_manifest.json",
+    "data_sources/SOURCES.csv",
+    "data_sources/DATA_SOURCES.md",
+    "data_sources/ASSUMPTIONS.csv",
+    "data_sources/CALCULATIONS.csv",
+    "data_sources/MODEL_DATA_MAP.csv",
+    "documentation/CURRENT_MODEL.md",
+    "documentation/MODEL_STRUCTURE.md",
+    "documentation/KNOWN_LIMITATIONS.md",
+    "documentation/HISTORY.md",
+    "documentation/CALIBRATION_HANDOFF.md",
+    "documentation/MUIO_IMPORT.md",
+    "documentation/REPRODUCE.md",
     "diagnostics/no_forcing_audit.json",
     "diagnostics/validation_summary.json",
     "diagnostics/resource_estimate.json",
     "scripts/audit_no_forcing.py",
+    "scripts/freeze_raw_baseline.py",
+    "scripts/validate_provenance.py",
 )
 
 REQUIRED_STATUS_KEYS = ("upstream_raw", "muio_import", "muio_final")
@@ -50,7 +65,19 @@ def find_zip(root: Path, supplied: Path | None) -> tuple[Path | None, str | None
     if supplied:
         candidate = supplied.expanduser().resolve()
         return candidate, None
-    candidates = sorted(root.rglob("*.zip"))
+    manifest_path = root / "config" / "baseline_manifest.json"
+    if manifest_path.is_file():
+        try:
+            manifest = read_json(manifest_path)
+            record = manifest.get("muio_archive")
+            if isinstance(record, dict) and record.get("path"):
+                candidate = Path(str(record["path"])).expanduser()
+                if not candidate.is_absolute():
+                    candidate = root / candidate
+                return candidate.resolve(), None
+        except ValueError:
+            pass
+    candidates = sorted((root / "muio").glob("*.zip"))
     if len(candidates) == 1:
         return candidates[0], None
     if not candidates:
@@ -78,6 +105,14 @@ def main() -> int:
 
     if not root.is_dir():
         raise SystemExit(f"Package root does not exist: {root}")
+
+    provenance = validate_provenance(root, "delivery")
+    failures.extend(
+        f"Provenance: {failure}" for failure in provenance.get("failures", [])
+    )
+    warnings.extend(
+        f"Provenance: {warning}" for warning in provenance.get("warnings", [])
+    )
 
     for relative in REQUIRED_FILES:
         if not (root / relative).is_file():
@@ -139,7 +174,7 @@ def main() -> int:
         except ValueError as exc:
             failures.append(str(exc))
 
-    import_doc = root / "MUIO_IMPORT.md"
+    import_doc = root / "documentation/MUIO_IMPORT.md"
     if import_doc.is_file():
         text = import_doc.read_text(encoding="utf-8").lower()
         missing_terms = [term for term in REPRODUCTION_TERMS if term not in text]
@@ -195,6 +230,7 @@ def main() -> int:
         "warning_count": len(warnings),
         "failures": failures,
         "warnings": warnings,
+        "provenance": provenance,
     }
     rendered = json.dumps(report, indent=2)
     if args.output:

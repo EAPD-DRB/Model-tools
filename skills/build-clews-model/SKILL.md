@@ -1,6 +1,6 @@
 ---
 name: build-clews-model
-description: Build from scratch a technically valid, uncalibrated OSeMOSYS/CLEWs whole-country full-nexus model with the upstream CLEWs Global workflow, then import the complete country model, repair, verify, solve, and package it as a usable MUIO case. Use when creating a new country CLEWs model; adapting CLEWs Global or GeoCLEWs; preparing country configuration and geospatial inputs; documenting exact source choices and crop proxies; converting complete CLEWs CSV sets through otoole and MUIO; checking importer capabilities, temporal mappings, input and result parity, and resource requirements; handling unsupported reserve-margin tags with a documented UDC workaround; or delivering a solved portable MUIO country case for later calibration. Never tune parameters or impose constraints to reproduce historical observations during this build stage.
+description: Build from scratch a technically valid, uncalibrated OSeMOSYS/CLEWs whole-country full-nexus model with the upstream CLEWs Global workflow, then import, repair, verify, solve, and package it as a usable MUIO case with standardized source, assumption, calculation, model-map, version-pin, history, and frozen-baseline traceability. Use when creating a new country CLEWs model; adapting CLEWs Global or GeoCLEWs; preparing country configuration and geospatial inputs; documenting exact sources and crop proxies; converting complete CLEWs CSV sets through otoole and MUIO; checking importer capabilities, temporal mappings, parity, provenance coverage, and resource requirements; handling unsupported reserve-margin tags with a documented UDC workaround; or delivering a solved portable MUIO country case for later calibration. Never tune parameters or impose constraints to reproduce historical observations during this build stage.
 ---
 
 # Build a CLEWs country model through MUIO
@@ -9,7 +9,9 @@ Create, in one continuous workflow:
 
 1. a reproducible raw CLEWs Global country model; and
 2. a solved, portable MUIO case representing that model as faithfully as the
-   installed MUIO version permits.
+   installed MUIO version permits; and
+3. a machine-validated provenance package following the standard country
+   layout.
 
 Preserve GeoCLEWs spatial processing, OSeMOSYS Global energy inputs, `clewsy`
 nexus integration, the upstream OSeMOSYS formulation, and an open solver.
@@ -17,9 +19,9 @@ Treat MUIO import as a separate representation and verification phase. Do not
 describe MUIO conversion fixes or formulation workarounds as country
 calibration.
 
-The authoritative deliverables are the complete solved upstream country model
-and its complete MUIO representation. Keep both reusable for later, separately
-scoped modelling work.
+The authoritative deliverables are the complete solved upstream country model,
+its complete MUIO representation, and their linked provenance and frozen raw
+baseline. Keep them reusable for later, separately scoped modelling work.
 
 ## Non-negotiable boundary
 
@@ -54,6 +56,8 @@ lock historical capacity, activity, generation, land, water, or emissions.
 
 Read:
 
+- [references/provenance-and-layout.md](references/provenance-and-layout.md)
+  before creating or modifying the country package;
 - [references/country-adaptations.md](references/country-adaptations.md) before
   changing country structure, technology applicability, time definitions, or
   crop mappings;
@@ -78,6 +82,11 @@ Read:
 ## Required workflow
 
 1. **Define the build**
+   - Initialize the standard package before acquiring or transforming data:
+     `python scripts/init_country_package.py PACKAGE_ROOT --country COUNTRY
+     --iso3 ISO`.
+   - Run `python scripts/validate_provenance.py PACKAGE_ROOT --stage scaffold`
+     and resolve every failure.
    - Record country, ISO3 code, intended horizon, administrative resolution,
      climate pathway, requested use, CLEWs Global location, and MUIO location.
    - When the user supplies only the country, proceed with documented
@@ -92,12 +101,15 @@ Read:
      complete and explained MUIO import, and a solved portable MUIO case.
 
 2. **Pin and inspect both codebases**
-   - Clone CLEWs Global recursively and record the root and submodule commits.
-   - Locate or obtain MUIO and record its commit/version.
+   - Clone CLEWs Global recursively and record the root and every submodule
+     repository and full commit in `config/upstream_versions.json`.
+   - Locate or obtain MUIO and record its commit/version plus checksums of the
+     importer, parameter registry, and active formulation.
    - Read the upstream README, configuration, Snakefile, environment files,
      licenses, otoole configuration, MUIO importer, MUIO parameter registry,
      active MUIO formulation, and expected input/output paths.
    - Preserve an untouched upstream reference or reproducible clean checkout.
+     Do not archive the whole checkout when the pins reproduce it.
    - Record checksums of shared MUIO importer/formulation files that the
      country workflow must not modify.
    - Run a dependency preflight for Python, Snakemake, otoole, geospatial
@@ -108,15 +120,25 @@ Read:
      changes.
    - Never copy a previously calibrated country model as the hidden starting
      point.
+   - Record exact editions and checksums for actual downloaded input files;
+     code pins do not freeze data behind mutable URLs.
 
 3. **Prepare authoritative structural inputs**
    - Obtain country boundaries and required administrative layers.
-   - Create `DATA_SOURCE_REGISTER.md` from the bundled template. For every
-     external dataset, record provider, exact product, edition, reference
-     year/period/scenario, variable, unit, geography, model use, transformation,
-     quality flag, proxy, source URL, license, and a possible national
-     replacement. Raw-data copies and byte-level checksums are not required
-     unless reproducibility or licensing separately requires them.
+   - Populate `data_sources/SOURCES.csv`. For every external dataset, record
+     provider, exact product, edition, reference period/scenario, variable,
+     unit, geography, model use, selection, transformation, quality, proxy,
+     URL, license, national replacement, evidence path, checksum, and status.
+   - Record every modeller choice in `data_sources/ASSUMPTIONS.csv`, every
+     implemented transformation in `data_sources/CALCULATIONS.csv`, and every
+     active parameter or coherent parameter family in
+     `data_sources/MODEL_DATA_MAP.csv`.
+   - Retain permitted extracts under `data_sources/evidence/` and require their
+     checksums. For restricted or copyrighted data, retain metadata, access
+     conditions, extraction instructions, and an authorized checksum without
+     redistributing the source.
+   - Register unavailable lineage explicitly as `documentation_gap`; never
+     leave an active value silently undocumented.
    - Include a government-review table identifying consequential source and
      proxy choices, the agency that could validate them, and the parameters
      that would change if a better national source is supplied.
@@ -130,8 +152,11 @@ Read:
    - Set country identifiers, nodes, horizon, seasons, dayparts, climate
      pathway, clustering resolution, projections, trade topology, and
      structurally applicable technologies.
-   - Create `MODEL_CARD.md` from the bundled template and make each
-     consequential choice explicit.
+   - Complete `documentation/CURRENT_MODEL.md`,
+     `documentation/MODEL_STRUCTURE.md`, and
+     `documentation/KNOWN_LIMITATIONS.md`; make each consequential choice
+     explicit and link it through the provenance ledgers.
+   - Add a dated record to `documentation/HISTORY.md`.
 
 5. **Run preflights before the expensive workflow**
    - Inspect the raster cache for stale country/crop/scenario files, zero-byte
@@ -154,6 +179,8 @@ Read:
      and pass after it. Cover the applicable failure class listed in
      `references/technical-corrections.md`.
    - Retain the patch/diff, fixture, command, and before/after result.
+   - Store revision-specific changes under `patches/` and map every
+     parameter-affecting change through the provenance ledgers.
    - Prove that the correction addresses software behavior, not historical fit.
 
 7. **Run the native workflow**
@@ -171,6 +198,8 @@ Read:
      duplicate proxy rasters and explicit/aggregate double counting.
    - Build OSeMOSYS Global inputs.
    - Integrate the full model with `clewsy`.
+   - Update `MODEL_DATA_MAP.csv` as files and parameter families are generated;
+     do not postpone coverage mapping until delivery.
    - Convert the data, generate the optimization problem, solve it, and export
      results using the upstream workflow and supported tools.
    - Stop on non-zero subprocess status. Never continue from a partially failed
@@ -188,34 +217,37 @@ Read:
      Do not suppress them with historical constraints.
    - Compare with observations only to create a transparent gap table. Mark
      every comparison as **diagnostic—not fitted**.
+   - Run `python scripts/validate_provenance.py PACKAGE_ROOT --stage build`.
+     Require unique IDs, resolved links, mapped active records, matching
+     evidence checksums, full code pins, and provenance coverage for every
+     populated model input.
 
 9. **Package the upstream raw model**
    - Include the pinned commits, country configuration, generated raw inputs,
      results, geospatial outputs, technical patches, source manifest, solver
      status, technical QA, model card, and reproduction commands.
-   - Include `DATA_SOURCE_REGISTER.md`, `MODEL_CARD.md`, and
-     `CALIBRATION_HANDOFF.md` created from the bundled templates. The
-     calibration handoff must list historical datasets, mismatches, suspected
-     drivers, and candidate future constraints. Apply none of them.
+   - Complete all scaffolded documentation and ledgers. The calibration
+     handoff must list historical datasets, mismatches, suspected drivers, and
+     candidate future parameters. Apply none of them.
    - Preserve a machine-readable no-forcing audit.
 
 10. **Build the MUIO capability inventory and import workbook**
-   - Create a capability inventory for every populated source parameter. Prove
+    - Create a capability inventory for every populated source parameter. Prove
      registration, JSON storage mapping, import/export handling, active
      formulation declaration, and an equation that uses it.
-   - Test the installed workbook sheet aliases before the full import. Account
+    - Test the installed workbook sheet aliases before the full import. Account
      for Excel's 31-character worksheet-name limit and fail on an unrecognized
      truncated name.
-   - Convert the complete CLEWs CSV input folder to Excel using otoole and the
+    - Convert the complete CLEWs CSV input folder to Excel using otoole and the
      matching CLEWs/otoole configuration.
-   - Add MUIO-required `TECHGROUP` definitions and assign every technology.
+    - Add MUIO-required `TECHGROUP` definitions and assign every technology.
      Grouping is interface metadata and must not alter parameters.
-   - Add deterministic time-set descriptions.
-   - If CLEWs Global supplies no `DiscountRate` row, insert an explicit
+    - Add deterministic time-set descriptions.
+    - If CLEWs Global supplies no `DiscountRate` row, insert an explicit
      `GLOBAL, 0.05` fallback and document it. Preserve any supplied value.
-   - Omit empty optional parameter sheets when the installed importer
+    - Omit empty optional parameter sheets when the installed importer
      misinterprets an empty sheet as populated.
-   - Save the untouched otoole workbook and the prepared MUIO workbook.
+    - Save the untouched otoole workbook and the prepared MUIO workbook.
 
 11. **Import the complete country model without modifying shared MUIO code**
     - Use a country-local one-off import driver around MUIO's existing
@@ -223,7 +255,9 @@ Read:
     - Hash the importer before and after and fail if it changes.
     - Refuse to overwrite an existing case silently.
     - Store every import helper inside the country package so the workflow is
-      portable to another laptop.
+     portable to another laptop.
+    - Add a short README to the active MUIO case pointing to the canonical
+     country package; do not duplicate the ledgers inside the runtime case.
     - Do not change `ImportTemplate.py`, `Parameters.json`, or the shared
       OSeMOSYS formulation merely to accommodate this country.
 
@@ -302,16 +336,19 @@ Read:
       respecting MUIO's backup layout.
     - Exclude regenerable LP/MPS files from the portable archive unless the user
       explicitly requests them. Retain the generation command and solver log.
-    - Include the prepared workbook, otoole config, one-off scripts, backups,
-      parity reports, solve status, and `MUIO_IMPORT.md` in the country package.
-    - Include `DATA_SOURCE_REGISTER.md`, `MODEL_CARD.md`,
-      `CALIBRATION_HANDOFF.md`, `MUIO_IMPORT.md`,
-      `diagnostics/no_forcing_audit.json`,
-      `diagnostics/validation_summary.json`, and
-      `diagnostics/resource_estimate.json`.
-    - Run `python scripts/validate_delivery.py` against the package. Verify the
-      ZIP, required artifact names, machine-readable status separation, and
-      exact reproduction, check, update, solve, and restore commands.
+    - Include the prepared workbook, otoole config, one-off scripts, parity
+     reports, solve status, canonical ledgers, current documentation, and
+     diagnostics in the country package.
+    - Run `python scripts/validate_provenance.py PACKAGE_ROOT --stage build`.
+    - Freeze one source/build archive and register the existing portable MUIO
+     ZIP with `python scripts/freeze_raw_baseline.py PACKAGE_ROOT
+     --muio-archive muio/COUNTRY_raw_MUIO.zip`. Do not make a duplicate MUIO
+     backup.
+    - Run `python scripts/validate_provenance.py PACKAGE_ROOT --stage delivery`
+     and then `python scripts/validate_delivery.py PACKAGE_ROOT`.
+    - Verify provenance coverage, evidence and baseline checksums, archive
+     integrity, machine-readable status separation, and exact reproduction,
+     check, update, solve, package, and restore commands.
 
 ## Permitted changes
 
@@ -348,7 +385,16 @@ Do not call the task complete until:
 - nexus and technical integrity checks pass;
 - the no-forcing audit has zero failures;
 - all country corrections and adaptations are documented;
-- the exact source register and government-review questions are complete;
+- the exact source catalogue and government-review questions are complete;
+- the standard package scaffold and canonical current/history separation are
+  complete;
+- every source, assumption, calculation, and model-map ID is unique and every
+  cross-reference resolves;
+- every active source, assumption, and calculation is mapped;
+- every populated raw input and the active country configuration has
+  provenance coverage;
+- every retained local evidence file matches its recorded checksum;
+- missing lineage is registered as a documented gap rather than left blank;
 - the geospatial cache, coverage, multipart/island, missing-value, and area
   preflights pass;
 - each applied technical correction has a retained regression fixture;
@@ -371,6 +417,10 @@ Do not call the task complete until:
 - parity differences are explained rather than hidden;
 - actual resource use is recorded against the preflight estimate;
 - the portable MUIO ZIP passes an archive integrity check;
+- the frozen raw source archive and portable MUIO ZIP match
+  `config/baseline_manifest.json`;
+- the current raw input and result tree hashes still match the frozen baseline;
+- `python scripts/validate_provenance.py PACKAGE_ROOT --stage delivery` passes;
 - `python scripts/validate_delivery.py` passes with every required handoff
   artifact; and
 - shared MUIO code checksums are unchanged unless the user separately
@@ -386,7 +436,10 @@ State:
 > representation repairs. No parameters or constraints were introduced to
 > force agreement with historical outcomes. Any reserve-margin UDC is a
 > labelled workaround for unsupported native tags, not calibration. Historical
-> calibration and policy constraints are separate later stages.
+> calibration and policy constraints are separate later stages. Active inputs
+> and modelling choices are linked through the package source, assumption,
+> calculation, and model-map ledgers; documented provenance does not by itself
+> prove that a source is accurate or fit for a particular boundary.
 
 Report solver success as technical validity only. Never present it as evidence
 of country calibration.

@@ -96,4 +96,4 @@ Store these independently in `diagnostics/validation_summary.json`:
 ```
 
 Do not overwrite an earlier failure with a later success. Explain unsupported,
-transformed, and workaround rows in `MUIO_IMPORT.md`.
+transformed, and workaround rows in `documentation/MUIO_IMPORT.md`.

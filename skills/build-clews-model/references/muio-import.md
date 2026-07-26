@@ -183,7 +183,7 @@ The country handoff must include:
 - resource estimate and actual measurements;
 - input and result parity reports;
 - pre-workaround and final solve statuses;
-- `MUIO_IMPORT.md`;
+- `documentation/MUIO_IMPORT.md`;
 - portable MUIO case ZIP.
 
 Use MUIO's backup directory layout. Omit files that MUIO's own backup omits,

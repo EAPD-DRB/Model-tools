@@ -65,6 +65,19 @@ Include:
 - regression fixtures for applied corrections; and
 - version/checksum records.
 
+After all raw checks pass, run `scripts/freeze_raw_baseline.py`. Retain one
+source/build archive and the existing portable raw MUIO ZIP. Do not make a
+second identical MUIO copy. The source archive excludes portable MUIO ZIPs,
+LP/MPS files, caches, its own backups, and its manifest.
+
+Do not archive complete upstream Git checkouts when pinned commits reproduce
+them. Do not redistribute restricted datasets. Record exact editions,
+retrieval instructions, and checksums for actual input files because code pins
+alone do not freeze mutable downloads.
+
+Require `config/baseline_manifest.json` to match both artifacts and the current
+raw input/result tree hashes.
+
 Exclude regenerable LP/MPS files from the portable ZIP by default. Document the
 command that recreates them. Never exclude authoritative inputs, solver status,
 or evidence required to explain the representation.
