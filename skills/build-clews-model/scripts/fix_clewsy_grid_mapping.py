@@ -43,7 +43,9 @@ FIXED = '''    grid_regions = list(dict.fromkeys(region_codes.values()))
     for i in data["EndUseFuels"]:
         fuel_list = data["EndUseFuels"][i]
         for grid_region in grid_regions:
-            fuel_list.append(f"ELC{grid_region}02")
+            electricity = f"ELC{grid_region}02"
+            if electricity not in fuel_list:
+                fuel_list.append(electricity)
         data["EndUseFuels"][i] = fuel_list
     # OSeMOSYS Global already supplies the PWRTRN technology and its
     # ELC<grid>01 -> ELC<grid>02 ratios. Adding it here would duplicate them.
@@ -84,7 +86,7 @@ def self_test() -> None:
             corrected = path.read_text(encoding="utf-8")
             assert source not in corrected
             assert FIXED in corrected
-            assert 'f"ELC{grid_region}02"' in corrected
+            assert 'electricity = f"ELC{grid_region}02"' in corrected
             assert 'data["TransformationTechnologies"] = []' in corrected
             assert fix(path, check_only=True) == "already fixed"
 
