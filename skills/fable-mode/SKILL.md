@@ -1,6 +1,6 @@
 ---
 name: fable-mode
-description: Use PROACTIVELY the moment you notice a task has many layers - multiple dependent steps, unknowns that could change the approach, debugging where the first theory might be wrong, or anything that needs verification before handoff. Also use when a task keeps failing or stalling, before any model run / long computation / multi-repo task, or when the user says "fable mode", "fable time", "think like Fable", "use the Fable skill", "use the Fable method", "work like Fable", "slow down and do this right", or "think this through first". Loads Fable 5's working discipline (the five-gate task loop plus standing habits) so any session, especially one running on Opus 4.8 or Sonnet 5, applies it.
+description: Use PROACTIVELY the moment you notice a task has many layers - multiple dependent steps, unknowns that could change the approach, debugging where the first theory might be wrong, or anything that needs verification before handoff. Also use when a task keeps failing or stalling, before any model run / long computation / multi-repo task, or when the user says "fable mode", "fable time", "think like Fable", "use the Fable skill", "use the Fable method", "work like Fable", "slow down and do this right", or "think this through first". Loads Fable 5's working discipline (the five-gate task loop plus standing habits) so any session, especially one running on Opus 5 or Sonnet 5, applies it.
 ---
 
 # The Fable Method
@@ -150,10 +150,16 @@ Scores are cost / intelligence / taste, so routing stops being guesswork:
 
 | Model     | Cost | Intelligence | Taste | Route it… |
 |-----------|-----:|-------------:|------:|-----------|
-| Fable 5   |    2 |           10 |    10 | orchestrate, plan, verify, write the judgment files — never mechanical execution |
-| Opus 4.8  |    5 |            8 |     8 | **anything a human sees, big decisions** — user-facing prose/reports, design calls, adversarial review |
-| Sonnet 5  |    8 |            6 |     6 | **standard work from a clear spec** — implement to a written plan, run a defined checklist, mechanical refactors |
+| Fable 5   |    3 |           10 |    10 | orchestrate, plan, verify, write the judgment files — never mechanical execution |
+| Opus 5    |    5 |          9.5 |     9 | **anything a human sees, big decisions** — user-facing prose/reports, design calls, adversarial review. Near benchmark parity with Fable on standard evals at half the price — route heavy design/review work down freely; Fable keeps the edge on the longest-horizon work |
+| Sonnet 5  |    7 |            7 |     6 | **standard work from a clear spec** — implement to a written plan, run a defined checklist, mechanical refactors |
 | Haiku 4.5 |   10 |            4 |     3 | **scoped grunt work, always with grep** — searches, inventories, file sweeps with an exact target |
+
+Scores calibrated July 2026. Cost is log-scaled from list output pricing ($/MTok: Fable 50, Opus
+25, Sonnet 15 — $10 intro through 2026-08, Haiku 5). Intelligence is anchored to published
+benchmarks (SWE-bench Verified: Opus 5 96.0, Fable 5 95, Sonnet 5 85.2, Haiku 4.5 73.3; GPQA
+Diamond: Opus 5 93.2; aggregate rankings place Opus 5 and Fable 5 within ~3 points). Taste is
+judgment, not a benchmark. Re-anchor at each model release.
 
 Tiebreaker between tiers: would a wrong answer reach the user or gate a big decision? Yes → route
 up. Pass the tier explicitly (`model: "opus" | "sonnet" | "haiku"`) on every Agent/Workflow call.
