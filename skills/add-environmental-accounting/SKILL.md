@@ -1,6 +1,6 @@
 ---
 name: add-environmental-accounting
-description: Design, implement, regenerate, and validate environmental accounting for a MUIO/OSeMOSYS CLEWS model using one or both multimode ENV_WATER and ENV_LAND terminal technologies as their independent exactness proofs allow. Use when asked to add Earth-system return flows, residual liquid water, water vapor, land-state accounts, forest or other natural land, emissions, wastewater, brine, backstop diagnostics, or an ENVIRONMENT accounting layer to models such as Zambia, Philippines, or Namibia, especially when edits must originate in the model JSON rather than generated data.txt files.
+description: Design, implement, regenerate, and validate environmental accounting for a MUIO/OSeMOSYS CLEWS model using exact multimode ENV_WATER and ENV_LAND terminals where their independent proofs allow, reporting ledgers where they do not, and an explicitly authorized diagnostic ENV_WATER plus post-solve Pivot publication when a visible water terminal is required despite a failed exactness proof. Use when asked to add Earth-system return flows, residual liquid water, water vapor, land-state accounts, forest or other natural land, emissions, wastewater, brine, backstop diagnostics, or an ENVIRONMENT accounting layer to models such as Zambia, Philippines, or Namibia.
 ---
 
 # Add Environmental Accounting
@@ -10,7 +10,12 @@ Add a transparent accounting layer without changing the modeled economy or silen
 ## Non-negotiable rules
 
 1. Work only on the model named by the user. Keep its source case untouched unless the user explicitly requests an in-place edit.
-2. Treat case JSON as source. Never hand-edit `data.txt`, solver output, result CSV files, or Pivot files. Regenerate them with that repository's MUIO code.
+2. Treat case JSON as source. Never hand-edit `data.txt`, solver output,
+   result CSV files, or Pivot files. Regenerate them with that repository's
+   MUIO code. The only Pivot exception is an explicitly authorized,
+   reproducible post-solve publisher for a separately named unforced
+   diagnostic terminal; it must preserve raw solver artifacts and follow the
+   safeguards below.
 3. Preserve every existing physical input, output, cost, demand, and policy connection. Add parallel accounting outputs when a service must continue downstream.
 4. Separate physical environmental flows from dummy variables, deficit/backstop supply, and reporting markers.
 5. Do not infer units, conversion factors, land suitability, wastewater return rates, desalination recovery, or emissions factors. Mark unavailable accounts as data gaps.
@@ -111,6 +116,28 @@ authorization for a mode-aware model extension. Continue assessing the other
 domain independently. Do not generate a plausible-looking but inexact
 multimode terminal.
 
+An explicitly user-requested experiment may add an **unforced diagnostic**
+terminal for a failed domain, but only in a separate, clearly named diagnostic
+case. Give it no forcing UDC, no demand, no output, zero cost, and finite
+nonbinding bounds. Keep the external production-minus-ordinary-use ledger
+authoritative, exclude the diagnostic terminal's own consumption from that
+reference, and reconcile reference, terminal activity, gap, and coverage for
+every run, region, year, and mode. Treat `FULL`, `PARTIAL`, `ZERO`, and `EMPTY`
+as empirical solver outcomes—not acceptance states—and never promote the
+diagnostic terminal as exact accounting. Follow the detailed safeguards in
+[references/muio-json-workflow.md](references/muio-json-workflow.md).
+
+If the user also requires that terminal to remain visible in the Dynamic
+Graph while Results Pivot shows the authoritative reference, create a
+model-specific post-solve publisher. Update only the diagnostic terminal's
+linked generated view rows, back up the original solver-generated views,
+preserve and hash every raw solver result, publish from the independent
+production-minus-ordinary-use calculation, and label the result as
+postprocessed reporting rather than optimizer output. Make publication
+atomic, validated, and repeatable after every solve. Never apply this
+exception to an ordinary production case or use it to conceal a failed
+solve.
+
 When strict row-for-row result identity is required, prefer reporting-only accounts. Added solver variables or equalities can change the selected basis of a degenerate optimum even when objective and physical aggregates are unchanged.
 
 ### 5. Implement through a reproducible JSON generator
@@ -125,7 +152,8 @@ Create a model-specific generator in the target model repository. It must:
 - add the safe subset of `ENV_WATER` and `ENV_LAND` as the only physical
   environmental terminal technologies; if both domains pass, add both, and if
   only one passes, omit the unsafe terminal and document its reporting-only
-  account;
+  account, except in the separately named unforced diagnostic experiment
+  described above;
 - assign one stable operating mode per documented water or land category;
 - append technologies, commodities, ratios, constraints, and complete default parameter rows across all years, timeslices, modes, and scenarios;
 - increase the global mode count when necessary and densify every mode-indexed JSON family expected by the host MUIO generator, including inactive default rows for pre-existing technologies;
@@ -156,6 +184,9 @@ When replacing an existing derived case, preserve its results, validation report
 - Let MUIO regenerate `data.txt`, processed data, linear program, solver output, CSV results, and Pivot metadata.
 - Require every case to solve optimally before accepting the accounting layer.
 - Parse and retain explicit solver status, version, and run metadata.
+- For an authorized diagnostic Pivot publication, run the publisher only
+  after MUIO finishes all required view generation. Use a unique evidence
+  label and rerun it after every subsequent solve.
 
 Do not guess command names. Inspect the host repository and call its actual classes or scripts.
 
@@ -193,12 +224,17 @@ Measure runtime separately from correctness. Compare generated matrix or LP size
 - In the Dynamic Graph, confirm each in-model domain's physical source
   connects through its account commodity to the implemented `ENV_WATER` or
   `ENV_LAND` terminal and that original service links remain. Confirm that a
-  reporting-only domain has no misleading terminal.
+  reporting-only domain has no misleading terminal in a production case. In
+  an authorized diagnostic case, confirm that the terminal is visibly labeled
+  unforced and non-authoritative.
 - Resolve result keys and view-file locations from the host `Variables.json` and viewer-generation code; do not infer them from abbreviations. In forks using the common mapping, `Total Annual Technology Activity By Mode` is `TATABM` in `view/RYTM.json`, while `TTMPA` is model-period activity and is not the annual Pivot.
 - In Pivot, verify each implemented `ENV_WATER` or `ENV_LAND` terminal under
   `Total Annual Technology Activity By Mode`, include `Mo Id`, and check every
   mode against the documented category mapping. View reporting-only domains
-  in their generated ledger instead.
+  in their generated ledger instead. For an authorized diagnostic
+  publication, verify every linked activity/use view, retain the original
+  solver-selected terminal result in the raw CSVs and backup, and state
+  prominently that Pivot is a postprocessed reporting surface.
 - Explain constants, discontinuities, dummy activity, and any scenario invariance from source equations—not from chart appearance alone.
 - Deliver the generator, derived case location, validation results, accounting dictionary, limitations, and exact viewing instructions.
 
@@ -218,3 +254,11 @@ Do not claim completion unless:
 - regression differences are quantified honestly;
 - dummy/backstop flows are labeled as diagnostics rather than Earth-system stocks;
 - every new account has a documented physical meaning and unit.
+- any authorized unforced diagnostic terminal is delivered separately, has no
+  forcing mechanism, is reconciled against an authoritative reference that
+  excludes its own consumption, and is not claimed as a completed exact
+  environmental account.
+- any authorized diagnostic Pivot publisher is case-restricted, atomic,
+  rerunnable after each solve, preserves raw-result hashes and original views,
+  changes no non-terminal row, validates all linked activity/use identities,
+  and marks published values as reporting-layer rather than solver output.

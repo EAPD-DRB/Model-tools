@@ -9,8 +9,9 @@ Use this reference while writing the model-specific generator. Inspect the host 
 3. Parameter coverage
 4. Scenario inheritance
 5. Constraint construction
-6. Regeneration
-7. Validation
+6. Unforced diagnostic and optional Pivot publication
+7. Regeneration
+8. Validation
 
 ## 1. Source files
 
@@ -132,7 +133,118 @@ For a zero-right-hand-side equality, scaling every coefficient by the same value
 
 Keep account selection separate from coefficient provenance. Build each domain's producer and consumer membership from the actual commodity links and effective ratios, not from the list of technologies assigned to environmental groups. Use the complete physical contributor set when deriving coefficients and finite activity/capacity envelopes.
 
-## 6. Regeneration
+## 6. Unforced diagnostic and optional Pivot publication
+
+Use this exception only when the user explicitly asks to test what an unsafe
+terminal would count without forcing it. Keep the exact or reporting-only
+production case intact and generate a separate case whose name includes
+`DIAGNOSTIC`.
+
+The diagnostic terminal must:
+
+- consume one mapped same-unit commodity at IAR 1 in each documented mode;
+- have no OAR, demand, forcing UDC, policy target, or negative/positive cost
+  that could encourage or discourage activity;
+- prohibit investment and use finite residual capacity plus annual and
+  model-period activity bounds derived from a defensible source-production
+  envelope;
+- remain nonbinding in every solved run; and
+- be described in model metadata as unforced, non-authoritative, and
+  unsuitable for use without reconciliation.
+
+Calculate the authoritative reference independently as:
+
+```text
+reference[r,c,y]
+  = production_by_all_technologies[r,c,y]
+  - use_by_all_technologies_except_the_diagnostic_terminal[r,c,y]
+```
+
+Excluding the terminal's own use prevents double subtraction. Compare that
+reference with the terminal's annual activity by matching mode. For every run,
+region, year, and mode, write:
+
+```text
+reference_available
+terminal_counted
+unaccounted_gap = reference_available - terminal_counted
+coverage_percent = 100 * terminal_counted / reference_available
+status = FULL | PARTIAL | ZERO | EMPTY | INVALID
+```
+
+Use a declared result-precision tolerance. `INVALID` means negative,
+non-finite, over-counted beyond tolerance, or otherwise inconsistent. The
+other statuses are observations: even all-`FULL` results would not prove
+structural exactness because another cost-identical solver basis may choose
+different slack allocation.
+
+Validate optimality, source hashes, allowlisted JSON changes, active terminal
+modes, absence of a forcing mechanism, nonbinding bounds, objective/cost/
+demand/emission invariants, and preservation of any exact terminal already in
+the source derived case. Retain complete regression differences: adding
+zero-cost variables can select a different cost-identical primal solution.
+
+### Optional authoritative Pivot publication
+
+Use a post-solve Pivot publisher only when the user explicitly requires both:
+
+1. the unforced diagnostic terminal to remain visible in the Dynamic Graph;
+   and
+2. the authoritative external reference to appear under that terminal in
+   Results Pivot.
+
+This is a controlled reporting-layer exception, not an optimizer fix. Keep
+the diagnostic case name and metadata, and never describe the published
+values as solver-selected terminal activity.
+
+Build a model-specific publisher that:
+
+1. accepts only the exact diagnostic case name and rejects symlinks,
+   unexpected terminal structure, missing modes, outputs, forcing UDCs, or
+   non-optimal runs;
+2. calculates each mapped commodity at timeslice resolution as production by
+   all technologies minus use by every technology except the diagnostic
+   terminal;
+3. reads only raw solver CSVs and hashes them before and after publication;
+4. resolves view keys and file locations from the host `Variables.json` and
+   result-view generation code;
+5. updates every linked diagnostic activity/use representation consistently;
+   in the common MUIO mapping these are `TTMPA`, `TATABM`, `ROA`, `ROUBT`, and
+   `UBT`, while `PBT` and `ROPBT` remain unchanged because a terminal with no
+   OAR produces nothing;
+6. stages the changed views, backs up the original solver-generated files,
+   atomically replaces only validated files, and restores the backup on any
+   failure;
+7. writes a uniquely labeled publication manifest, raw-result/view hashes,
+   detailed reference ledger, validation report, and a marker inside the case
+   stating that Pivot is postprocessed; and
+8. is idempotent when the same raw results have already been published.
+
+MUIO CSV output may round component rows. Declare a precision tolerance,
+reject negative residuals beyond it, and handle smaller negative timeslice
+artifacts deterministically. If clamping a tiny negative to zero, remove the
+same correction from a positive timeslice for that commodity and year so the
+authoritative annual total remains exact. Record the maximum and total
+adjustments.
+
+Validate that:
+
+- every non-diagnostic-terminal Pivot row is structurally unchanged;
+- raw result hashes, parameter JSON, and `genData.json` are unchanged;
+- the Dynamic Graph terminal inputs and modes are unchanged;
+- annual activity equals published use by mode;
+- timeslice activity rate equals published use rate;
+- model-period activity equals the sum of published annual activity;
+- the independent annual reporter and Pivot agree within declared precision;
+  and
+- the original solver-generated views remain recoverable.
+
+Every new solve regenerates the views. Require the publisher to be rerun
+after each solve, and treat `ENV_WATER` Pivot values as untrusted whenever
+publication or validation is missing or fails. Do not silently fall back to
+the unforced solver activity.
+
+## 7. Regeneration
 
 Discover the host command with repository search, for example:
 
@@ -159,7 +271,7 @@ Do not infer a result key or view-file path from an abbreviation. Read the host 
 
 Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technologies must retain their source modes; each implemented `ENV_WATER` or `ENV_LAND` terminal must expose only its documented category modes. Treat a missing, duplicated, or unintended mode as a generation failure.
 
-## 7. Validation
+## 8. Validation
 
 ### Structural
 
@@ -174,6 +286,11 @@ Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technolog
 - no superseded category-specific terminal technologies remain;
 - terminal mode dictionaries, input commodities, descriptions, and same-unit requirements agree;
 - every terminal mode has exactly one IAR of 1 and no output;
+- an authorized diagnostic terminal appears only in a separately named case,
+  has no forcing UDC or demand, and is labeled unforced/non-authoritative;
+- an authorized Pivot publisher accepts only that diagnostic case, writes a
+  postprocessed marker, preserves a recoverable solver-view backup, and
+  changes only allowlisted terminal rows in resolved host view keys;
 - all mode-indexed JSON families are dense enough for the host generator;
 - processed `MODEperTECHNOLOGY` retains original modes and contains only documented terminal modes;
 - base ratios and constraint multipliers have expected signs and values;
@@ -187,6 +304,12 @@ Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technolog
 ### Physical
 
 - every terminal mode equals the unscaled residual of its mapped commodity;
+- for an authorized unforced diagnostic terminal, the external reference
+  excludes the terminal's own use and every mode-year reports terminal
+  activity, gap, coverage, and status instead of asserting equality;
+- for an authorized Pivot publication, published annual, timeslice, and
+  model-period activity/use identities close and agree with the independent
+  reporter while raw solver-result hashes remain unchanged;
 - the sum of category residuals equals the unscaled domain UDC identity;
 - parallel land-stock outputs equal physical land activity;
 - original services remain connected and unchanged;
@@ -227,6 +350,13 @@ Assess runtime separately. Compare matrix or LP dimensions and repeated solve ti
   and interpret the numeric modes with the documented dictionaries. Use the
   generated ledger for reporting-only domains.
 - For water, report vapor separately from the sum of useful liquid-water modes. Never interpret total `ENV_WATER` activity as useful liquid water.
+- For an authorized unforced diagnostic, show its Pivot activity only beside
+  the authoritative reconciliation ledger and state that solver-selected
+  `FULL`, `PARTIAL`, `ZERO`, or `EMPTY` coverage is not an exactness proof.
+- For an authorized diagnostic publication, verify the publication marker
+  corresponds to the current raw-result hashes, explain that the displayed
+  values are postprocessed reporting, and rerun the publisher after every
+  solve before interpreting Pivot.
 
 Primary references:
 
