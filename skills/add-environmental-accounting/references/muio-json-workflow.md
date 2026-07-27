@@ -9,7 +9,7 @@ Use this reference while writing the model-specific generator. Inspect the host 
 3. Parameter coverage
 4. Scenario inheritance
 5. Constraint construction
-6. Unforced diagnostic and optional Pivot publication
+6. Mandatory ENV_WATER fallback publication
 7. Regeneration
 8. Validation
 
@@ -59,11 +59,11 @@ When migrating an older environmental-accounting case, treat category-specific t
 Adding a technology or commodity to `genData.json` is insufficient. Append complete rows for every parameter family that MUIO expects.
 
 For each terminal technology whose domain independently passes the exactness
-proof:
+proof, and for the unforced `ENV_WATER` fallback when its proof fails:
 
-- add the safe subset of `ENV_WATER` and `ENV_LAND`, with one documented
-  operating mode per category; add both when both domains pass, and never add
-  a terminal for a failed domain merely to preserve symmetry;
+- always add `ENV_WATER`, with one documented operating mode per category;
+  add its forcing constraint only when the exactness proof passes; add
+  `ENV_LAND` only when its independent proof passes;
 - require every input to a given terminal to use the same physical unit;
 - set exactly one IAR of 1 for each active terminal mode and no terminal output;
 - use zero capital, fixed, and variable costs;
@@ -74,7 +74,7 @@ proof:
 
 Increase the global operating-mode count if an implemented terminal needs a higher mode ID than the source model provides. Inspect the host generation loops and densify every mode-indexed JSON family they traverse—not only rows belonging to the new terminals. Common examples are `RYTM.json`, `RYTCM.json`, `RYTEM.json`, and any storage-mode table. Use the host parameter defaults for inactive base rows and its normal `null` convention for inheriting scenarios. After preprocessing, verify `MODEperTECHNOLOGY`: every original technology retains exactly its intended modes, while each implemented `ENV_WATER` or `ENV_LAND` terminal contains only its documented modes.
 
-Derive capacity settings from the host equations: the maximum feasible terminal activity must remain below residual capacity multiplied by capacity-to-activity conversion and effective availability/capacity factors. Set investment limits to zero when the terminal is not an investment option, and keep annual/model-period activity bounds nonbinding unless implementing a proven-fixed account. If no finite defensible upper envelope exists, stop or use reporting-only accounting.
+Derive capacity settings from the host equations: the maximum feasible terminal activity must remain below residual capacity multiplied by capacity-to-activity conversion and effective availability/capacity factors. Set investment limits to zero when the terminal is not an investment option, and keep annual/model-period activity bounds nonbinding unless implementing a proven-fixed account. For the unforced `ENV_WATER` fallback, use a defensible production envelope or the host's documented unbounded convention rather than an arbitrary large value. For other domains, stop or use reporting-only accounting when no safe envelope exists.
 
 For stock commodities:
 
@@ -98,7 +98,8 @@ MUIO models commonly store full values in the base scenario and `null` in policy
 Before deriving balance coefficients, resolve whether non-base scenarios override any connected IAR/OAR values. If they do, either:
 
 - construct case-combination-aware coefficients; or
-- stop and implement reporting-only accounting.
+- stop the exact forcing attempt and use the `ENV_WATER` publication fallback
+  for water, or reporting-only accounting for another domain.
 
 Do not silently use base coefficients for a scenario with effective ratio changes.
 
@@ -127,20 +128,22 @@ sum[t] alpha[D,r,t,y] * TotalAnnualTechnologyActivity[r,t,y]
 
 Individual commodity balances make every category residual nonnegative. The aggregate equality sets the sum of residuals to zero, forcing every terminal mode to consume its full mapped residual. Include only original technologies with a nonzero aggregate coefficient in at least one year, plus the corresponding terminal.
 
-This proof is valid only when all non-activity balance terms are represented. Inspect annual demand, accumulated demand, trade, new-capacity inputs, total-capacity inputs, and any fork-specific terms. If the UDC cannot represent one of them, use reporting-only accounting or request a mode-aware code extension.
+This proof is valid only when all non-activity balance terms are represented. Inspect annual demand, accumulated demand, trade, new-capacity inputs, total-capacity inputs, and any fork-specific terms. If the UDC cannot represent one of them, use the mandatory unforced-terminal/Pivot-publication fallback for `ENV_WATER`; use reporting-only accounting or request a mode-aware extension for another domain.
 
 For a zero-right-hand-side equality, scaling every coefficient by the same value preserves the identity. Use scaling only to improve conditioning and validate closure from unscaled physical results.
 
 Keep account selection separate from coefficient provenance. Build each domain's producer and consumer membership from the actual commodity links and effective ratios, not from the list of technologies assigned to environmental groups. Use the complete physical contributor set when deriving coefficients and finite activity/capacity envelopes.
 
-## 6. Unforced diagnostic and optional Pivot publication
+## 6. Mandatory ENV_WATER fallback publication
 
-Use this exception only when the user explicitly asks to test what an unsafe
-terminal would count without forcing it. Keep the exact or reporting-only
-production case intact and generate a separate case whose name includes
-`DIAGNOSTIC`.
+Use this fallback automatically when the exact `ENV_WATER` proof fails. Do
+not stop at a reporting-only water ledger and do not ask for another
+authorization. Keep the source and an unchanged control intact, and generate
+a clearly labeled derived case whose name or metadata states that water is
+unforced and postprocessed. Inform the user that the fallback is active and
+that publication is required after every solve.
 
-The diagnostic terminal must:
+The fallback terminal must:
 
 - consume one mapped same-unit commodity at IAR 1 in each documented mode;
 - have no OAR, demand, forcing UDC, policy target, or negative/positive cost
@@ -157,7 +160,7 @@ Calculate the authoritative reference independently as:
 ```text
 reference[r,c,y]
   = production_by_all_technologies[r,c,y]
-  - use_by_all_technologies_except_the_diagnostic_terminal[r,c,y]
+  - use_by_all_technologies_except_ENV_WATER[r,c,y]
 ```
 
 Excluding the terminal's own use prevents double subtraction. Compare that
@@ -184,31 +187,28 @@ demand/emission invariants, and preservation of any exact terminal already in
 the source derived case. Retain complete regression differences: adding
 zero-cost variables can select a different cost-identical primal solution.
 
-### Optional authoritative Pivot publication
+### Required authoritative Pivot publication
 
-Use a post-solve Pivot publisher only when the user explicitly requires both:
-
-1. the unforced diagnostic terminal to remain visible in the Dynamic Graph;
-   and
-2. the authoritative external reference to appear under that terminal in
-   Results Pivot.
+Build the post-solve Pivot publisher whenever this fallback is active so the
+unforced terminal remains visible in the Dynamic Graph and the authoritative
+external reference appears under `ENV_WATER` in Results Pivot.
 
 This is a controlled reporting-layer exception, not an optimizer fix. Keep
-the diagnostic case name and metadata, and never describe the published
+the fallback case name and metadata, and never describe the published
 values as solver-selected terminal activity.
 
 Build a model-specific publisher that:
 
-1. accepts only the exact diagnostic case name and rejects symlinks,
+1. accepts only the exact fallback case name and rejects symlinks,
    unexpected terminal structure, missing modes, outputs, forcing UDCs, or
    non-optimal runs;
 2. calculates each mapped commodity at timeslice resolution as production by
-   all technologies minus use by every technology except the diagnostic
+   all technologies minus use by every technology except the fallback
    terminal;
 3. reads only raw solver CSVs and hashes them before and after publication;
 4. resolves view keys and file locations from the host `Variables.json` and
    result-view generation code;
-5. updates every linked diagnostic activity/use representation consistently;
+5. updates every linked fallback activity/use representation consistently;
    in the common MUIO mapping these are `TTMPA`, `TATABM`, `ROA`, `ROUBT`, and
    `UBT`, while `PBT` and `ROPBT` remain unchanged because a terminal with no
    OAR produces nothing;
@@ -229,7 +229,7 @@ adjustments.
 
 Validate that:
 
-- every non-diagnostic-terminal Pivot row is structurally unchanged;
+- every non-`ENV_WATER` Pivot row is structurally unchanged;
 - raw result hashes, parameter JSON, and `genData.json` are unchanged;
 - the Dynamic Graph terminal inputs and modes are unchanged;
 - annual activity equals published use by mode;
@@ -279,16 +279,15 @@ Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technolog
 - new IDs and names are unique;
 - all metadata links reference defined IDs;
 - all parameter families contain every new technology/commodity/constraint for every scenario;
-- the physical environmental terminal set exactly matches the domains that
-  independently passed the proof; it is `{ENV_WATER, ENV_LAND}` when both
-  pass, a one-terminal subset in a mixed architecture, or empty when both are
-  reporting-only;
+- the environmental terminal set always contains `ENV_WATER`, solver-enforced
+  when its proof passes and unforced when the publication fallback is active;
+  `ENV_LAND` is present only when its independent proof passes;
 - no superseded category-specific terminal technologies remain;
 - terminal mode dictionaries, input commodities, descriptions, and same-unit requirements agree;
 - every terminal mode has exactly one IAR of 1 and no output;
-- an authorized diagnostic terminal appears only in a separately named case,
-  has no forcing UDC or demand, and is labeled unforced/non-authoritative;
-- an authorized Pivot publisher accepts only that diagnostic case, writes a
+- a fallback `ENV_WATER` has no forcing UDC or demand and is labeled
+  unforced/postprocessed;
+- its Pivot publisher accepts only that fallback case, writes a
   postprocessed marker, preserves a recoverable solver-view backup, and
   changes only allowlisted terminal rows in resolved host view keys;
 - all mode-indexed JSON families are dense enough for the host generator;
@@ -303,11 +302,13 @@ Inspect the processed `MODEperTECHNOLOGY` set before solving. Original technolog
 
 ### Physical
 
-- every terminal mode equals the unscaled residual of its mapped commodity;
-- for an authorized unforced diagnostic terminal, the external reference
-  excludes the terminal's own use and every mode-year reports terminal
-  activity, gap, coverage, and status instead of asserting equality;
-- for an authorized Pivot publication, published annual, timeslice, and
+- every solver-enforced terminal mode equals the unscaled residual of its
+  mapped commodity;
+- for an unforced `ENV_WATER` fallback, the external reference
+  excludes the terminal's own use; every mode-year reports raw terminal
+  activity, gap, coverage, and status, while the published Pivot value equals
+  the reference rather than asserting that the raw solver activity is exact;
+- for the fallback Pivot publication, published annual, timeslice, and
   model-period activity/use identities close and agree with the independent
   reporter while raw solver-result hashes remain unchanged;
 - the sum of category residuals equals the unscaled domain UDC identity;
@@ -343,17 +344,19 @@ Assess runtime separately. Compare matrix or LP dimensions and repeated solve ti
 ### Results interface
 
 - In the Dynamic Graph, verify each in-model mapped commodity feeds the
-  correct implemented terminal mode while the original service links remain;
-  confirm no terminal exists for a reporting-only domain.
+  correct implemented terminal mode while the original service links remain.
+  Confirm that `ENV_WATER` always exists; when its fallback is active, confirm
+  that it is labeled unforced and postprocessed. Confirm no terminal exists
+  for any other reporting-only domain.
 - In Pivot, select `Total Annual Technology Activity By Mode`, filter `Tech`
   to the implemented `ENV_WATER` and/or `ENV_LAND` terminal, include `Mo Id`,
   and interpret the numeric modes with the documented dictionaries. Use the
   generated ledger for reporting-only domains.
 - For water, report vapor separately from the sum of useful liquid-water modes. Never interpret total `ENV_WATER` activity as useful liquid water.
-- For an authorized unforced diagnostic, show its Pivot activity only beside
+- For an unforced `ENV_WATER` fallback, show raw solver activity only beside
   the authoritative reconciliation ledger and state that solver-selected
   `FULL`, `PARTIAL`, `ZERO`, or `EMPTY` coverage is not an exactness proof.
-- For an authorized diagnostic publication, verify the publication marker
+- For the fallback publication, verify the publication marker
   corresponds to the current raw-result hashes, explain that the displayed
   values are postprocessed reporting, and rerun the publisher after every
   solve before interpreting Pivot.
