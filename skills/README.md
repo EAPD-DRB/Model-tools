@@ -40,3 +40,7 @@ directory into their configured Codex skills folder; skills that include
   and verification loop.
 - [`og-country-calibration`](og-country-calibration/SKILL.md): calibrate or
   refine an OG-Core country model.
+- [`pull-handoff`](pull-handoff/SKILL.md): update the Fiji, Philippines, and
+  Model-tools repositories and install the latest MUIO cases.
+- [`push-handoff`](push-handoff/SKILL.md): package, document, commit, and push
+  Fiji and Philippines model handoffs.
