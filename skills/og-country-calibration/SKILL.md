@@ -616,3 +616,14 @@ reform + output tables); the earnings tilt is solved inside `income.py`'s
     single↔multi agreement via the comparison dashboard and the same-reform acceptance test.
 11. Wrap up: `make format`, `pytest -m 'not local'`, CHANGELOG entry (before→after + citation), docs
     with glue-from-JSON. Ask before pushing; ask before the PR.
+
+## Related skills
+
+- `og-run` — actually launching the baseline and reform solves.
+- `og-run-preflight` — the go/no-go check before any solve.
+- `calibration-provenance` — tracing one parameter to its source.
+- `muiogo-explain` — explaining the calibration to a person.
+- `og-clews-linked-run` — coupling the calibrated model to a CLEWs energy scenario.
+
+These live in the MUIOGO-AI collection; if one is not available to you,
+do the job directly and say which skill would have covered it.
