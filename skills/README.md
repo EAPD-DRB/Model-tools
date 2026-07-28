@@ -32,6 +32,9 @@ directory into their configured Codex skills folder; skills that include
 - [`assess-clews-calibration`](assess-clews-calibration/SKILL.md): assess
   technical validity, historical adequacy, forcing, evidence, and fitness for
   purpose.
+- [`calibrate-clews-model`](calibrate-clews-model/SKILL.md): implement
+  equation-led, non-forcing, source-traceable calibration changes with
+  deterministic pre-solve and bounded runtime gates.
 - [`build-clews-model`](build-clews-model/SKILL.md): build and package an
   uncalibrated country CLEWS model.
 - [`clews-model-review`](clews-model-review/SKILL.md): review structure and data

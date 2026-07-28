@@ -71,6 +71,8 @@ Include the score as supporting information, not as a substitute for the grade r
 ## Related skills
 
 - `clews-model-review` — structural and referential integrity.
+- `calibrate-clews-model` — implementing improvements identified by the
+  assessment.
 - `muiogo-explain` — describing the model and its calibration to a person.
 - `build-clews-model` — building the model in the first place.
 

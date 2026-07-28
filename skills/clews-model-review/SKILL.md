@@ -48,7 +48,10 @@ Model folders are **git-ignored local data** (`.gitignore`: `WebAPP/DataStorage/
 
 ## Checks (each = a real defect class; severity)
 
-- **Referential integrity** [FAIL] — any TechId/CommId/EmisId in data missing from genData.
+- **Referential integrity** [FAIL] — any complete
+  TechId/CommId/EmisId in data missing from genData. Parse IDs from JSON keys
+  and scalar values; do not regex serialized text. Derived-model IDs may
+  contain underscores, periods, colons or hyphens.
 - **Scenario-ID consistency** [FAIL] — any `SC_*` in a data file not in `osy-scenarios` (stale/orphaned). *Namibia example: `RY.json` alone referenced dead SC_13ijj/SC_tqww6/SC_wjl7a.*
 - **Placeholder descriptions** [FAIL if all, else WARN] — Desc "" or "Default commodity". *LaoPDR: all 403 techs + 88 comms — hallmark of an un-curated "otoole converted" import.*
 - **Dangling technologies** [WARN/FAIL] — no IAR and no OAR in any scenario. *e.g. LaoPDR's 6 PWRBIN/PWRBOU nodes; or an export tech that was never given its input link.*
@@ -57,7 +60,10 @@ Model folders are **git-ignored local data** (`.gitignore`: `WebAPP/DataStorage/
 - **Unit consistency in a single-fuel domain** [WARN] — e.g. diesel split PJ vs TJ. *Namibia INDDSL labelled TJ but numerically PJ; Zambia water strings "10⁹m³" vs "10⁹m³/yr".* NOTE: a different scale can be legitimate — Namibia DESWAT in 10⁹m³ is correct because the electrolysis IAR (0.009) compensates. Verify before flagging.
 - **Sector coverage** [WARN] — detect Energy/Land/Water by CODE prefix (works even with missing descriptions); Climate by emissions count.
 - **Organization** [INFO] — ≤1 scenario = no policy analysis; ≤1 tech group on a large model = hard to navigate.
-- **Solve status** [WARN] — `res/` present, all `results.txt` = "Optimal"; result-folder names should match current scenario labels (else stale results).
+- **Solve status** [WARN] — `res/` present and every `results.txt` is
+  "Optimal". Result-folder names are run labels, not scenario labels; compare
+  them with `view/resData.json` when determining whether a run is registered,
+  incomplete or possibly stale.
 
 ## Modeling conventions
 
@@ -74,6 +80,8 @@ Add or adjust checks by editing this file and `audit.py`. When you learn a new d
 
 ## Related skills
 
+- `calibrate-clews-model` — implementing an equation-led, non-forcing
+  calibration change.
 - `assess-clews-calibration` — whether the model is calibrated well enough for a question.
 - `muiogo-provision` — MUIOGO's ten input-consistency checks, before a long solve.
 - `muiogo-run` — solving a case; `muiogo-analyze` — comparing and charting the results.

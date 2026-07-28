@@ -29,11 +29,34 @@ SECTOR_CODES = {
 }
 PLACEHOLDER_DESCS = {"", "Default commodity", "Default technology"}
 _ORDER = {"FAIL": 0, "WARN": 1, "INFO": 2, "OK": 3}
+MODEL_ID_RE = re.compile(
+    r"^(?P<kind>TEC|COM|EMI|SC)_[A-Za-z0-9_.:-]+$"
+)
 
 
 def clean_unit(u): return re.sub("<[^>]+>", "", u or "")
 def load_json(path):
     with open(path) as fh: return json.load(fh)
+
+
+def model_ids(value):
+    """Yield complete model IDs from JSON keys and values.
+
+    MUIOGO-generated IDs are usually alphanumeric, but derived models may use
+    underscores or other safe separators. Parse complete JSON scalars instead
+    of searching serialized text so IDs such as ``TEC_envland_v12`` are not
+    truncated to ``TEC_envland``.
+    """
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if isinstance(key, str) and MODEL_ID_RE.fullmatch(key):
+                yield key
+            yield from model_ids(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from model_ids(child)
+    elif isinstance(value, str) and MODEL_ID_RE.fullmatch(value):
+        yield value
 
 
 class Report:
@@ -69,17 +92,21 @@ def audit_model(model_dir):
 
     # referential integrity + orphans + scenario-id consistency
     defined_sc = set(scens)
-    tid_re, cid_re, eid_re, sc_re = (re.compile(p) for p in
-        (r"TEC_[0-9a-z]+", r"COM_[0-9a-z]+", r"EMI_[0-9a-z]+", r"SC_[0-9a-z]+"))
     used_tid, used_cid, used_eid, bad_sc = set(), set(), set(), {}
     for f in sorted(glob.glob(os.path.join(model_dir, "*.json"))):
         if os.path.basename(f) == "genData.json":
             continue
-        txt = open(f).read()
-        used_tid |= set(tid_re.findall(txt))
-        used_cid |= set(cid_re.findall(txt))
-        used_eid |= set(eid_re.findall(txt))
-        extra = set(sc_re.findall(txt)) - defined_sc
+        ids = set(model_ids(load_json(f)))
+        used_tid |= {identifier for identifier in ids
+                     if identifier.startswith("TEC_")}
+        used_cid |= {identifier for identifier in ids
+                     if identifier.startswith("COM_")}
+        used_eid |= {identifier for identifier in ids
+                     if identifier.startswith("EMI_")}
+        extra = {
+            identifier for identifier in ids
+            if identifier.startswith("SC_")
+        } - defined_sc
         if extra:
             bad_sc[os.path.basename(f)] = sorted(extra)
 
@@ -192,18 +219,48 @@ def audit_model(model_dir):
     if not os.path.isdir(resdir) or not os.listdir(resdir):
         rep.add("WARN", "no saved results (model has not been solved on record)")
     else:
-        folders = sorted(os.listdir(resdir))
-        scen_labels = {s.get("Scenario") for s in scens.values()} | {s.get("Desc") for s in scens.values()}
+        folders = sorted(
+            folder for folder in os.listdir(resdir)
+            if os.path.isdir(os.path.join(resdir, folder))
+        )
         statuses = []
         for s in folders:
             rf = os.path.join(resdir, s, "results.txt")
-            first = open(rf).readline().strip() if os.path.exists(rf) else ""
+            if os.path.exists(rf):
+                with open(rf) as result_stream:
+                    first = result_stream.readline().strip()
+            else:
+                first = ""
             statuses.append((s, first[:38]))
-            if first and not first.lower().startswith("optimal"):
+            if not first:
+                rep.add(
+                    "WARN",
+                    f"result folder '{s}' has no solver status",
+                )
+            elif not first.lower().startswith("optimal"):
                 rep.add("WARN", f"result '{s}' is not optimal: {first[:60]!r}")
         print("  results:", statuses)
-        if folders and scen_labels and not (set(folders) & scen_labels):
-            rep.add("INFO", "saved result folder names don't match current scenario labels (possibly stale)")
+        resdata_path = os.path.join(model_dir, "view", "resData.json")
+        if os.path.exists(resdata_path):
+            saved_runs = {
+                item.get("Case")
+                for item in load_json(resdata_path).get("osy-cases", [])
+                if item.get("Case")
+            }
+            unregistered = sorted(set(folders) - saved_runs)
+            missing_results = sorted(saved_runs - set(folders))
+            if unregistered:
+                rep.add(
+                    "INFO",
+                    "result folder(s) absent from view/resData.json "
+                    f"(possibly stale): {unregistered[:8]}",
+                )
+            if missing_results:
+                rep.add(
+                    "INFO",
+                    "saved run metadata has no result folder "
+                    f"(possibly incomplete): {missing_results[:8]}",
+                )
 
     print("  findings:")
     if not rep.findings:
