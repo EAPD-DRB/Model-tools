@@ -150,26 +150,40 @@ Written for Class C. A Class B change takes the short path above and touches onl
 
 ### 5. Pass deterministic pre-solve gates
 
-Run the gates your change can actually break. The first three always apply — they are cheap
-and catch collateral damage. The rest are scoped to the parameter family you touched:
+Run the gates your change can actually break. Three always apply — they are cheap and catch
+collateral damage:
 
-| Gate | Applies to |
-|---|---|
-| exact referential and scenario-ID integrity | **always** |
-| source-diff allowlist and unchanged source hashes | **always** |
-| no unintended restrictive `TAL`/`TAU`, exact activity pins, or arbitrary release years | **always** |
-| explicit technology-role coverage | new or re-roled technologies |
-| initial-year capacity and commodity-balance replay | initial stock, residual capacity, base-year demand |
-| every-year, every-timeslice capacity/service envelope | capacity, availability, capacity factor, utilization |
-| nonnegative and dimensionally consistent stock/vintage profiles | stock, lifetime, vintage |
-| full-horizon endogenous-vintage survival and replacement | stock, lifetime, turnover, adoption |
-| generated-data and derived-set inspection | structural edits, new sets, new modes |
-| `glpsol --check` and matrix export | structural or constraint-family changes |
+- exact referential and scenario-ID integrity;
+- source-diff allowlist and unchanged source hashes;
+- no unintended restrictive `TAL`/`TAU`, exact activity pins, or arbitrary release years.
 
-A fuel price, a cost or an emissions factor is a scalar in an existing equation: the three
-always-gates plus one solve. An initial stock or an operational life reaches the vintage
-machinery, and those gates catch errors — a stock surviving past its lifetime, an envelope
-going negative in a mid-horizon year — that no amount of eyeballing will.
+The rest are scoped by **which constraint block your parameter actually enters**. The table
+below is derived from the upstream formulation
+([`OSeMOSYS_GNU_MathProg/src/osemosys.txt`](https://github.com/OSeMOSYS/OSeMOSYS_GNU_MathProg/blob/master/src/osemosys.txt)),
+not from parameter names. Verify against your **active local formulation** before relying on
+it — step 2 exists for that reason, and MUIO builds do diverge.
+
+| Parameter family | Constraint blocks it enters | Additional gates |
+|---|---|---|
+| `VariableCost`, `FixedCost`, `CapitalCost` | **none** — cost and salvage accounting only (`OC1`, `OC2`, `CC1`, `SV1`–`SV2`) | none. Three always-gates and one solve. Compare the objective. |
+| `EmissionActivityRatio`, `EmissionsPenalty` | `E1` → penalty in the objective (`E3`); **and `E8`/`E9` limits, but only when `AnnualEmissionLimit` or `ModelPeriodEmissionLimit` is set** (both blocks are conditional on `<> -1`) | none if no limit is set. **If a limit is set, an emissions factor can make the model infeasible** — check emissions headroom before solving. |
+| `InputActivityRatio`, `OutputActivityRatio` | commodity balance (`EBa1`–`EBa8`) | commodity-balance replay |
+| `SpecifiedAnnualDemand`, `AccumulatedAnnualDemand` | `EQ_SpecifiedDemand`, `EBa9`, `EBb4` | commodity-balance replay |
+| `ResidualCapacity` | `CAa2_TotalAnnualCapacity` — indexed over **every** year, feeding `CAa4` | **every-year** capacity envelope, not just the initial year |
+| `OperationalLife` | `CAa1_TotalNewCapacity` (vintage accumulation) **and** `SV1`–`SV3` salvage | vintage survival + full-horizon replacement, **and** compare the objective — a lifetime change moves salvage value too |
+| `CapacityFactor`, `AvailabilityFactor`, `CapacityToActivityUnit` | `CAa4_Constraint_Capacity`, `CAb1_PlannedMaintenance` (`CapacityToActivityUnit` also `RM1`) | every-year, every-timeslice capacity/service envelope |
+| Initial/effective stock, turnover, adoption | `CAa1` vintage accumulation | nonnegative, dimensionally consistent stock/vintage profiles + full-horizon survival and replacement |
+| `ReserveMargin` and its tags | `RM1`–`RM3` | reserve-margin check |
+| `TotalAnnualMin/MaxCapacity`, activity limits | `TCC1`/`TCC2`, `NCC1`/`NCC2`, `AAC2`/`AAC3` | covered by the always-gate on pins |
+| New or re-roled technologies, new modes or sets | structural | technology-role coverage, derived-set inspection, `glpsol --check` |
+
+Two consequences worth stating plainly, because both are easy to get wrong:
+
+- **A cost is genuinely cheap.** `VariableCost`, `FixedCost` and `CapitalCost` enter no
+  constraint at all — they only move the objective. Three gates and one solve is right.
+- **An emissions factor is not**, despite looking like a cost. It reaches a hard limit
+  whenever one is set, so the same edit is cheap in a model with no emission cap and
+  potentially infeasibility-inducing in one with a cap.
 
 **Class C only**, once each artifact is recorded in the plan:
 
