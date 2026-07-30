@@ -172,6 +172,14 @@ def exact_bound_matches(parameters, years):
             low_values, high_values = expanded(lower[scenario]), expanded(upper[scenario])
             for key in sorted(set(low_values) & set(high_values)):
                 low, high = low_values[key], high_values[key]
+                # Upstream OSeMOSYS activates these constraints asymmetrically: upper
+                # limits are guarded `<> -1` (TCC1/NCC1/AAC2/TAC2) and lower limits
+                # `> 0` (TCC2/NCC2/AAC3/TAC3). So a matching pair only pins anything
+                # when the shared value is positive. A -1/-1 row - the standard "no
+                # limit" default - constrains nothing at all, and reporting it as a
+                # lock would bury the real findings.
+                if low <= 0:
+                    continue
                 if abs(low - high) <= max(1e-9, 1e-9 * max(abs(low), abs(high))):
                     identity, year = key
                     matches.append({
@@ -180,6 +188,30 @@ def exact_bound_matches(parameters, years):
                         "identity": dict(identity), "value": low,
                     })
     return matches
+
+
+def forced_off_bounds(parameters, years):
+    """Upper-bound rows set to an active zero, which switches the object off.
+
+    Zero is not a sentinel: the upper-limit constraints are guarded `<> -1`, so an
+    upper bound of 0 is live and pins the variable to zero. That needs no matching
+    lower bound to bite, so `exact_bound_matches` cannot see it.
+    """
+    found, year_set = [], set(years)
+    for _lower_id, upper_id, kind in BOUND_PAIRS:
+        for scenario, rows in sorted((parameters.get(upper_id) or {}).items()):
+            for row in rows:
+                identity = {str(k): str(v) for k, v in row.items()
+                            if k not in year_set and v is not None}
+                for year in years:
+                    value = row.get(year)
+                    if isinstance(value, (int, float)) and value == 0:
+                        found.append({
+                            "kind": kind, "upper_parameter": upper_id,
+                            "scenario": scenario, "year": year,
+                            "identity": identity, "value": 0.0,
+                        })
+    return found
 
 
 def year_split_issues(parameters, years):
@@ -196,7 +228,13 @@ def year_split_issues(parameters, years):
             if not values:
                 continue
             total = float(sum(values))
-            if abs(total - 1.0) > 1e-6:
+            # Match upstream OSeMOSYS, which validates YearSplit itself with
+            #   check{y in YEAR}: sum{l in TIMESLICE} YearSplit[l,y] >= 0.9999;
+            #   check{y in YEAR}: sum{l in TIMESLICE} YearSplit[l,y] <= 1.0001;
+            # (osemosys.txt:200-201). A tighter bound here would fail models the
+            # solver itself accepts - timeslice shares derived from real hour counts
+            # routinely round at the fifth decimal. Do not tighten this.
+            if abs(total - 1.0) > 1e-4:
                 issues.append({"scenario": scenario, "year": year, "sum": round(total, 9)})
     return issues
 
@@ -608,6 +646,13 @@ def inventory(model_dir):
             "warn", "exact_bound_pairs",
             f"{len(fixed_matches)} exact lower/upper bound matches may history-fix outcomes",
             fixed_matches[:25]))
+    forced_off = forced_off_bounds(parameters, years)
+    if forced_off:
+        findings.append(finding(
+            "warn", "zero_upper_bounds",
+            f"{len(forced_off)} upper bound(s) set to an active zero, switching the object "
+            "off for that year",
+            forced_off[:25]))
 
     return {
         "schema_version": 1,

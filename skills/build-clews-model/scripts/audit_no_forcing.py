@@ -273,6 +273,21 @@ def main() -> int:
                         input_directory,
                         f"{label} at index {key} equals {lower_value}.",
                     )
+            # Upper limits are guarded `<> -1` upstream, so 0 is a live bound that
+            # pins the variable to zero on its own - no matching lower bound needed,
+            # which is why the pair check above cannot see it. Warned rather than
+            # failed: a zero cap is legitimate when a technology genuinely is not
+            # available, and forcing only when it was chosen to match an idle history.
+            for key, upper_value in sorted(upper.items()):
+                if upper_value == 0:
+                    finding(
+                        "warning",
+                        "zero-upper-bound",
+                        input_directory,
+                        f"{label} upper bound at index {key} is an active zero, "
+                        "switching the object off; confirm this is a structural "
+                        "availability limit and not a historical outcome.",
+                    )
 
         if args.reference_inputs:
             reference = args.reference_inputs.expanduser().resolve()

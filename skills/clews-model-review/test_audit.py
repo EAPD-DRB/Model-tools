@@ -310,5 +310,66 @@ class AuditRegressionTest(unittest.TestCase):
         )
 
 
+class BoundSentinelTests(unittest.TestCase):
+    """Upstream OSeMOSYS activates bounds asymmetrically.
+
+    Upper limits are guarded ``<> -1`` (TCC1/NCC1/AAC2/TAC2) and lower limits
+    ``> 0`` (TCC2/NCC2/AAC3/TAC3), so -1 disables a bound while 0 is a live upper
+    bound that pins the variable to zero. See osemosys.txt:195, which itself
+    branches on both ``<> 0`` and ``<> -1``.
+    """
+
+    @staticmethod
+    def _pair(lower, upper):
+        return {
+            "TAMinC": {"SC_0": [{"TechId": "TEC_a_v1", "2020": lower}]},
+            "TAMaxC": {"SC_0": [{"TechId": "TEC_a_v1", "2020": upper}]},
+        }
+
+    def test_inactive_sentinel_pair_is_not_a_lock(self) -> None:
+        # -1/-1 is the default "no limit" row: it constrains nothing at all.
+        self.assertEqual(
+            AUDIT.exact_bound_matches(self._pair(-1.0, -1.0), ["2020"]), []
+        )
+
+    def test_matching_positive_pair_is_a_lock(self) -> None:
+        matches = AUDIT.exact_bound_matches(self._pair(5.0, 5.0), ["2020"])
+        self.assertEqual(len(matches), 1)
+        self.assertEqual(matches[0]["value"], 5.0)
+
+    def test_active_zero_upper_bound_is_reported(self) -> None:
+        # 0 is not a sentinel: it switches the technology off for that year, and
+        # it needs no matching lower bound to bite.
+        params = {"TAMaxC": {"SC_0": [{"TechId": "TEC_b_v1", "2020": 0.0}]}}
+        self.assertEqual(AUDIT.exact_bound_matches(params, ["2020"]), [])
+        forced = AUDIT.forced_off_bounds(params, ["2020"])
+        self.assertEqual(len(forced), 1)
+        self.assertEqual(forced[0]["upper_parameter"], "TAMaxC")
+
+    def test_no_limit_upper_bound_is_not_forced_off(self) -> None:
+        params = {"TAMaxC": {"SC_0": [{"TechId": "TEC_c_v1", "2020": -1.0}]}}
+        self.assertEqual(AUDIT.forced_off_bounds(params, ["2020"]), [])
+
+
+class YearSplitToleranceTests(unittest.TestCase):
+    """Match upstream's own tolerance (osemosys.txt:200-201: 0.9999 / 1.0001)."""
+
+    @staticmethod
+    def _ys(*values):
+        return {"YS": {"SC_0": [{"Ts": f"Ts_{i}", "2020": v}
+                                for i, v in enumerate(values)]}}
+
+    def test_rounding_within_upstream_tolerance_passes(self) -> None:
+        # Sums to 0.99995 - accepted by OSeMOSYS's own check, so we must accept it.
+        self.assertEqual(
+            AUDIT.year_split_issues(self._ys(0.49997, 0.49998), ["2020"]), []
+        )
+
+    def test_real_normalization_error_still_fails(self) -> None:
+        self.assertEqual(
+            len(AUDIT.year_split_issues(self._ys(0.5, 0.4), ["2020"])), 1
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

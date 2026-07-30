@@ -20,11 +20,33 @@ One wording. Apply it to any change that touches a parameter or a constraint:
 
 If no, it is calibration-by-fitting. Defer it, document it, and leave the raw model alone.
 
+## How OSeMOSYS activates bounds — read before writing a forcing check
+
+Upstream activates lower and upper limits **asymmetrically**
+([`osemosys.txt`](https://github.com/OSeMOSYS/OSeMOSYS_GNU_MathProg/blob/master/src/osemosys.txt)):
+
+| Bound | Guard | Meaning |
+|---|---|---|
+| Upper (`TCC1`, `NCC1`, `AAC2`, `TAC2`) | `<> -1` | `-1` disables it. **`0` is live and pins the variable to zero.** |
+| Lower (`TCC2`, `NCC2`, `AAC3`, `TAC3`) | `> 0` | `0` or `-1` disables it. |
+
+Two consequences for any forcing audit:
+
+- A matching pair only pins something when the shared value is **positive**. A `-1 / -1`
+  row — the standard "no limit" default — constrains nothing, and reporting it as a lock
+  buries the real findings.
+- A **lone upper bound of zero** switches the object off for that year and needs no matching
+  lower bound to bite. A pair-matching check cannot see it; check for it separately.
+
+Upstream's own sanity check at `osemosys.txt:195` branches on both `<> 0` and `<> -1`,
+which is the authority for this distinction.
+
 ## Never add or tune
 
 - historical generation-share, fuel-share or dispatch-share locks;
 - equal historical lower/upper activity bounds (`TAL == TAU`, `TAMinC == TAMaxC`) with a
-  positive value;
+  **positive** value;
+- an upper bound of zero chosen to switch a technology off because history shows it idle;
 - historical minimum/maximum capacity locks;
 - capacity, demand, availability, capacity-factor, efficiency, cost, fuel, emissions or
   yield overrides selected to reduce historical error;
