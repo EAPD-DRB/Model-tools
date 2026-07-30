@@ -30,7 +30,9 @@ SCHEMAS = {
         "transformation",
         "quality",
         "proxy",
+        "exact_locator",
         "official_url",
+        "access_date",
         "license",
         "national_alternative",
         "review_owner",
@@ -45,6 +47,8 @@ SCHEMAS = {
         "description",
         "used_for",
         "status",
+        "central_value",
+        "unit",
         "source_or_reason",
         "review_need",
     ),
@@ -572,7 +576,36 @@ def validate(root: Path, stage: str) -> dict[str, Any]:
             "Legacy root DATA_SOURCE_REGISTER.md exists; SOURCES.csv is canonical."
         )
     if stage == "delivery":
+        # A trace needs to point *inside* the source, not just at it. A bare URL is
+        # explicitly insufficient, so exact_locator is a delivery-blocking field:
+        # warned at build so an in-flight package can finish, required to ship.
+        for row in sources:
+            identifier = (row.get("source_id") or "").strip() or "<blank source_id>"
+            if not (row.get("exact_locator") or "").strip():
+                failures.append(
+                    f"SOURCES.csv {identifier} has no exact_locator "
+                    "(page, table, sheet, cell, dataset variable or query)."
+                )
+            if not (row.get("access_date") or "").strip():
+                failures.append(f"SOURCES.csv {identifier} has no access_date.")
+        # An assumption that cannot be reconstructed numerically is not documented.
+        for row in assumptions:
+            identifier = (row.get("assumption_id") or "").strip() or "<blank assumption_id>"
+            if not (row.get("central_value") or "").strip():
+                failures.append(
+                    f"ASSUMPTIONS.csv {identifier} has no central_value; "
+                    "record the number, not only a description."
+                )
+            elif not (row.get("unit") or "").strip():
+                failures.append(f"ASSUMPTIONS.csv {identifier} has a value but no unit.")
         validate_baseline(root, failures)
+    else:
+        for row in sources:
+            if not (row.get("exact_locator") or "").strip():
+                warnings.append(
+                    f"SOURCES.csv {(row.get('source_id') or '?').strip()} has no "
+                    "exact_locator yet; this blocks delivery."
+                )
 
     return {
         "package_root": str(root),
