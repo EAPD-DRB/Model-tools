@@ -1,0 +1,4 @@
+assumption_id,statement,central_value,unit,evidence_source_ids,lower_bound,upper_bound
+ASM_KTOE_TO_PJ,Energy is converted with the IEA convention 1 ktoe = 0.041868 PJ,0.041868,PJ/ktoe,SRC_IEA_WEB_2023_NG_PWR,,
+ASM_OPLIFE_NGCC,Kipevu III combined-cycle gas turbine has a 30-year operating life from commissioning,30,years,SRC_MOE_GENCAP_2022,25,35
+ASM_NGCC_UTIL_2022,Kipevu III ran at a 0.42 capacity factor in 2022; chosen to reproduce the observed gas-fired share of generation,0.42,fraction,SRC_IEA_WEB_2023_NG_PWR,0.35,0.50

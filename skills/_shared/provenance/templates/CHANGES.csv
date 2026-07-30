@@ -1,0 +1,4 @@
+change_id,date,class,description,model_objects,evidence_path,map_rows_affected,resolve_status,author,commit
+CHG_0001,2026-03-19,B,Set NGCC residual capacity and input activity ratio from the 2022 national station list and the 2023 IEA balance,PWRNGCC001,diagnostics/validation_summary_2026-03-19.json,MAP_0001 MAP_0002,resolved,k.mwangi,8c1d4a7
+CHG_0002,2026-03-20,C,Set the 2022 NGCC capacity factor to 0.42 so the model reproduces the observed gas-fired share of generation,PWRNGCC001,diagnostics/calibration_ab_2026-03-20.json,MAP_0004,resolved,a.otieno,b47f0e9
+CHG_0003,2026-03-21,A,Remove unreferenced placeholder technology PWROCEAN001; the ID appears nowhere in the model data except its own definition row,PWROCEAN001,diagnostics/unreferenced_id_audit_2026-03-21.json,MAP_0005,objective_unchanged,a.otieno,d9a3c15

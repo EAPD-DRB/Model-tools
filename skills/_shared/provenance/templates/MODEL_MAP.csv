@@ -1,0 +1,6 @@
+map_id,model_file,parameter,entity,mode,scenario,years,value_or_expression,model_unit,evidence_ids,superseded_by
+MAP_0001,ResidualCapacity.csv,ResidualCapacity,PWRNGCC001,,REF,2011-2040,0.75,GW,CALC_RESCAP_NGCC_2022 ASM_OPLIFE_NGCC,
+MAP_0002,InputActivityRatio.csv,InputActivityRatio,PWRNGCC001,1,REF,2022-2050,2.4456,PJ/PJ,CALC_NG_PWR_IAR_2022,
+MAP_0003,TotalAnnualMaxCapacity.csv,TotalAnnualMaxCapacity,LNDMAIZERF,,REF,2022,2200000,ha,SRC_FAOSTAT_QCL_2024_MAIZE,
+MAP_0004,CapacityFactor.csv,CapacityFactor,PWRNGCC001,1,REF,2022,0.42,fraction,ASM_NGCC_UTIL_2022,
+MAP_0005,TECHNOLOGY.csv,TechnologyDescription,PWROCEAN001,,,,Placeholder ocean energy technology; no ocean plant appears in the national station list,text,SRC_MOE_GENCAP_2022,CHG_0003

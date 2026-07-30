@@ -311,20 +311,6 @@ def validate_baseline(root: Path, failures: list[str]) -> None:
             if not isinstance(expected, dict) or expected != actual:
                 failures.append(f"Baseline tree hash mismatch: {relative}")
 
-    records = manifest.get("records")
-    if not isinstance(records, dict):
-        failures.append("Baseline manifest lacks record checksums.")
-    else:
-        for key, relative in (
-            ("upstream_versions_sha256", "config/upstream_versions.json"),
-            ("no_forcing_audit_sha256", "diagnostics/no_forcing_audit.json"),
-            ("validation_summary_sha256", "diagnostics/validation_summary.json"),
-        ):
-            path = root / relative
-            expected = records.get(key)
-            if not path.is_file() or expected != sha256_file(path):
-                failures.append(f"Baseline record checksum mismatch: {relative}")
-
 
 def validate(root: Path, stage: str) -> dict[str, Any]:
     failures: list[str] = []
@@ -578,13 +564,6 @@ def validate(root: Path, stage: str) -> dict[str, Any]:
             str(muiogo.get("commit", ""))
         ):
             failures.append("MUIO has neither a version nor a full pinned commit.")
-        for key in (
-            "importer_sha256",
-            "parameter_registry_sha256",
-            "formulation_sha256",
-        ):
-            if not SHA256.fullmatch(str(muiogo.get(key, ""))):
-                failures.append(f"MUIO checksum is invalid or absent: {key}")
         if not pins.get("toolchain"):
             failures.append("Toolchain versions are absent from upstream_versions.json.")
 

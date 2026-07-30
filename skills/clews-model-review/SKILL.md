@@ -1,6 +1,6 @@
 ---
 name: clews-model-review
-description: Evaluate a MUIOGO CLEWs model for structure and data consistency against the NamibiaCLEWs benchmark. Use when asked to review, audit, or judge whether a CLEWs model under WebAPP/DataStorage/ is well-structured, or to flag data inconsistencies in one. This checks STRUCTURE: for whether a model is calibrated well enough to answer a question use assess-clews-calibration, and for MUIOGO's mechanical input-consistency checks before a solve use muiogo-provision.
+description: Audit a MUIOGO CLEWs model under WebAPP/DataStorage/ for structural and data consistency against the NamibiaCLEWs benchmark. Also gates whether an object is safe to delete (--removable). For calibration quality use assess-clews-calibration.
 ---
 
 # CLEWs Model Review

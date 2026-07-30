@@ -1,0 +1,4 @@
+calculation_id,formula,source_ids,assumption_ids,input_calculation_ids,input_values,input_units,output_value,output_unit,script_path,script_version
+CALC_NG_KTOE_TO_PJ_2022,fuel_input_pj = fuel_input_ktoe * ktoe_to_pj,SRC_IEA_WEB_2023_NG_PWR,ASM_KTOE_TO_PJ,,fuel_input_ktoe = 1250; ktoe_to_pj = 0.041868,ktoe; PJ/ktoe,52.335,PJ,,
+CALC_NG_PWR_IAR_2022,input_activity_ratio = fuel_input_pj / electricity_output_pj,SRC_IEA_WEB_2023_NG_PWR,,CALC_NG_KTOE_TO_PJ_2022,fuel_input_pj = 52.335; electricity_output_pj = 21.4,PJ; PJ,2.4456,PJ/PJ,,
+CALC_RESCAP_NGCC_2022,residual_capacity_gw[y] = installed_mw / 1000 if y < commissioning_year + operating_life else 0,SRC_MOE_GENCAP_2022,ASM_OPLIFE_NGCC,,installed_mw = 750; commissioning_year = 2011; operating_life = 30,MW; year; year,0.75 for 2011-2040; 0 from 2041,GW,scripts/residual_capacity.py,1.3.0

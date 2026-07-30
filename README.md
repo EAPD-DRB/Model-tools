@@ -23,7 +23,8 @@ Each folder has its own `README.md` with a bit more detail.
 
 | Tool | Type | Description |
 |------|------|-------------|
-| [build-clews-model](skills/build-clews-model/SKILL.md) | skill | Build a technically valid, uncalibrated CLEWs Global country model and carry it through otoole into a solved, verified, portable MUIO case, including temporal repairs and an unsupported reserve-tag workaround. |
+| [clews-model-fix](skills/clews-model-fix/SKILL.md) | skill | Make a structural fix to a MUIO/OSeMOSYS CLEWs model that cannot change any solved value: remove unreferenced technologies, commodities or emissions, fix placeholder descriptions, adjust technology groups. Start here for small changes. |
+| [build-clews-model](skills/build-clews-model/SKILL.md) | skill | Build a new uncalibrated OSeMOSYS/CLEWs country model from CLEWs Global and package it as a solved, source-traceable MUIO case. Not for calibration or structural cleanup. |
 | [add-fisheries-sector](skills/add-fisheries-sector/SKILL.md) | skill | Add a complete, source-traceable, non-forcing Fisheries sector to an existing solved OSeMOSYS/CLEWs/MUIO country model, including residual stock, boundary reconciliation, unchanged-solver validation, and policymaker-ready number lineage. |
 | [assess-clews-calibration](skills/assess-clews-calibration/SKILL.md) | skill | Evaluate technical validity, historical adequacy, forcing, evidence coverage, and fitness for purpose of an OSeMOSYS or full CLEWs country model. |
 | [calibrate-clews-model](skills/calibrate-clews-model/SKILL.md) | skill | Implement source-traceable CLEWs calibration changes through equation mapping, deterministic stock/vintage gates, bounded solver A/B tests, and full application-chain validation without forcing historical activity. |

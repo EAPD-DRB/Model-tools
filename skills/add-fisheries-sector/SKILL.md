@@ -1,6 +1,6 @@
 ---
 name: add-fisheries-sector
-description: Add a technically complete, source-traceable, non-forcing Fisheries sector to an existing solved OSeMOSYS, CLEWs, or MUIO country model. Use when adding fishing-fleet propulsion, aquaculture operations, fish production, cold chain, or processing; estimating existing equipment stock and residual capacity; reconciling Fisheries with Industry, Agriculture, Transport, land, water, food, or energy accounts; documenting the exact source and derivation of every number for policymaker review; regenerating all scenarios with the unchanged solver; or packaging a verified portable country case.
+description: Add a source-traceable, non-forcing Fisheries sector (fleet propulsion, aquaculture, cold chain, processing) to a solved OSeMOSYS/CLEWs/MUIO country model, reconciled with existing energy, water, land and food accounts.
 ---
 
 # Add Fisheries Sector
@@ -90,7 +90,9 @@ data. Do not edit the templates inside the installed skill.
   currency basis, rounding, scripts, and source IDs for every derived value.
 - Use the same parameter record IDs in model documentation and validation
   reports.
-- Run `scripts/validate_provenance.py` and resolve every error before solving.
+- Run `scripts/validate_provenance.py` and resolve every error before solving. Cap this at
+  three fix-and-rerun cycles; if errors remain, stop and report what is unresolved with the
+  validator output rather than continuing to iterate.
 
 ### 4. Construct demands and projections
 

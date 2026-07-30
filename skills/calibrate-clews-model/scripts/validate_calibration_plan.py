@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -66,8 +67,58 @@ def require_text(
         errors.append(f"{location}.{field} must be non-empty text")
 
 
-def validate_plan(plan: Any, stage: str) -> list[str]:
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_precision_input(
+    item: dict[str, Any],
+    location: str,
+    stage: str,
+    base_dir: Path,
+    errors: list[str],
+) -> None:
+    """Recompute a precision input's digest and compare it with the record."""
+    recorded = str(item.get("sha256", "")).strip().lower()
+    # Cheap pre-filter: a value that cannot be a digest is rejected before I/O.
+    if not SHA256_RE.fullmatch(recorded):
+        errors.append(
+            f"{location}.sha256 must be a 64-character checksum at {stage}"
+        )
+        return
+    path_value = item.get("path")
+    if not isinstance(path_value, str) or not path_value.strip():
+        return
+    candidate = Path(path_value.strip()).expanduser()
+    if not candidate.is_absolute():
+        candidate = base_dir / candidate
+    if not candidate.is_file():
+        errors.append(
+            f"{location}.path is missing at {stage}, so its recorded checksum "
+            f"cannot be verified: {path_value}"
+        )
+        return
+    try:
+        actual = sha256_file(candidate)
+    except OSError as error:
+        errors.append(f"{location}.path cannot be read at {stage}: {error}")
+        return
+    if actual != recorded:
+        errors.append(
+            f"{location}.sha256 does not match {path_value}: recorded "
+            f"{recorded}, actual {actual}"
+        )
+
+
+def validate_plan(
+    plan: Any, stage: str, plan_dir: Path | None = None
+) -> list[str]:
     errors: list[str] = []
+    base_dir = Path(plan_dir).expanduser() if plan_dir is not None else Path.cwd()
     if not isinstance(plan, dict):
         return ["plan root must be a JSON object"]
     if plan.get("schema_version") != 1:
@@ -245,13 +296,8 @@ def validate_plan(plan: Any, stage: str) -> list[str]:
             continue
         for field in ("name", "path", "sha256"):
             require_text(item, field, location, errors)
-        if stage != "design" and not SHA256_RE.fullmatch(
-            str(item.get("sha256", ""))
-        ):
-            errors.append(
-                f"{location}.sha256 must be a 64-character checksum at "
-                f"{stage}"
-            )
+        if stage != "design":
+            verify_precision_input(item, location, stage, base_dir, errors)
         if (
             item.get("used_for_initialization")
             and item.get("precision") not in FULL_PRECISION
@@ -338,12 +384,13 @@ def main() -> int:
         default="design",
     )
     args = parser.parse_args()
+    plan_path = args.plan.expanduser().resolve()
     try:
-        plan = load_json(args.plan)
+        plan = load_json(plan_path)
     except (OSError, json.JSONDecodeError) as error:
         print(json.dumps({"status": "failed", "errors": [str(error)]}))
         return 1
-    errors = validate_plan(plan, args.stage)
+    errors = validate_plan(plan, args.stage, plan_path.parent)
     result = {
         "plan": str(args.plan),
         "stage": args.stage,

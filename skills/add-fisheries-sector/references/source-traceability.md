@@ -1,5 +1,23 @@
 # Source traceability standard
 
+> **Canonical schema:** [../../_shared/provenance/SCHEMA.md](../../_shared/provenance/SCHEMA.md)
+> is authoritative for new work — six tables, ~50 columns, one validator
+> (`_shared/provenance/provenance.py`), with worked example rows.
+>
+> The six registers described below are the older fisheries-specific set. They still work and
+> `scripts/validate_provenance.py` still enforces them, so an in-flight sector build should
+> finish on them. For anything new, use the shared schema. The principles in this document —
+> the lineage chain, exact locators, calculation lineage, proxy labelling, evidence grades,
+> the trace test — are unchanged and apply to both.
+>
+> **Migration, when you next touch this skill:** `source-register` → `SOURCES`,
+> `assumption-register` → `ASSUMPTIONS`, `calculation-register` → `CALCULATIONS`,
+> `parameter-register` → `MODEL_MAP`. `completeness-register` collapses to `GAPS` (its other
+> eight columns duplicate the parameter register). `boundary-register` becomes `CALCULATIONS`
+> rows tagged `boundary_correction` plus `GAPS` rows for excluded flows.
+> `policymaker-trace-test` becomes a pass/fail line in the delivery note — it carries no
+> lineage. `residual-capacity-input` is a script input, not a register.
+
 ## Contents
 
 1. Traceability objective
@@ -253,8 +271,9 @@ python scripts/validate_provenance.py \
 
 ## 8. Policymaker trace test
 
-Before delivery, sample at least ten populated model values, or 10% when fewer
-than 100 values exist. Include:
+Before delivery, sample **ten** populated model values — not a percentage, so the cost does
+not scale with model size. Draw them to cover the categories below, one each where the model
+has one. Include:
 
 - at least one direct value;
 - one unit conversion;
@@ -292,8 +311,22 @@ When a source is replaced:
 - update affected calculations and parameters;
 - retain the superseded lineage;
 - identify changed model values;
-- regenerate and solve all scenarios;
-- rerun the policymaker trace test.
+- record the replacement as a row in `CHANGES.csv`.
+
+**Then re-run only what the change touched.** Compare the new model values against the old
+ones first:
+
+- **No model value changed** — a better locator, a fixed URL, a corrected citation, a
+  re-issued edition with identical numbers. This is a Class A change. Do **not** regenerate
+  or re-solve anything. Record `resolve_status=objective_unchanged` and re-trace only the
+  affected values.
+- **Some model values changed.** Regenerate and re-solve the scenarios those values feed.
+  Re-solve every scenario only when the change reaches a parameter every scenario shares.
+- **The trace test** is re-run on the affected samples, not on all ten, unless the
+  replacement touched more than a quarter of the sampled values.
+
+A re-solve is worth tens of minutes to hours. Never spend one to prove that a number which
+did not change did not change.
 
 Never overwrite source provenance in a way that makes an earlier model version
 unreconstructable.

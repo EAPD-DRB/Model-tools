@@ -1,6 +1,6 @@
 ---
 name: calibrate-clews-model
-description: "Implement or refine a country calibration in an existing MUIO/OSeMOSYS CLEWs model using equation-first, non-forcing, source-traceable changes and bounded solver validation. Use when changing stocks, residual capacity, lifetimes, turnover, demand, capacity factors, utilization, costs, efficiencies, emissions factors, resource limits, or historical constraints; when replacing TAL/TAU or other historical pins; when diagnosing a calibration-induced infeasibility or solve-time regression; or when promoting a calibrated MUIOGO case. This IMPLEMENTS calibration: use assess-clews-calibration to grade an existing calibration and clews-model-review to audit structure."
+description: Implement or refine a country calibration in an existing MUIO/OSeMOSYS CLEWs model with equation-first, non-forcing, sourced changes: stocks, lifetimes, demand, costs, efficiencies, historical pins, calibration-induced infeasibility. Not for structural cleanup, dead-object removal, descriptions or technology grouping - use clews-model-fix. To grade instead, assess-clews-calibration.
 ---
 
 # Calibrate a CLEWs model
@@ -9,7 +9,29 @@ Implement calibration as a reproducible model change, not as a search for a
 solver result that resembles history. Read the repository instructions, the
 active local formulation, and the application export code before editing.
 
+## Triage before anything else
+
+The evidence a change requires scales with what the change can affect — not with the
+importance of the model. Classify first, then take the matching path:
+
+| Class | Test | Path |
+|---|---|---|
+| **A — structural** | No parameter value changes and no source data changes | **Stop. Use `clews-model-fix`.** |
+| **B — sourced parameter change** | A number changes, chosen *without* reference to an observed outcome | Provenance + re-solve. **Skip the design gate below.** |
+| **C — calibration** | A value chosen *with reference to* an observed outcome | This skill, in full |
+
+The discriminator is the counterfactual test in
+[../\_shared/non-forcing.md](../_shared/non-forcing.md): *would this exact change still be
+made if no historical outcome were known?* Yes → A or B. No → C.
+
+Deleting a dead technology, fixing a description, or regrouping technologies is Class A. It
+does not need a calibration plan, a control run, an A/B test or a checksum register. Do not
+run the gate below on it.
+
 ## Mandatory design gate
+
+**Class C only.** For Class B, record provenance and go straight to the equation-first
+workflow.
 
 Before the first full solve:
 
@@ -38,19 +60,12 @@ Do not run a full optimization while this gate fails.
 
 ## Non-forcing rules
 
-- Use observed activity as final demand, a benchmark, or evidence for an
-  explicitly documented initial effective stock. Do not preserve it as an
-  activity target by default.
-- Do not add positive exact `TAL = TAU`, fuel-share locks, dispatch shares, or
-  other historical reproduction constraints unless the user explicitly
-  requests them and the source describes a real continuing constraint.
-- Reject a constraint that expires after an arbitrary calibration window.
-  Use a full-horizon physical dynamic—stock survival, lifetime, turnover,
-  adoption, resource availability, or demand—or leave the outcome
-  endogenous.
-- Distinguish stock turnover from utilization. Capacity and lifetime
-  assumptions can limit replacement speed; they do not guarantee smooth
-  dispatch among already available technologies.
+[../\_shared/non-forcing.md](../_shared/non-forcing.md) is authoritative. Read it before
+introducing any parameter or constraint. Two additions specific to calibration:
+
+- Distinguish stock turnover from utilization. Capacity and lifetime assumptions can limit
+  replacement speed; they do not guarantee smooth dispatch among already available
+  technologies.
 - Keep benchmark-only observations out of source parameters.
 
 Read [references/stock-turnover-patterns.md](references/stock-turnover-patterns.md)

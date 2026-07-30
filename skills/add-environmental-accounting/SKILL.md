@@ -1,11 +1,26 @@
 ---
 name: add-environmental-accounting
-description: "Design, implement, regenerate, and validate environmental accounting for a MUIO/OSeMOSYS CLEWS model, always delivering a multimode ENV_WATER terminal: solver-enforced when its exactness proof passes, otherwise unforced with authoritative post-solve Pivot publication and clear disclosure. Add ENV_LAND when its independent proof allows and use reporting ledgers for other unsafe domains. Use when asked to add Earth-system return flows, residual liquid water, water vapor, land-state accounts, forest or other natural land, emissions, wastewater, brine, backstop diagnostics, or an ENVIRONMENT accounting layer to models such as Zambia, Philippines, or Namibia."
+description: Add or validate environmental accounting (water, land, emissions, wastewater) in a MUIO/OSeMOSYS CLEWs model - solver-enforced terminals where an exactness proof passes, disclosed post-solve publication otherwise. Not for structural cleanup - use clews-model-fix.
 ---
 
 # Add Environmental Accounting
 
 Add a transparent accounting layer without changing the modeled economy or silently inventing environmental data. Treat each model as structurally different: reuse the method, never Namibia-specific identifiers or coefficients.
+
+## Triage before anything else
+
+The evidence a change requires scales with what the change can affect. This skill is for
+**adding or validating an accounting layer**. If the request is smaller, take the smaller path:
+
+| Class | Test | Path |
+|---|---|---|
+| **A — structural** | No parameter value changes and no source data changes (removing an unreferenced commodity, fixing a description, regrouping technologies) | **Stop. Use `clews-model-fix`.** |
+| **B — accounting layer** | New terminals, ratios or constraints, from documented sources | This skill |
+| **C — calibration** | A value chosen *with reference to* an observed outcome | `calibrate-clews-model` |
+
+The discriminator is the counterfactual test in
+[../\_shared/non-forcing.md](../_shared/non-forcing.md): *would this exact change still be
+made if no historical outcome were known?*
 
 ## Non-negotiable rules
 
@@ -33,7 +48,13 @@ Add a transparent accounting layer without changing the modeled economy or silen
 python scripts/audit_environmental_model.py --model WebAPP/DataStorage/<case>
 ```
 
-Use the path inside this skill when it is installed elsewhere. Treat its name-based classifications as leads and verify them against ratios, constraints, units, and results. Read [references/accounting-patterns.md](references/accounting-patterns.md) for physical interpretation and [references/muio-json-workflow.md](references/muio-json-workflow.md) before editing.
+Use the path inside this skill when it is installed elsewhere. Treat its name-based classifications as leads and verify them against ratios, constraints, units, and results.
+
+Load a reference when you reach the step that needs it, not now:
+[references/accounting-patterns.md](references/accounting-patterns.md) when interpreting a
+physical flow or choosing a terminal shape (step 4);
+[references/muio-json-workflow.md](references/muio-json-workflow.md) before writing the
+generator (step 5).
 
 ### 2. Define the accounting boundary
 
@@ -185,8 +206,9 @@ When replacing an existing derived case, preserve its results, validation report
 - Require every case to solve optimally before accepting the accounting layer.
 - Parse and retain explicit solver status, version, and run metadata.
 - When the `ENV_WATER` fallback is active, run the publisher after MUIO
-  finishes all required view generation. Use a unique evidence label and
-  rerun it after every subsequent solve.
+  finishes all required view generation. Use a unique evidence label, and
+  rerun it after any subsequent solve **that changed a result** — the published
+  view is derived from results, so an unchanged solve needs no republish.
 
 Do not guess command names. Inspect the host repository and call its actual classes or scripts.
 
