@@ -56,6 +56,16 @@ PYTHON_VENDORED = {
     ),
 }
 
+# A script owned by one skill and needed verbatim by another. Same rule as above
+# — one editable source, mechanical copies, ``--check`` policing drift — except
+# the source lives in the skill that owns the checks rather than in shared/.
+# Keyed (owning skill, path within it) -> (dependent skill, path within it).
+SKILL_VENDORED = {
+    ("clews-model-review", "audit.py"): (
+        ("clews-model-fix", "audit.py"),
+    ),
+}
+
 BANNER = (
     "<!-- GENERATED FILE - do not edit here.\n"
     "     Source: skills/shared/{source}\n"
@@ -66,7 +76,7 @@ BANNER = (
 
 PYTHON_BANNER = (
     "# GENERATED FILE - do not edit here.\n"
-    "# Source: skills/shared/{source}\n"
+    "# Source: {source}\n"
     "# Regenerate: python scripts/sync_shared.py\n"
     "# This local copy keeps the installed skill self-contained in Claude and Codex.\n"
 )
@@ -80,9 +90,9 @@ def rendered(source: str) -> str:
     return BANNER.format(source=source) + text
 
 
-def rendered_python(source: str) -> str:
-    text = (SHARED / source).read_text(encoding="utf-8")
-    banner = PYTHON_BANNER.format(source=source)
+def rendered_python(path: Path, label: str) -> str:
+    text = path.read_text(encoding="utf-8")
+    banner = PYTHON_BANNER.format(source=label)
     if text.startswith("#!"):
         first, remainder = text.split("\n", 1)
         return first + "\n" + banner + remainder
@@ -139,7 +149,24 @@ def main(argv: list[str] | None = None) -> int:
         if not (SHARED / source).is_file():
             print(f"missing shared source: skills/shared/{source}", file=sys.stderr)
             return 2
-        payload = rendered_python(source)
+        payload = rendered_python(SHARED / source, f"skills/shared/{source}")
+        for skill, relative_target in targets:
+            skill_root = REPO / "skills" / skill
+            if not skill_root.is_dir():
+                print(f"no skill dir for {skill}", file=sys.stderr)
+                return 2
+            target = skill_root / relative_target
+            written += sync_target(target, payload, args.check, stale)
+
+    for (owner, owner_relative), targets in SKILL_VENDORED.items():
+        origin = REPO / "skills" / owner / owner_relative
+        if not origin.is_file():
+            print(
+                f"missing skill source: skills/{owner}/{owner_relative}",
+                file=sys.stderr,
+            )
+            return 2
+        payload = rendered_python(origin, f"skills/{owner}/{owner_relative}")
         for skill, relative_target in targets:
             skill_root = REPO / "skills" / skill
             if not skill_root.is_dir():

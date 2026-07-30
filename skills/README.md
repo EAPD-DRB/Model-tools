@@ -30,22 +30,26 @@ a skill is installed on its own.
 
 ## Shared spine
 
-`shared/` is the **editable source** for rules that several skills depend on. Do not
-edit the vendored copies in a skill's `references/` — they carry a generated-file
-banner and are overwritten:
+`shared/` is the **editable source** for rules that several skills depend on. A script
+that one skill owns can also be a source, when a second skill needs it verbatim. Never
+edit a vendored copy — it carries a generated-file banner and is overwritten:
 
 ```bash
 python scripts/sync_shared.py          # propagate an edit to every dependent skill
 python scripts/sync_shared.py --check  # fail if a copy has drifted
 ```
 
-Run `--check` before committing a change to `shared/`. This is what keeps one rule
+Run `--check` before committing a change to a source below. This is what keeps one rule
 from forking into six divergent copies again.
 
 - [`shared/non-forcing.md`](shared/non-forcing.md): the non-forcing boundary and the one
   wording of the counterfactual test.
 - [`shared/provenance/`](shared/provenance/SCHEMA.md): the canonical six-table provenance
   schema, worked example templates, and the single validator (`provenance.py`).
+- [`clews-model-review/audit.py`](clews-model-review/audit.py): the structural checker and
+  the `--removable` gate. Owned by `clews-model-review` and vendored into
+  `clews-model-fix`, whose only hard gate is that flag — so the fast path works when it is
+  the one skill installed.
 
 ## Choosing a skill: size the ceremony to the change
 

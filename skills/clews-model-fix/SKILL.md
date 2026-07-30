@@ -53,7 +53,9 @@ historical outcome were known?* For a Class A fix the answer is trivially yes. F
    them. If a reference is itself dead, that is a second Class A change: clear it first,
    re-run the gate, and record both.
 
-   `audit.py` collects referenced IDs from every `*.json` except `genData.json`, so this
+   `audit.py` ships in this skill's directory — a synced copy of the one
+   `clews-model-review` owns — so the gate runs whether or not that skill is installed.
+   It collects referenced IDs from every `*.json` except `genData.json`, so this
    covers activity ratios, costs, bounds, emission ratios and UDC coefficient files. Never
    substitute "it has no input/output ratio" for this gate — a dangling technology can still
    carry a capital cost with a minimum-capacity bound, and deleting that *would* change the
