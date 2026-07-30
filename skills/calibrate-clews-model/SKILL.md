@@ -20,9 +20,9 @@ importance of the model. Classify first, then take the matching path:
 | **B — sourced parameter change** | A number changes, chosen *without* reference to an observed outcome | **The Class B short path below.** No plan. |
 | **C — calibration** | A value chosen *with reference to* an observed outcome | This skill, in full |
 
-The discriminator is the counterfactual test in
-[../\_shared/non-forcing.md](../_shared/non-forcing.md): *would this exact change still be
-made if no historical outcome were known?* Yes → A or B. No → C.
+The discriminator is the counterfactual test: *would this exact change still be made if no
+historical outcome were known?* Yes → A or B. No → C. Full rules in
+[references/non-forcing.md](references/non-forcing.md).
 
 Deleting a dead technology, fixing a description, or regrouping technologies is Class A. It
 does not need a calibration plan, a control run, an A/B test or a checksum register. Do not
@@ -34,7 +34,7 @@ A sourced number that was not chosen by looking at an outcome does **not** need 
 plan, a control solve, or an A/B rollback. It needs six things:
 
 1. **Provenance.** A source (or calculation) and assumption record, and a `MODEL_MAP` row —
-   [../\_shared/provenance/SCHEMA.md](../_shared/provenance/SCHEMA.md). This is the point of
+   [references/SCHEMA.md](references/SCHEMA.md). This is the point of
    the exercise, and it is minutes.
 2. **The equation and the units.** Read the local equation that consumes the parameter and
    confirm the unit and the direction (input/output ratios invert). This is lookup, not
@@ -88,7 +88,7 @@ Do not run a full optimization while this gate fails.
 
 ## Non-forcing rules
 
-[../\_shared/non-forcing.md](../_shared/non-forcing.md) is authoritative. Read it before
+[references/non-forcing.md](references/non-forcing.md) is authoritative. Read it before
 introducing any parameter or constraint. Two additions specific to calibration:
 
 - Distinguish stock turnover from utilization. Capacity and lifetime assumptions can limit
@@ -229,7 +229,7 @@ diagnose it.
 ### 8. Document and promote
 
 - Maintain the ledgers in
-  [../\_shared/provenance/SCHEMA.md](../_shared/provenance/SCHEMA.md), including a
+  [references/SCHEMA.md](references/SCHEMA.md), including a
   `CHANGES.csv` row carrying this change's class.
 - Update the case's `MODEL_FIXES*.md` with reason, equations, source changes,
   before/after values, diagnostics, baseline and exact passed/failed/timed-out

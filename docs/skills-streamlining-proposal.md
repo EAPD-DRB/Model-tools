@@ -382,7 +382,7 @@ That is the whole enforcement, and it is a dozen lines of Python.
 
 ### Move 1: one provenance schema, one validator
 
-Create `skills/_shared/provenance/` holding **one** `SCHEMA.md` (one page), **six** CSV
+Create `skills/shared/provenance/` holding **one** `SCHEMA.md` (one page), **six** CSV
 templates, and **one** `provenance.py`. Every skill points at it; none redefines it.
 
 | File | Columns | Purpose |
@@ -511,7 +511,7 @@ otherwise the test will fight the fix.
 
 ### Move 5: single-source the rules, and bound the loops
 
-- **One copy of the no-forcing rule**, in `skills/_shared/non-forcing.md`, with **one**
+- **One copy of the no-forcing rule**, in `skills/shared/non-forcing.md`, with **one**
   wording of the counterfactual test. Five skills link to it. Three wordings in three files is
   a drift hazard, not redundancy. Keep the three code implementations collapsed to one shared
   checker (Move 3).
@@ -613,11 +613,11 @@ Implemented on `main`, 2026-07-29. Every test below was run.
 | Move | Status |
 |---|---|
 | **0 — proportionality** | **Done.** New `clews-model-fix` skill. `audit.py --removable` gate (exit 0/1, names blocking files, `--json`). Triage tables in `calibrate-clews-model` and `add-environmental-accounting` with a Class A exit. Negative clauses in every heavy description. |
-| **1 — one provenance schema** | **Partly done.** `_shared/provenance/` shipped: `SCHEMA.md`, 6 templates *with worked example rows*, one `provenance.py`, 59 passing tests. `SOURCES` gained `exact_locator`+`access_date`; `ASSUMPTIONS` gained `central_value`+`unit`; new `CHANGES.csv`. **Not migrated:** `add-fisheries-sector` still uses its 6 registers, because its validator enforces them and breaking a working flow was the worse trade. Migration mapping documented in `source-traceability.md`. |
+| **1 — one provenance schema** | **Partly done.** `shared/provenance/` shipped: `SCHEMA.md`, 6 templates *with worked example rows*, one `provenance.py`, 59 passing tests. `SOURCES` gained `exact_locator`+`access_date`; `ASSUMPTIONS` gained `central_value`+`unit`; new `CHANGES.csv`. **Not migrated:** `add-fisheries-sector` still uses its 6 registers, because its validator enforces them and breaking a working flow was the worse trade. Migration mapping documented in `source-traceability.md`. |
 | **2 — procedure, not encyclopedia** | **Done for the worst two.** `build-clews-model` 460 → 172 lines, **10 mandatory reference reads → 0**, 11 references → 8. `add-environmental-accounting` reads made conditional. `muio-import.md`/`import-quality-gates.md` still unmerged — now conditional, so it costs maintenance, not tokens. |
 | **3 — gates in code** | **Done.** 33 prose gates → 7 judgment-only. Three provenance checkpoints, stated once. `audit_muiogo_model.py` (324 lines) reduced to a shim delegating to `audit.py`, removing 6–7 duplicated checks **and the ID-truncation bug the copy had re-introduced**. `validate_delivery.py` reuses the required-file list; duplicate `testzip` gone; the nine-substring prose scan gone. |
 | **4 — hash only across a trust boundary** | **Done.** Nine dead checks removed or made real. `validate_calibration_plan.py` now opens the file and compares — and the test that asserted `"0"*64` passes was rewritten, plus two new failure tests. Three `null` MUIO checksum keys deleted from the scaffold. Tree hashes at `validate_provenance.py:298-312` untouched, and tamper tests confirm nothing was lost. |
-| **5 — single-source and bound** | **Done.** `_shared/non-forcing.md` is now the one copy, with one wording of the counterfactual test. Descriptions 594 → 314 words *including a new skill*. Citation-only source replacement no longer triggers a re-solve. Trace sample fixed at ten, not 10%. Fix-and-rerun capped at three cycles. |
+| **5 — single-source and bound** | **Done.** `shared/non-forcing.md` is now the one copy, with one wording of the counterfactual test. Descriptions 594 → 314 words *including a new skill*. Citation-only source replacement no longer triggers a re-solve. Trace sample fixed at ten, not 10%. Fix-and-rerun capped at three cycles. |
 
 ### Verified
 

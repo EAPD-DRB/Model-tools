@@ -19,7 +19,7 @@ The evidence a change requires scales with what the change can affect. This skil
 | **C — calibration** | A value chosen *with reference to* an observed outcome | `calibrate-clews-model` |
 
 The discriminator is the counterfactual test in
-[../\_shared/non-forcing.md](../_shared/non-forcing.md): *would this exact change still be
+[references/non-forcing.md](references/non-forcing.md): *would this exact change still be
 made if no historical outcome were known?*
 
 ## Non-negotiable rules

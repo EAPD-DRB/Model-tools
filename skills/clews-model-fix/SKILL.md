@@ -19,9 +19,9 @@ If the change is not in scope below, stop and hand off. Do not widen this skill.
 | **B — sourced parameter change** | A number changes, chosen *without* reference to an observed outcome | `calibrate-clews-model`, with provenance |
 | **C — calibration** | A value chosen *with reference to* an observed outcome | `calibrate-clews-model`, full plan |
 
-The discriminator is the counterfactual test in
-[../\_shared/non-forcing.md](../_shared/non-forcing.md): *would this exact change still be
-made if no historical outcome were known?* For a Class A fix the answer is trivially yes.
+The discriminator is the counterfactual test: *would this exact change still be made if no
+historical outcome were known?* For a Class A fix the answer is trivially yes. Full rules in
+[references/non-forcing.md](references/non-forcing.md).
 
 ## In scope
 
@@ -66,7 +66,7 @@ made if no historical outcome were known?* For a Class A fix the answer is trivi
    findings, and no finding that was absent before.
 
 4. **Record.** One row in `CHANGES.csv`
-   ([../\_shared/provenance/SCHEMA.md](../_shared/provenance/SCHEMA.md)) with `class=A`,
+   ([references/SCHEMA.md](references/SCHEMA.md)) with `class=A`,
    the objects removed, `evidence_path` pointing at the gate output from step 1, and
    `resolve_status=objective_unchanged`. Add one dated line to
    `documentation/HISTORY.md` naming the `change_id`.

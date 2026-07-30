@@ -1,8 +1,8 @@
 # Source traceability standard
 
-> **Canonical schema:** [../../_shared/provenance/SCHEMA.md](../../_shared/provenance/SCHEMA.md)
+> **Canonical schema:** [SCHEMA.md](SCHEMA.md)
 > is authoritative for new work — six tables, ~50 columns, one validator
-> (`_shared/provenance/provenance.py`), with worked example rows.
+> (`provenance.py` in the repo's `skills/shared/provenance/`), with worked example rows.
 >
 > The six registers described below are the older fisheries-specific set. They still work and
 > `scripts/validate_provenance.py` still enforces them, so an in-flight sector build should

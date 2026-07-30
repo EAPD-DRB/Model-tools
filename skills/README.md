@@ -19,17 +19,32 @@ cp -r skills/og-country-calibration ~/.claude/skills/
 
 Claude discovers it by the `name` and `description` in the `SKILL.md`
 frontmatter — no other registration needed. Codex users can copy the same
-directory into their configured Codex skills folder; skills that include
-`agents/openai.yaml` also expose Codex interface metadata.
+directory into their configured Codex skills folder; every CLEWs skill ships
+`agents/openai.yaml` with Codex interface metadata.
+
+**Each skill directory is self-contained.** Copy one directory and it works, in
+Claude or in Codex — no sibling directories required, no repo checkout needed.
+Rules shared between skills are vendored into each skill's `references/` rather
+than linked across directories, because a cross-directory link breaks the moment
+a skill is installed on its own.
 
 ## Shared spine
 
-`_shared/` holds the rules that several skills depend on. State them there, link to them
-from a skill, and never copy them into one:
+`shared/` is the **editable source** for rules that several skills depend on. Do not
+edit the vendored copies in a skill's `references/` — they carry a generated-file
+banner and are overwritten:
 
-- [`_shared/non-forcing.md`](_shared/non-forcing.md): the non-forcing boundary and the one
+```bash
+python scripts/sync_shared.py          # propagate an edit to every dependent skill
+python scripts/sync_shared.py --check  # fail if a copy has drifted
+```
+
+Run `--check` before committing a change to `shared/`. This is what keeps one rule
+from forking into six divergent copies again.
+
+- [`shared/non-forcing.md`](shared/non-forcing.md): the non-forcing boundary and the one
   wording of the counterfactual test.
-- [`_shared/provenance/`](_shared/provenance/SCHEMA.md): the canonical six-table provenance
+- [`shared/provenance/`](shared/provenance/SCHEMA.md): the canonical six-table provenance
   schema, worked example templates, and the single validator (`provenance.py`).
 
 ## Choosing a skill: size the ceremony to the change

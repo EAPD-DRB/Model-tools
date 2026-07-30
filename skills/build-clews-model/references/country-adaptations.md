@@ -135,6 +135,6 @@ For each adaptation, provide:
 | Historical fit used? | Must be `No` |
 
 Also complete the source fields required by
-[../../_shared/provenance/SCHEMA.md](../../_shared/provenance/SCHEMA.md), and name the
+[SCHEMA.md](SCHEMA.md), and name the
 choice in the government-review table in
 [provenance-and-layout.md](provenance-and-layout.md).

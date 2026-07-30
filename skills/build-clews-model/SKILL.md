@@ -18,25 +18,36 @@ calibration.
 
 ## Boundary
 
-[../\_shared/non-forcing.md](../_shared/non-forcing.md) is authoritative and binding for
-this whole workflow, including the MUIO phase. Read it whenever an observed country value
-might influence a parameter or constraint. Before delivery,
-`python scripts/audit_no_forcing.py` must report zero failures.
+**Do not use historical observations to make model results match history.** The test, applied
+to any parameter or constraint: *would this exact change still be made if no historical
+outcome were known?* If no, defer it to calibration. Binding for this whole workflow,
+including the MUIO phase. Before delivery, `python scripts/audit_no_forcing.py` must report
+zero failures.
+
+Full rules — the forbidden-pattern list, and how OSeMOSYS activates bounds (`-1` disables an
+upper limit but `0` is a live lock, which forcing checks get wrong):
+[references/non-forcing.md](references/non-forcing.md).
 
 ## Provenance
 
-[../\_shared/provenance/SCHEMA.md](../_shared/provenance/SCHEMA.md) defines the six ledgers
-and the one invariant. Populate them as you go — coverage mapping is not a delivery-time
-activity. Register unavailable lineage in `GAPS.csv`; never leave an active value silently
+Populate the ledgers as you go — coverage mapping is not a delivery-time activity. Every
+source needs an `exact_locator` (page, table, sheet, cell, dataset variable or query); a bare
+URL is insufficient and blocks delivery. Every assumption needs a `central_value` and a
+`unit`. Register unavailable lineage as a documented gap; never leave an active value silently
 undocumented.
 
 Three validation checkpoints, and only three:
 
 ```bash
-python ../_shared/provenance/provenance.py PKG/data_sources --stage scaffold
-python ../_shared/provenance/provenance.py PKG/data_sources --stage build
-python ../_shared/provenance/provenance.py PKG/data_sources --stage delivery --model-inputs PKG/model/inputs
+python scripts/validate_provenance.py PKG --stage scaffold
+python scripts/validate_provenance.py PKG --stage build
+python scripts/validate_provenance.py PKG --stage delivery
 ```
+
+[references/SCHEMA.md](references/SCHEMA.md) is the canonical six-ledger schema and the one
+invariant. This skill's own `scripts/validate_provenance.py` currently enforces the
+country-package layout; the schema doc is the target for new work and for anything outside a
+country package.
 
 ## Workflow
 
