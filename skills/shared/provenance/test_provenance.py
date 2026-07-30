@@ -673,6 +673,28 @@ class CoverageTests(LedgerTestCase):
             self.validate(self.build(tables), stage="delivery", model_inputs=inputs)
         )
 
+    def test_non_csv_model_mapping_is_not_an_unmatched_input_warning(self) -> None:
+        tables = self.tables()
+        config_row = dict(tables["MODEL_MAP.csv"][0])
+        config_row.update(
+            {
+                "map_id": "MAP_CONFIG",
+                "model_file": "config/config.yaml",
+                "parameter": "country",
+                "value_or_expression": "Kenya",
+                "model_unit": "text",
+            }
+        )
+        tables["MODEL_MAP.csv"].append(config_row)
+        inputs = self._inputs("InputActivityRatio.csv", "CapacityFactor.csv")
+        report = self.validate(
+            self.build(tables), stage="delivery", model_inputs=inputs
+        )
+        self.assertPasses(report)
+        self.assertFalse(
+            any("config/config.yaml" in warning for warning in report["warnings"])
+        )
+
 
 class CommandLineTests(LedgerTestCase):
     @staticmethod

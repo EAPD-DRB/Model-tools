@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# GENERATED FILE - do not edit here.
+# Source: skills/shared/provenance/provenance.py
+# Regenerate: python scripts/sync_shared.py
+# This local copy keeps the installed skill self-contained in Claude and Codex.
 """Validate a CLEWs provenance ledger.
 
 One validator for the six-table ledger described in SCHEMA.md. Replaces

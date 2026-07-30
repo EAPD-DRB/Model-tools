@@ -45,9 +45,10 @@ python scripts/validate_provenance.py PKG --stage delivery
 ```
 
 [references/SCHEMA.md](references/SCHEMA.md) is the canonical six-ledger schema and the one
-invariant. This skill's own `scripts/validate_provenance.py` currently enforces the
-country-package layout; the schema doc is the target for new work and for anything outside a
-country package.
+invariant. The checkpoint wrapper applies that schema to `data_sources/`, checks active model
+inputs and `config/config.yaml` against `MODEL_MAP.csv`, then applies the separate country-
+package and frozen-baseline checks. `DATA_SOURCES.md` is explanatory narrative, not a seventh
+ledger.
 
 ## Workflow
 
@@ -149,9 +150,9 @@ supplies none; the labelled reserve-margin UDC workaround.
 
 ## Done when
 
-The scripts enforce the mechanical gates — `audit_no_forcing.py`, `provenance.py` at all
-three stages, and `validate_delivery.py` must all exit 0. Do not restate their checks here.
-What they cannot judge, and you must:
+The scripts enforce the mechanical gates — `audit_no_forcing.py`,
+`validate_provenance.py` at all three stages, and `validate_delivery.py` must all exit 0.
+Do not restate their checks here. What they cannot judge, and you must:
 
 - the native workflow and the final MUIO run both solve, and their statuses are reported
   separately alongside `muio_import`;

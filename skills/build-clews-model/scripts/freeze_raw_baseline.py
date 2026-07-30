@@ -10,13 +10,13 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from validate_provenance import (
+from validate_package import (
     selected_tree_hash,
     sha256_file,
     source_package_excluded,
     tree_hash,
-    validate as validate_provenance,
 )
+from validate_provenance import validate as validate_provenance
 
 
 def read_json(path: Path) -> dict[str, Any]:

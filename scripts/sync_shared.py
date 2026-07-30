@@ -50,12 +50,25 @@ VENDORED = {
     ),
 }
 
+PYTHON_VENDORED = {
+    "provenance/provenance.py": (
+        ("build-clews-model", "scripts/provenance.py"),
+    ),
+}
+
 BANNER = (
     "<!-- GENERATED FILE - do not edit here.\n"
     "     Source: skills/shared/{source}\n"
     "     Regenerate: python scripts/sync_shared.py\n"
     "     A local copy exists so this skill works when its directory is\n"
     "     installed on its own, in Claude or in Codex. -->\n\n"
+)
+
+PYTHON_BANNER = (
+    "# GENERATED FILE - do not edit here.\n"
+    "# Source: skills/shared/{source}\n"
+    "# Regenerate: python scripts/sync_shared.py\n"
+    "# This local copy keeps the installed skill self-contained in Claude and Codex.\n"
 )
 
 
@@ -67,8 +80,36 @@ def rendered(source: str) -> str:
     return BANNER.format(source=source) + text
 
 
+def rendered_python(source: str) -> str:
+    text = (SHARED / source).read_text(encoding="utf-8")
+    banner = PYTHON_BANNER.format(source=source)
+    if text.startswith("#!"):
+        first, remainder = text.split("\n", 1)
+        return first + "\n" + banner + remainder
+    return banner + text
+
+
 def target_for(skill: str, source: str) -> Path:
     return REPO / "skills" / skill / "references" / Path(source).name
+
+
+def sync_target(
+    target: Path,
+    payload: str,
+    check: bool,
+    stale: list[str],
+) -> int:
+    current = target.read_text(encoding="utf-8") if target.is_file() else None
+    if current == payload:
+        return 0
+    relative = target.relative_to(REPO)
+    if check:
+        stale.append(f"{relative} is {'missing' if current is None else 'stale'}")
+        return 0
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(payload, encoding="utf-8")
+    print(f"wrote {relative}")
+    return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -92,16 +133,20 @@ def main(argv: list[str] | None = None) -> int:
             if not target.parent.is_dir():
                 print(f"no references/ dir for {skill}", file=sys.stderr)
                 return 2
-            current = target.read_text(encoding="utf-8") if target.is_file() else None
-            if current == payload:
-                continue
-            relative = target.relative_to(REPO)
-            if args.check:
-                stale.append(f"{relative} is {'missing' if current is None else 'stale'}")
-            else:
-                target.write_text(payload, encoding="utf-8")
-                print(f"wrote {relative}")
-                written += 1
+            written += sync_target(target, payload, args.check, stale)
+
+    for source, targets in PYTHON_VENDORED.items():
+        if not (SHARED / source).is_file():
+            print(f"missing shared source: skills/shared/{source}", file=sys.stderr)
+            return 2
+        payload = rendered_python(source)
+        for skill, relative_target in targets:
+            skill_root = REPO / "skills" / skill
+            if not skill_root.is_dir():
+                print(f"no skill dir for {skill}", file=sys.stderr)
+                return 2
+            target = skill_root / relative_target
+            written += sync_target(target, payload, args.check, stale)
 
     if args.check:
         if stale:
