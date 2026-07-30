@@ -17,7 +17,7 @@ importance of the model. Classify first, then take the matching path:
 | Class | Test | Path |
 |---|---|---|
 | **A — structural** | No parameter value changes and no source data changes | **Stop. Use `clews-model-fix`.** |
-| **B — sourced parameter change** | A number changes, chosen *without* reference to an observed outcome | Provenance + re-solve. **Skip the design gate below.** |
+| **B — sourced parameter change** | A number changes, chosen *without* reference to an observed outcome | **The Class B short path below.** No plan. |
 | **C — calibration** | A value chosen *with reference to* an observed outcome | This skill, in full |
 
 The discriminator is the counterfactual test in
@@ -28,10 +28,38 @@ Deleting a dead technology, fixing a description, or regrouping technologies is 
 does not need a calibration plan, a control run, an A/B test or a checksum register. Do not
 run the gate below on it.
 
+## The Class B short path
+
+A sourced number that was not chosen by looking at an outcome does **not** need a calibration
+plan, a control solve, or an A/B rollback. It needs six things:
+
+1. **Provenance.** A source (or calculation) and assumption record, and a `MODEL_MAP` row —
+   [../\_shared/provenance/SCHEMA.md](../_shared/provenance/SCHEMA.md). This is the point of
+   the exercise, and it is minutes.
+2. **The equation and the units.** Read the local equation that consumes the parameter and
+   confirm the unit and the direction (input/output ratios invert). This is lookup, not
+   computation. It is where a good number gets written into the wrong parameter family.
+3. **A clean diff.** Referential integrity holds and nothing else changed. Work on a
+   disposable case; change source parameters only.
+4. **Family-scoped pre-solve checks.** Run only the gates in step 5 that your parameter
+   family can break — see the scoping table there. A fuel price and an initial stock are both
+   "one number" and warrant very different scrutiny.
+5. **One solve.** Unavoidable and not ceremony: a single number re-optimises the system, so
+   the effect cannot be known without solving.
+6. **Compare against the stored baseline** — not a freshly re-solved one. Objective, runtime,
+   and the activities/capacities the parameter touches.
+
+**Escalate to the full path** — control solve, A/B rollback, the whole gate set — only when
+something moved that should not have, the runtime regresses, the solve is infeasible, or the
+stored baseline turns out to be stale or mismatched. Escalation is a response to evidence,
+not a precondition.
+
+Record the change in `CHANGES.csv` with `class=B`.
+
 ## Mandatory design gate
 
-**Class C only.** For Class B, record provenance and go straight to the equation-first
-workflow.
+**Class C only.** Class B uses the short path above and never creates a plan; do not run the
+plan validator on a Class B change.
 
 Before the first full solve:
 
@@ -72,6 +100,9 @@ Read [references/stock-turnover-patterns.md](references/stock-turnover-patterns.
 when stocks, lifetimes, turnover, adoption or free switching are in scope.
 
 ## Equation-first workflow
+
+Written for Class C. A Class B change takes the short path above and touches only steps 2,
+4, the always-gates in 5, and a single solve in 6.
 
 ### 1. Establish a trustworthy baseline
 
@@ -119,38 +150,50 @@ when stocks, lifetimes, turnover, adoption or free switching are in scope.
 
 ### 5. Pass deterministic pre-solve gates
 
-Before CBC:
+Run the gates your change can actually break. The first three always apply — they are cheap
+and catch collateral damage. The rest are scoped to the parameter family you touched:
 
-- exact referential and scenario-ID integrity;
-- explicit technology-role coverage;
-- source-diff allowlist and unchanged source hashes;
-- initial-year capacity and commodity-balance replay;
-- every-year, every-timeslice capacity/service envelope;
-- nonnegative and dimensionally consistent stock/vintage profiles;
-- full-horizon check of endogenous-vintage survival and replacement;
-- no unintended restrictive `TAL`/`TAU`, exact activity pins, or arbitrary
-  release years;
-- generated-data and derived-set inspection;
-- `glpsol --check` and matrix export.
+| Gate | Applies to |
+|---|---|
+| exact referential and scenario-ID integrity | **always** |
+| source-diff allowlist and unchanged source hashes | **always** |
+| no unintended restrictive `TAL`/`TAU`, exact activity pins, or arbitrary release years | **always** |
+| explicit technology-role coverage | new or re-roled technologies |
+| initial-year capacity and commodity-balance replay | initial stock, residual capacity, base-year demand |
+| every-year, every-timeslice capacity/service envelope | capacity, availability, capacity factor, utilization |
+| nonnegative and dimensionally consistent stock/vintage profiles | stock, lifetime, vintage |
+| full-horizon endogenous-vintage survival and replacement | stock, lifetime, turnover, adoption |
+| generated-data and derived-set inspection | structural edits, new sets, new modes |
+| `glpsol --check` and matrix export | structural or constraint-family changes |
 
-Record each artifact in the plan, then run:
+A fuel price, a cost or an emissions factor is a scalar in an existing equation: the three
+always-gates plus one solve. An initial stock or an operational life reaches the vintage
+machinery, and those gates catch errors — a stock surviving past its lifetime, an envelope
+going negative in a mid-horizon year — that no amount of eyeballing will.
+
+**Class C only**, once each artifact is recorded in the plan:
 
 ```bash
 python scripts/validate_calibration_plan.py PLAN.json --stage pre-solve
 ```
+
+Class B has no plan and must not run this.
 
 Treat a deterministic failure as a design or data error. Do not ask CBC to
 diagnose it.
 
 ### 6. Solve once, diagnose narrowly
 
-- Run CBC through the normal application chain within the plan's time budget.
+- Run CBC through the normal application chain within the plan's time budget — or, for a
+  Class B change with no plan, within twice the last known-good runtime.
 - If presolve reports infeasibility, map the row back to the named local
   equation, indices, lower/upper values and source parameters before changing
   anything.
 - If runtime regresses, stop near twice the known-good runtime unless the log
   shows credible convergence.
-- Compare one unchanged control with one minimal A/B rollback. Do not run a
+- Compare against the **stored** baseline result first. Only when something moved that
+  should not have — or the baseline proves stale, the runtime regresses, or the solve is
+  infeasible — spend a fresh unchanged control and one minimal A/B rollback. Never run a
   sequence of speculative formulations.
 - A generated-file edit is permitted only in a disposable, clearly labelled
   diagnostic. Reproduce an accepted remedy in source and rerun the entire
@@ -171,15 +214,16 @@ diagnose it.
 
 ### 8. Document and promote
 
-- Maintain source, assumption, calculation, model-map and parameter-change
-  registers.
+- Maintain the ledgers in
+  [../\_shared/provenance/SCHEMA.md](../_shared/provenance/SCHEMA.md), including a
+  `CHANGES.csv` row carrying this change's class.
 - Update the case's `MODEL_FIXES*.md` with reason, equations, source changes,
   before/after values, diagnostics, baseline and exact passed/failed/timed-out
   checks.
 - Promote only by regenerating the live case from the validated source state.
 - Run one fresh live validation; do not copy disposable generated files or
   results.
-- Complete the plan's promotion gates and run:
+- **Class C only** — complete the plan's promotion gates and run:
 
   ```bash
   python scripts/validate_calibration_plan.py PLAN.json --stage promotion
@@ -187,10 +231,14 @@ diagnose it.
 
 ## Acceptance gate
 
-Do not claim completion unless the plan validator passes at `promotion`, the
-normal application chain solves successfully, no required validation is
-omitted, and every material data source, transformation and limitation is
-traceable.
+**Both classes.** Do not claim completion unless the normal application chain solves
+successfully, no gate that applies to your parameter family was omitted, and every material
+data source, transformation and limitation is traceable through the ledgers. Record the
+change in `CHANGES.csv` with its class.
+
+**Class C additionally.** The plan validator must pass at `promotion`. Class B has no plan;
+its equivalent evidence is the provenance records, the family-scoped gate results and the
+baseline comparison.
 
 ## Related skills
 

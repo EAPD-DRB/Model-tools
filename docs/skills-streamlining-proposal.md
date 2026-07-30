@@ -626,6 +626,22 @@ compile; every CLI returns rc=0 on `--help`. `audit.py`'s default output is **by
 to before the merge on a fixture, same exit code. The shared validator passes on its own
 templates and verifies a real digest. All relative markdown links resolve.
 
+### Follow-up fix (same day)
+
+The first cut of Move 0 fixed the *entry* to `calibrate-clews-model` but not its interior, so
+a Class B change — one sourced number, no reference to history — still inherited a control
+solve, eleven pre-solve gates and an A/B rollback. Worse, it was incoherent: Class B was told
+to skip the design gate, which is where the plan is created, and then hit a step requiring
+that plan to be validated.
+
+Fixed by adding an explicit **Class B short path** (provenance, equation and units, clean
+diff, family-scoped gates, one solve, compare against the *stored* baseline) and by scoping
+the eleven pre-solve gates to the parameter family touched: three always apply, the rest only
+where they can catch something. A fuel price gets three gates and one solve; an initial stock
+still reaches the full vintage machinery, because those gates catch real errors. Control solve
+and A/B rollback are now escalations triggered by evidence, not preconditions. Every
+plan-validator reference is Class C scoped.
+
 ### Known remaining work
 
 1. Migrate `add-fisheries-sector` to the shared schema and retire its four redundant registers.
