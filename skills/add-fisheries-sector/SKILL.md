@@ -48,7 +48,10 @@ Read:
   packaging delivery.
 
 Copy the templates in `assets/` into the country work package before entering
-data. Do not edit the templates inside the installed skill.
+data. Do not edit the templates inside the installed skill. The registers there
+are what you populate by hand; `assets/data_sources/` holds the header-only
+canonical ledger tables, useful for scaffolding a delivery folder — step 3
+generates their contents, so never fill them in by hand.
 
 ## Required workflow
 
@@ -93,6 +96,27 @@ data. Do not edit the templates inside the installed skill.
 - Run `scripts/validate_provenance.py` and resolve every error before solving. Cap this at
   three fix-and-rerun cycles; if errors remain, stop and report what is unresolved with the
   validator output rather than continuing to iterate.
+- Then project the registers into the six-table ledger every other CLEWs skill
+  ships — `SOURCES.csv`, `CALCULATIONS.csv`, `ASSUMPTIONS.csv`, `MODEL_MAP.csv`,
+  `GAPS.csv`, `CHANGES.csv`, defined in `references/SCHEMA.md`. The registers are
+  what you author; the ledger is what you deliver. Do not write it by hand:
+
+  ```
+  python scripts/project_registers_to_ledger.py --registers . --out data_sources --copy-evidence \
+      --change-id CHG_FSH_ADD_<YYYYMMDD> --change-date <YYYY-MM-DD> --change-class B \
+      --change-description "<what changed>" --author "<name>" --commit <sha>
+  python scripts/validate_ledger.py data_sources
+  ```
+
+- Read the projector's own output, not just the validator's. It reports whatever
+  did not carry across verbatim. An unresolved ID or a status with no stated
+  reason is a register to fix, then re-project. An evidence label the ledger
+  derives differently is a vocabulary difference it records rather than fixes —
+  check that the derived type is the honest one before delivering.
+- The projector refuses to overwrite ledger rows that differ from what it would
+  write, and refuses to rewrite a `CHANGES.csv` row that already exists. If it
+  asks for `--force`, find out why the delivered ledger disagrees with the
+  registers before you use it.
 
 ### 4. Construct demands and projections
 
@@ -181,6 +205,8 @@ ResidualCapacity =
 ### 10. Validate and package
 
 - Re-run provenance validation and the freedom audit.
+- Re-project the ledger and re-run `scripts/validate_ledger.py`, so what ships
+  reflects the registers as they finally stand rather than an earlier draft.
 - Perform the policymaker trace test in
   `references/source-traceability.md`: reconstruct a sample of model numbers
   without relying on personal memory.
@@ -200,6 +226,9 @@ Do not claim completion until:
   calculation;
 - every calculation resolves to source observations and explicit assumptions;
 - exact source locators and access dates are present;
+- the projected six-table ledger validates clean against `references/SCHEMA.md`,
+  its row counts reconcile with the registers, and every change is logged in
+  `CHANGES.csv`;
 - residual stock exists for every applicable pre-base-year technology;
 - residual retirement and technical availability have independent meanings;
 - no Fisheries historical activity or carrier share is forced;
@@ -219,9 +248,12 @@ State:
 > represented but may remain idle. No parameters or constraints were introduced
 > to force historical technology activity or carrier shares. Each model number
 > can be traced through the parameter, calculation, assumption, and source
-> registers. Remaining data gaps and uncertainties are explicit.
+> registers. Remaining data gaps and uncertainties are explicit. Provenance ships
+> as the canonical six-table ledger and validates against the shared schema.
 
 Do not describe solver success as historical calibration or policy validation.
+Say whether input coverage was proven; `validate_ledger.py` cannot prove it for
+values stored in MUIO case JSON, and it says so in its own output.
 
 ## Related skills
 

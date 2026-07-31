@@ -1,6 +1,6 @@
 ---
 name: calibrate-clews-model
-description: Implement or refine a country calibration in an existing MUIO/OSeMOSYS CLEWs model with equation-first, non-forcing, sourced changes: stocks, lifetimes, demand, costs, efficiencies, historical pins, calibration-induced infeasibility. Not for structural cleanup, dead-object removal, descriptions or technology grouping - use clews-model-fix. To grade instead, assess-clews-calibration.
+description: "Implement or refine a country calibration in an existing MUIO/OSeMOSYS CLEWs model with equation-first, non-forcing, sourced changes: stocks, lifetimes, demand, costs, efficiencies, historical pins, calibration-induced infeasibility. Not for structural cleanup, dead-object removal, descriptions or technology grouping - use clews-model-fix. To grade instead, assess-clews-calibration."
 ---
 
 # Calibrate a CLEWs model

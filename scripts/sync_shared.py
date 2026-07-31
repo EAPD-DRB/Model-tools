@@ -53,6 +53,7 @@ VENDORED = {
 PYTHON_VENDORED = {
     "provenance/provenance.py": (
         ("build-clews-model", "scripts/provenance.py"),
+        ("add-fisheries-sector", "scripts/provenance.py"),
     ),
 }
 

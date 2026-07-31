@@ -28,6 +28,24 @@ Full rules — the forbidden-pattern list, and how OSeMOSYS activates bounds (`-
 upper limit but `0` is a live lock, which forcing checks get wrong):
 [references/non-forcing.md](references/non-forcing.md).
 
+`audit_no_forcing.py` is the only script here that needs a third-party package — PyYAML, to
+read `config.yaml`. Every other script in this skill is stdlib-only, so switching interpreters
+to clear this one import will not change any other script's result. Check before you start:
+
+```bash
+python3 -c "import yaml" || pip install --target .deps pyyaml   # then PYTHONPATH=.deps
+```
+
+Install beside the work rather than into the interpreter: bundled and minimal Pythons
+routinely lack PyYAML, a stock system Python and MUIOGO's `.venv` both lack it, and a scratch
+target directory needs no write access to any shared environment. Do not hand-roll a YAML
+parse to avoid the dependency — a key this skill checks for that a partial parser misses
+reads as absent, which turns a forcing failure into a silent pass.
+
+Without PyYAML the script still runs its input-file checks and reports `config-unreadable` as
+a **failure**, so a config that was never audited cannot clear this gate. Treat that finding
+as work outstanding, not as environmental noise to be argued past.
+
 ## Provenance
 
 Populate the ledgers as you go — coverage mapping is not a delivery-time activity. Every

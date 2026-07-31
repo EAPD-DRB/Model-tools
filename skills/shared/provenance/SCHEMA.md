@@ -13,8 +13,11 @@ python provenance.py LEDGER_DIR [--stage scaffold|build|delivery] [--model-input
 ```
 
 Exit 0 passes, exit 1 fails. `scaffold` checks only that the six files exist with the right
-columns. `build` adds every row, reference and digest check. `delivery` additionally requires
-`--model-inputs` and proves every populated input file is mapped.
+columns. `build` adds every row, reference and digest check. Input coverage — proving every
+populated input file is mapped — runs at any stage once `--model-inputs` is given, and
+`delivery` additionally requires it. So a wrapper that knows where inputs live, as the
+packaged `validate_provenance.py` does, proves coverage from `build` onwards; expect
+unmapped-input failures there rather than only at `delivery`.
 
 ## ID conventions
 

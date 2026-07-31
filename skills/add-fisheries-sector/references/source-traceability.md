@@ -1,22 +1,31 @@
 # Source traceability standard
 
-> **Canonical schema:** [SCHEMA.md](SCHEMA.md)
-> is authoritative for new work — six tables, ~50 columns, one validator
-> (`provenance.py` in the repo's `skills/shared/provenance/`), with worked example rows.
+> **Both are required.** The registers described below are what you author. The canonical
+> six-table ledger in [SCHEMA.md](SCHEMA.md) — one validator, shared with every other CLEWs
+> skill — is what you deliver. Nothing here is superseded: keep populating these registers,
+> because they hold fisheries-specific fields the ledger has no column for, and they are
+> where an analyst actually works.
 >
-> The six registers described below are the older fisheries-specific set. They still work and
-> `scripts/validate_provenance.py` still enforces them, so an in-flight sector build should
-> finish on them. For anything new, use the shared schema. The principles in this document —
-> the lineage chain, exact locators, calculation lineage, proxy labelling, evidence grades,
-> the trace test — are unchanged and apply to both.
+> **Do not author the ledger twice.** These registers are a superset of the canonical
+> columns, so `scripts/project_registers_to_ledger.py` generates it: `source-register` →
+> `SOURCES`, `assumption-register` → `ASSUMPTIONS`, `calculation-register` →
+> `CALCULATIONS`, `parameter-register` → `MODEL_MAP`, and `GAPS` from two places — the
+> `data_gap` and `not_applicable` rows of `completeness-register` plus the excluded flows of
+> `boundary-register`. An included boundary correction is already lineage, carried by the
+> calculation its row cites. Register columns with no canonical home fold into `notes` as
+> `key=value` pairs, with the original ID kept as `legacy_id=…`.
 >
-> **Migration, when you next touch this skill:** `source-register` → `SOURCES`,
-> `assumption-register` → `ASSUMPTIONS`, `calculation-register` → `CALCULATIONS`,
-> `parameter-register` → `MODEL_MAP`. `completeness-register` collapses to `GAPS` (its other
-> eight columns duplicate the parameter register). `boundary-register` becomes `CALCULATIONS`
-> rows tagged `boundary_correction` plus `GAPS` rows for excluded flows.
-> `policymaker-trace-test` becomes a pass/fail line in the delivery note — it carries no
-> lineage. `residual-capacity-input` is a script input, not a register.
+> `CHANGES.csv` is the one table with nothing to project from: it is an append-only log, so
+> pass the `--change-*` arguments when you project. `policymaker-trace-test` and
+> `residual-capacity-input` are not projected — the first is a pass/fail line in the delivery
+> note and the second is a script input; neither carries lineage.
+>
+> Two vocabularies differ, and the projector records rather than hides it. The ledger has no
+> `proxy` type and derives the type from lineage — a calculation makes a value `derived` even
+> where §5 below calls it a proxy or an estimate — so the register's label is preserved as
+> `declared_evidence_type=…` in the ledger's `notes`. The principles in this document — the
+> lineage chain, exact locators, calculation lineage, proxy labelling, evidence grades, the
+> trace test — are unchanged and apply to both.
 
 ## Contents
 
@@ -123,7 +132,11 @@ the model. Record:
 - evidence type;
 - direct source IDs or calculation ID;
 - assumption IDs;
-- uncertainty and confidence.
+- uncertainty and confidence;
+- `superseded_by` — blank while the row is live, and the `CHG_` ID that retired it once it
+  is not. Retire rows this way instead of deleting them: the ledger keeps retired lineage so
+  an earlier model version stays reconstructable, and a retired row stops counting as
+  coverage.
 
 If a row represents interpolation, identify the calculation record containing
 both endpoints and the interpolation rule.
@@ -311,7 +324,9 @@ When a source is replaced:
 - update affected calculations and parameters;
 - retain the superseded lineage;
 - identify changed model values;
-- record the replacement as a row in `CHANGES.csv`.
+- record the replacement as a row in `CHANGES.csv` — re-project with the `--change-*`
+  arguments, which fill `map_rows_affected` with the `MAP_` IDs actually in the ledger, and
+  set `superseded_by` on a retired `parameter-register` row rather than deleting it.
 
 **Then re-run only what the change touched.** Compare the new model values against the old
 ones first:
