@@ -84,6 +84,17 @@ Put unavailable lineage in `GAPS.csv`. A gap is not evidence for an active
 value: use a documented assumption when the model must carry a value, or leave
 the value out when no defensible assumption exists.
 
+### Successor model versions
+
+For a new version of an existing model, copy the complete current canonical
+ledger and retained evidence into the new package before adding or changing
+records. Carry unchanged records forward, add new records, and update or
+supersede changed records. Do not replace inherited records with a source row
+or note that merely points to the previous version. Previous-version references
+are supplementary chronology only; the new ledger must stand on its own.
+
+This rule applies to every country and model family.
+
 ## Validation
 
 Run:

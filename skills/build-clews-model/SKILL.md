@@ -1,6 +1,6 @@
 ---
 name: build-clews-model
-description: Build a new uncalibrated OSeMOSYS/CLEWs country model from CLEWs Global and package it as a solved, source-traceable MUIO case. Use for new country builds, GeoCLEWs adaptation, otoole/MUIO import, or delivery packaging. Not for calibration, and not for structural cleanup - see clews-model-fix.
+description: Build or evolve an uncalibrated OSeMOSYS/CLEWs country model from CLEWs Global and package it as a solved, source-traceable MUIO case. Use for new country builds, new versions of existing country models, GeoCLEWs adaptation, otoole/MUIO import, or delivery packaging. Not for calibration, and not for structural cleanup - see clews-model-fix.
 ---
 
 # Build a CLEWs country model through MUIO
@@ -54,6 +54,12 @@ URL is insufficient and blocks delivery. Every assumption needs a `central_value
 `unit`. Register unavailable lineage as a documented gap; never leave an active value silently
 undocumented.
 
+For a new version of an existing model, begin with a complete copy of the current canonical
+ledger and its retained evidence. Carry unchanged records forward, add records for new inputs,
+and update or supersede records for changed inputs. A previous-version reference may record
+chronology, but it must never replace the inherited source, calculation, assumption or model-map
+records. The new version's ledger must stand on its own without opening an earlier package.
+
 Three validation checkpoints, and only three:
 
 ```bash
@@ -70,11 +76,14 @@ ledger.
 
 ## Workflow
 
-1. **Scaffold and define.** `python scripts/init_country_package.py PKG --country C --iso3 ISO`,
-   then the `scaffold` checkpoint. Record country, ISO3, horizon, administrative resolution,
-   climate pathway, intended use, and both source locations. Label the scenario `raw`.
-   Proceed on documented upstream defaults when the user gives only a country; ask only when
-   a missing choice would change the model architecture.
+1. **Scaffold and define.** For a new model, run
+   `python scripts/init_country_package.py PKG --country C --iso3 ISO`, then the `scaffold`
+   checkpoint. For a successor version, copy the complete current canonical ledger and retained
+   evidence into the new package first, then continue that ledger rather than starting a blank
+   or delta-only one. Record country, ISO3, horizon, administrative resolution, climate pathway,
+   intended use, and both source locations. Label the scenario `raw`. Proceed on documented
+   upstream defaults when the user gives only a country; ask only when a missing choice would
+   change the model architecture.
 
 2. **Pin both codebases.** Clone CLEWs Global recursively; record root and every submodule
    commit in `config/upstream_versions.json`. Record the MUIO version/commit. Run a
@@ -179,6 +188,8 @@ Do not restate their checks here. What they cannot judge, and you must:
   with the agency that could validate it;
 - each applied technical correction addresses software behaviour, not historical fit;
 - unsupported inputs are explicitly inventoried rather than silently dropped;
+- a successor version carries the complete prior ledger and retained evidence forward, and no
+  previous-version reference substitutes for inherited provenance;
 - any reserve-margin UDC is labelled a workaround, not an import;
 - an Amber resource estimate has been explicitly accepted by the user.
 
