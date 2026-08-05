@@ -1,4 +1,4 @@
 interface:
   display_name: "Push Handoff"
-  short_description: "Zip and push result-free Fiji and Philippines cases"
-  default_prompt: "Use $push-handoff to zip the documented current Fiji and Philippines cases without solver results, verify them, and push the intended repository changes."
+  short_description: "Zip and push linked CLEWs working cases"
+  default_prompt: "Use $push-handoff to verify the repository-local Fiji and Philippines cases and their MUIOGO symlinks, then zip them without results and push the intended changes."

@@ -1,4 +1,4 @@
 interface:
   display_name: "Pull Handoff"
-  short_description: "Pull and safely unzip current CLEWs cases"
-  default_prompt: "Use $pull-handoff to pull the Fiji and Philippines repositories and safely install their documented current result-free cases in MUIOGO."
+  short_description: "Pull CLEWs cases and maintain MUIOGO links"
+  default_prompt: "Use $pull-handoff to pull Fiji and Philippines, safely install their current cases under each repository, and maintain relative MUIOGO DataStorage symlinks."
