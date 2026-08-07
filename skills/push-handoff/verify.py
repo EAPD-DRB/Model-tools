@@ -28,7 +28,7 @@ run `git fetch` first or treat the branch check as advisory — it says so in it
 own output rather than guessing.
 """
 from __future__ import annotations
-import argparse, hashlib, json, os, subprocess, sys, zipfile
+import argparse, hashlib, json, os, re, subprocess, sys, zipfile
 
 # Content that must never travel in a handoff archive. Solver output is the one
 # that matters most: it looks valid to whoever unzips it, and it came from a
@@ -278,40 +278,114 @@ def check_archive(rep, archive, case):
             rep.fail("archive integrity (CRC of every entry)", "corrupt entry: " + bad)
 
 
-def check_checksum(rep, archive):
-    """SHA256SUMS must describe THIS archive.
+SHA256_RE = re.compile(r"\b[0-9a-fA-F]{64}\b")
 
-    A checksum file left describing the previous archive is worse than none:
-    the recipient's verification passes against a stale reference.
+# Walking the whole repository, minus the places a hash record cannot live and
+# the ones that are expensive to descend.
+SKIP_DIRS = {".git", "case", "res", "__pycache__", ".venv", "node_modules"}
+MAX_TEXT_BYTES = 2_000_000
+
+
+def _is_sums_file(name):
+    low = name.lower()
+    return low.startswith("sha256sums") or low.endswith(".sha256")
+
+
+def _hash_record_files(repo):
+    """Every file that could state an archive's SHA-256: sums files and prose."""
+    for dirpath, dirnames, filenames in os.walk(repo):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for name in filenames:
+            if not (_is_sums_file(name) or name.lower().endswith((".md", ".txt"))):
+                continue
+            path = os.path.join(dirpath, name)
+            try:
+                if os.path.getsize(path) > MAX_TEXT_BYTES:
+                    continue
+            except OSError:
+                continue
+            yield path
+
+
+def check_hash_records(rep, repo, archive):
+    """EVERY recorded copy of the hash must describe THIS archive.
+
+    One archive's hash is routinely written down in several places — a sums
+    file beside it, another at the package root with repo-relative paths, and
+    the README a recipient actually reads. They are not redundant: a sums
+    file's paths only resolve from one directory, so verifying from two places
+    needs two files. But nothing keeps them in step, and an update that
+    refreshes two of three leaves the third quietly describing the previous
+    archive. Checking only the nearest one passes whenever the stale copy is
+    the far one.
+
+    Sums files are parsed structurally: a line whose last field names this
+    archive must carry its hash. Prose is judged more loosely, because a hash
+    in Markdown is rarely on the same line as the filename it belongs to — a
+    file that names this archive and quotes hashes must quote the right one
+    somewhere. That is sound in the direction that matters: it cannot be
+    satisfied by a stale hash alone.
+
+    Returns the repo-relative paths of every file found to record the hash, so
+    the staged-files check knows they are legitimate to commit.
     """
-    sums = os.path.join(os.path.dirname(archive), "SHA256SUMS")
-    if not os.path.isfile(sums):
-        rep.fail("SHA256SUMS matches the archive", "no SHA256SUMS beside the archive")
-        return
     base = os.path.basename(archive)
-    recorded = None
-    try:
-        with open(sums, encoding="utf-8") as fh:
-            for line in fh:
+    actual = sha256(archive).lower()
+
+    sums_hits, sums_bad, prose_ok, prose_bad = [], [], [], []
+    for path in _hash_record_files(repo):
+        try:
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        if base not in text:
+            continue
+        rel = os.path.relpath(path, repo)
+        if _is_sums_file(os.path.basename(path)):
+            for line in text.splitlines():
+                line = line.strip()
+                if not line or line.startswith("#"):
+                    continue
                 parts = line.split()
-                if len(parts) >= 2 and parts[-1].lstrip("*") == base:
-                    recorded = parts[0]
+                if len(parts) >= 2 and os.path.basename(parts[-1].lstrip("*")) == base:
+                    sums_hits.append(rel)
+                    if parts[0].lower() != actual:
+                        sums_bad.append((rel, parts[0]))
                     break
-    except OSError as exc:
-        rep.fail("SHA256SUMS matches the archive", str(exc))
-        return
-    if recorded is None:
-        rep.fail("SHA256SUMS matches the archive", "no line for " + base)
-        return
-    actual = sha256(archive)
-    if recorded.lower() != actual.lower():
-        rep.fail("SHA256SUMS matches the archive",
-                 "recorded {}… actual {}…".format(recorded[:16], actual[:16]))
+        else:
+            quoted = {h.lower() for h in SHA256_RE.findall(text)}
+            if not quoted:
+                continue
+            (prose_ok if actual in quoted else prose_bad).append(rel)
+
+    if not sums_hits:
+        rep.fail("a checksum file records the archive",
+                 "no SHA256SUMS line anywhere names " + base)
     else:
-        rep.ok("SHA256SUMS matches the archive", actual[:16] + "…")
+        rep.ok("a checksum file records the archive",
+               "{} file(s): {}".format(len(sums_hits), ", ".join(sorted(sums_hits))))
+
+    if sums_bad:
+        rep.fail("every checksum record matches the archive",
+                 "actual {}… but {}".format(actual[:16], "; ".join(
+                     "{} says {}…".format(p, h[:16]) for p, h in sorted(sums_bad))))
+    elif sums_hits:
+        rep.ok("every checksum record matches the archive", actual[:16] + "…")
+
+    if prose_bad:
+        rep.fail("prose references quote the current hash",
+                 "{} name{} {} but never quote {}…: {}".format(
+                     len(prose_bad), "s" if len(prose_bad) == 1 else "",
+                     base, actual[:16], ", ".join(sorted(prose_bad))))
+    elif prose_ok:
+        rep.ok("prose references quote the current hash",
+               "{} file(s): {}".format(len(prose_ok), ", ".join(sorted(prose_ok))))
+
+    return set(sums_hits) | set(prose_ok) | set(prose_bad)
 
 
-def check_staged(rep, repo, archive, allow):
+def check_staged(rep, repo, archive, allow, records=()):
     """Only the handoff files may be in the commit.
 
     Unrelated local work swept into a handoff commit is invisible to the
@@ -332,6 +406,9 @@ def check_staged(rep, repo, archive, allow):
         os.path.join(adir, "SHA256SUMS"),
         os.path.join(adir, "README.md"),
     }
+    # Every file that records this archive's hash has to be updatable in the
+    # same commit, wherever it sits — that is the whole point of finding them.
+    permitted.update(records)
     permitted.update(allow or [])
     extra = [p for p in staged if p not in permitted]
     if extra:
@@ -385,9 +462,9 @@ def main(argv=None):
     live = check_case_and_link(rep, repo, args.case, datastorage)
     check_case_identity(rep, live, args.case)
     check_archive(rep, archive, args.case)
-    check_checksum(rep, archive)
+    records = check_hash_records(rep, repo, archive)
     if args.staged:
-        check_staged(rep, repo, archive, args.allow)
+        check_staged(rep, repo, archive, args.allow, records)
 
     rep.render()
 

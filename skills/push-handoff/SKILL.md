@@ -28,8 +28,12 @@ hand, and it never gets bored on the eleventh check.
    case folder, excluding `res/`, solver CSVs and logs, `data.txt`,
    `data_processed.txt`, LP files, and caches. Keep every editable parameter
    JSON, case-local documentation, and `view/` metadata — exclude by rule, so
-   file types nobody has invented yet still ship. Write the SHA-256 into
-   `SHA256SUMS` from the archive you just built, never from an earlier line.
+   file types nobody has invented yet still ship. Then update **every** place
+   the hash is written down, computing it from the archive you just built and
+   never copying an earlier line. There is usually more than one: a
+   `SHA256SUMS` beside the archive, sometimes another at the package root with
+   repo-relative paths, and the `README.md` a recipient actually reads. Step 3
+   finds them all — if it names a file you did not update, update it.
 3. **Verify.** `verify.py` ships in this skill's directory:
 
    ```bash
@@ -40,7 +44,9 @@ hand, and it never gets bored on the eleventh check.
    present, that the MUIOGO DataStorage entry is a symlink resolving to that
    exact case, that `osy-casename` agrees with the folder name, that the
    archive holds one correctly-named top-level folder with no excluded results
-   and an intact CRC, and that `SHA256SUMS` describes *this* archive. Add
+   and an intact CRC, and that every recorded copy of the hash — in any
+   checksum file or README anywhere in the repository — describes *this*
+   archive. Add
    `--archive` when the path is ambiguous, `--datastorage` when MUIOGO is not
    a sibling. **Exit 1 or 2 stops the handoff.** Report what failed; do not
    work around it.
