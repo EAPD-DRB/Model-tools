@@ -65,6 +65,12 @@ SKILL_VENDORED = {
     ("clews-model-review", "audit.py"): (
         ("clews-model-fix", "audit.py"),
     ),
+    # Push verifies the archive it sends; pull verifies the archive it
+    # receives. One file, so the two ends cannot drift into disagreeing about
+    # what a valid handoff is.
+    ("push-handoff", "verify.py"): (
+        ("pull-handoff", "verify.py"),
+    ),
 }
 
 BANNER = (
