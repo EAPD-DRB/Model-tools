@@ -31,7 +31,7 @@ already in the repo, and the run fails if they are older than --max-fetch-age
 week-old picture of the remote. Run `git fetch` first.
 """
 from __future__ import annotations
-import argparse, hashlib, json, os, re, subprocess, sys, time, zipfile
+import argparse, hashlib, json, os, re, subprocess, sys, time, zipfile, zlib
 
 # Content that must never travel in a handoff archive. Solver output is the one
 # that matters most: it looks valid to whoever unzips it, and it came from a
@@ -240,7 +240,12 @@ def check_repo_state(rep, repo):
 
 
 def check_case_ignored(rep, repo):
-    code, _ = git(repo, "check-ignore", "-q", "case")
+    # Ask about "case/", with the slash. The usual rule is "/case/", which is
+    # directory-only, and git can only match it against a query that says it is
+    # a directory or against a path that already exists on disk. Asking for
+    # bare "case" reports "not ignored" in a fresh clone, where the answer
+    # matters most.
+    code, _ = git(repo, "check-ignore", "-q", "case/")
     if code == 0:
         rep.ok("case/ is gitignored", "the live case stays out of history")
     else:
@@ -366,12 +371,21 @@ def check_archive(rep, archive, case):
                 else:
                     rep.ok(label, declared)
 
-        bad = zf.testzip()
-        if bad is None:
-            rep.ok("archive integrity (CRC of every entry)",
-                   "{} entries".format(len(names)))
+        # testzip() names the first entry whose CRC is wrong, but only for
+        # damage mild enough that the entry still decompresses. Heavier
+        # corruption raises out of zlib instead, and an uncaught exception here
+        # would end the run in a stack trace rather than a failed check.
+        try:
+            bad = zf.testzip()
+        except (zipfile.BadZipFile, zlib.error, EOFError, OSError) as exc:
+            rep.fail("archive integrity (CRC of every entry)",
+                     "{}: {}".format(type(exc).__name__, exc))
         else:
-            rep.fail("archive integrity (CRC of every entry)", "corrupt entry: " + bad)
+            if bad is None:
+                rep.ok("archive integrity (CRC of every entry)",
+                       "{} entries".format(len(names)))
+            else:
+                rep.fail("archive integrity (CRC of every entry)", "corrupt entry: " + bad)
 
 
 SHA256_RE = re.compile(r"\b[0-9a-fA-F]{64}\b")
