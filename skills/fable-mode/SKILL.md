@@ -11,9 +11,10 @@ A hard task is anything where the first idea might be wrong: multi-step builds, 
 with claims, anything touching data you haven't looked at yet. For a one-file edit or a simple
 lookup, skip the gates and just do the work.
 
-**What actually earns its place here.** On Claude 5 the generic discipline below is largely native
-behaviour, and repeating it buys little — Anthropic deleted ~80% of Claude Code's system prompt for
-exactly this reason: instructions written for weaker models get in the way of stronger ones. The
+**What actually earns its place here.** On the frontier tier (Fable 5, Opus 5) the generic
+discipline below is largely native behaviour, and repeating it buys little — Anthropic deleted
+~80% of Claude Code's system prompt for exactly this reason: instructions written for weaker
+models get in the way of stronger ones. The
 load-bearing content is the environment ritual and the orchestration rules — non-obvious, learned
 from incidents, not something a model reconstructs on its own. Those are kept in full.
 
@@ -41,8 +42,9 @@ Effort budget: ~1 tool call for single facts, 3–5 for medium tasks, 5–10 for
 research/comparisons; more only when the action is irreversible, hours-long, or published.
 
 Full prose for every gate, the standing habits, and the skipped-gate smell list:
-[references/full-discipline.md](references/full-discipline.md). Load it when running on Sonnet or
-Haiku, or when a task keeps failing under this skeleton.
+[references/full-discipline.md](references/full-discipline.md). The environment info names the
+model you are running on: anything below the frontier tier (Sonnet, Haiku) MUST Read that file
+before starting work; frontier models load it only when a task keeps failing under this skeleton.
 
 ## Mandatory ritual: model runs & environments
 
