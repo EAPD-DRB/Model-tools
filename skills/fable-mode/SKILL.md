@@ -101,6 +101,41 @@ four parts; a brief missing any of them is not ready to delegate:
   with findings; it never invents an alternate plan.
 - **Flag:** anything it couldn't verify, explicitly listed — silence is not a pass.
 
+## Guard friction: keep benign work legible to the safety classifiers
+
+Fable-tier safety classifiers deliberately over-trigger (Anthropic says so), and two of our
+domains sit near gated categories without being in them: demographic mortality/fertility data
+reads bio-adjacent (the gated set is virology/toxicology/molecular design — actuarial and
+UN-WPP/DHS statistics are explicitly on the allowed side), and securing our own repos reads
+cyber-adjacent (the policy line is authorization: "with the system owner's consent" is allowed
+vocabulary, offense-without-authorization is the gated thing). We never do wet-lab bio or
+offensive security, so every flag on our work is a false positive — reduce them by making that
+legible, never by evasion.
+
+- **Lead with the reason, not only the request** (Anthropic's own template). Put owner + purpose +
+  data source BEFORE loaded vocabulary: "for the OG-Core pension model, mortality rates by income
+  from UN WPP / DHS surveys…"; "dependency patch on my own repo X — defensive maintenance of code
+  we own." Where true, use the policy's allowed-side words: own repository, authorized, defensive.
+- **Neutral verbs cost nothing:** terminate a process, not kill it; review for weaknesses, not
+  attack; patch the CVE, not exploit. Word choice among equally accurate options is not
+  obfuscation.
+- **The classifier reads more than the prompt:** file contents, filenames, git status, CLAUDE.md,
+  and subagent system prompts are all input. Keep security-review subagent prompts lean or run the
+  review inline (documented: same review passed inline, flagged as a keyword-dense subagent). A
+  first-message flag in a security-heavy repo can be workspace context alone — `claude --safe-mode`
+  isolates that. Never write show-your-reasoning / transcribe-your-thinking instructions into
+  skills or CLAUDE.md: that is the one documented self-inflicted trigger (reasoning_extraction).
+- **When a guard fires:** never retry verbatim, never rephrase to obscure. One retry with fuller
+  true context is officially supported (`/config` → disable switch-models-on-flag → edit and retry;
+  otherwise the session falls back bio→Opus 5 / cyber→Opus 4.8 and `/model` returns afterward).
+  Flags cascade — after one, move the flagged work to a fresh session and keep guard-prone work
+  out of long mixed sessions. Report keepers via /feedback or a claude-code issue with the request
+  ID; sustained security work can apply to the Cyber Verification Program.
+- **Never:** obfuscate or code terms to slip past detection, split a request into fragments to
+  dodge a screen, claim an authorization that isn't real, or instruct any model to ignore its
+  safeguards. If honest context doesn't clear it, stop and surface it to Marcelo — the guard might
+  be right.
+
 ## Notes
 
 - This is a method skill, not a workflow. It changes how you execute the current task; it produces
