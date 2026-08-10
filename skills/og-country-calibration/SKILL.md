@@ -190,6 +190,26 @@ Method → pitfall → exemplar.
   a wholesale file copy forgot to swap it. **Add a regression test** asserting `country_id` matches the
   country being calibrated.
 
+### Income-differentiated demographics (ogcore >= 0.18.0)
+
+- `get_pop_objs()` accepts `income_percentiles` (pass the model's own `lambdas` — it is not data),
+  plus `fert_gradient`, `mort_gradient`, and `infmort_gradient`: fertility and mortality tilted
+  across the lifetime-income groups instead of identical across J.
+- **The measured gradients live in
+  [EAPD-DRB/Demographic-Gradients](https://github.com/EAPD-DRB/Demographic-Gradients)** — DHS
+  fertility (TFR) and infant-mortality (IMR) tilts for ~78 countries, census household-deaths
+  adult-mortality tilts for 14, and a GNI-keyed general fallback for everyone else. It plays the
+  role for demographic *differentials* that Population-Data plays for *levels*; reference data by
+  raw URL.
+- **Before using it, fetch and follow that repo's AGENTS.md**
+  (`https://raw.githubusercontent.com/EAPD-DRB/Demographic-Gradients/main/AGENTS.md`) — it maps
+  each ogcore input to a file, states precedence, and lists the traps. It is the source of truth;
+  don't work from a copy of its rules.
+- The two rules that change results, worth knowing before you even fetch: **divide the library's
+  tilt by 100** (it is per unit wealth rank; ogcore wants per centered percentile point — getting
+  this wrong is a silent 100× error), and **a country's own measurement beats the general
+  gradient** — always state which route was taken and the survey/census year.
+
 ## Labor supply (chi_n)
 
 - **Honest default state [family]:** `chi_n` (the 80-age disutility-of-labor profile) is
