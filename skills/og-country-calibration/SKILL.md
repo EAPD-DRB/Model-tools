@@ -70,8 +70,8 @@ code. Open the file; don't trust memory or a sibling's citation.
    debt ratio, its foreign share, and the effective real rate on debt are (a) **published precisely**
    by the treasury / revenue service / IMF, to the currency unit; (b) **convention-free** — they map
    one-to-one onto model ratios, unlike GDP / wage / consumption *levels* (arbitrary model units,
-   need `factor`), sector *nominal* output shares (numeraire-distorted, never comparable), or `r` /
-   K_f/K (open-economy modeling latitude); and (c) **self-checking** via the government budget
+   need `factor`), sector *nominal* output shares (numeraire-distorted, never comparable), or `r`
+   (genuine modelling latitude); and (c) **self-checking** via the government budget
    identity (see Fiscal consistency), so a miscalibration surfaces as an inconsistency in the SS and
    as an outright debt runaway on the transition. So a calibration that nails its fiscal ratios is
    validated on its most trustworthy *and* most stability-critical dimension. `factor` itself is a
@@ -79,6 +79,17 @@ code. Open the file; don't trust memory or a sibling's citation.
    `factor` gap is a mis-collected-tax error, not a cosmetic one. Treat the production / preference /
    earnings moments (sector VA shares, hours, the Gini) as a necessary second tier that fiscal data
    can't speak to. **[emerging: IDN, ETH; the fiscal-first framing net-new: ZAF]**
+2b. **`K_f/K` belongs in the FIRST tier, not the latitude bucket — it is published, and it is a
+   lever on `K/Y`.** Earlier versions of this skill filed the foreign-owned capital share under
+   "open-economy modelling latitude" alongside `r`. That is wrong and it cost JPN a shipped
+   placeholder. The IIP publishes it to the currency unit: **foreign equity claims on domestic
+   capital = inward direct-investment equity (incl. reinvested earnings) + inward portfolio equity**,
+   divided by GDP, divided by `K/Y`. Japan end-2024: (34.5 + 334.8) / 609 / 3.70 = **16.4%** — against
+   the 1.5% a placeholder `zeta_K = 0.10` was producing. Two concept cautions: portfolio equity is at
+   **market** value while model `K` is replacement cost (divide by Tobin's q — Japan's ~1.4 gives a
+   12% lower bound), and foreign holdings of *corporate* debt are also claims on domestic capital in a
+   one-asset model (an upper bound near 20%). Quote the range, pick inside it, say which. `r` stays in
+   the latitude bucket — but see the world-rate warning under Finding every lever. **[net-new: JPN]**
 3. **Single-industry first; multi-industry is a separate, non-destructive file** — its own JSON + its
    own example; the single-industry default keeps working untouched. **Two packaging choices, both
    legitimate — pick per repo, but never hand-write the file (always regenerate from the builder):**
@@ -635,6 +646,68 @@ EAPD-DRB/OG-ZAF#142). OG-IDN and OG-ETH have **not** — their shipped multisect
 placeholder (OG-IDN even ships the flat *anchor* gamma/Z as if calibrated). Don't treat a sibling's
 multisector JSON as a worked example without checking `input_output.py` has the real
 `get_gamma`/`get_Z`/value-added `get_io_matrix` functions.
+
+## Finding every lever on a moment — do this BEFORE you tune
+
+The failure this section exists to prevent, in full: OG-JPN's `K/Y` came in at 3.50
+against a PWT 3.70. `beta` is the conventional instrument, it needed 0.984, and at
+0.984 the steady state stopped solving. That was written up as an acceptable miss and
+a "family trait". It was neither. `zeta_K` — capital-account openness, sitting at a
+placeholder 0.10 that the repo's own comment labelled `NEEDS TUNING ... pending the
+IIP anchor` — closed **79% of the `K/Y` gap and 85% of a separate consumption gap**
+when set to the value the IIP data had been specifying all along. Fourteen tuning
+rounds ran without touching it.
+
+Four rules, all mechanical. None of them require noticing anything.
+
+**1. Write the model's own closed form for the moment, then list its arguments.**
+Not the conventional pairing — the equation OG-Core actually evaluates. For `K/Y`,
+`firm.get_r` gives `r = (1-tau_b)·p_m·MPK - delta + tau_b·delta_tau + tau_inv·delta`,
+so under Cobb-Douglas:
+
+```
+K/Y = (1 - tau_b)·gamma / (r + delta - tau_b·delta_tau - inv_tax_credit·delta)
+```
+
+That names **six** levers plus everything moving `r`, where convention names one
+(`beta`). Reproduce the solved value from the closed form before trusting it — if it
+does not match to 4 decimals you have the wrong equation, and finding that out costs
+minutes rather than a shipped calibration. Then extend to `r`: the household Euler
+pins the **portfolio** return `r_p`, and `r` is whatever makes the capital/debt blend
+equal it. So `debt_ratio_ss` and `r_gov` are levers on `K/Y` too — a bigger stock of
+zero-yielding government debt forces capital to pay more, which shrinks `K`.
+
+**2. Every parameter ends in one of three states, and "placeholder" is not one.**
+Sourced · tuned-to-a-named-moment · deliberately-defaulted-with-a-written-reason.
+A `NEEDS TUNING` marker is a **debt with an exit criterion**, not a note to self.
+Grep for the marker as a release gate and make it a test — `test_no_unresolved_tuning_markers`.
+The JPN comment even named the dataset to use; it shipped anyway, because nothing
+failed when it didn't.
+
+**3. Two moments that move together are ONE moment — check for shared levers before
+diagnosing either.** Build the moment × parameter table from rule 1 and look for
+overlap. JPN's consumption gap (+2.3pp) and `K/Y` gap (−0.20) were analysed
+separately for an entire calibration, including a full decomposition of consumption
+into investment / government / net exports. They were the same gap: too little capital
+means too little investment, and `C = Y - I - I_g - G - NX` makes consumption the
+residual that absorbs it. One lever closed both. **Symptom-by-symptom tuning will
+always find a spurious "structural" residual** — because fixing one symptom moves the
+other and you conclude the model can't do better.
+
+**4. A lever that runs out of road is the WRONG LEVER, not proof the gap is
+structural.** When the instrument needs a value that will not solve, or one outside
+its plausible range, that is diagnostic information about the *instrument*. Escalate
+to rule 1; do not write "acceptable band". The band language is how a calibration
+launders an untuned parameter into a family trait.
+
+**Then: sweep the defaults you did NOT source.** Perturb every unsourced parameter and
+record which target moments move. Anything that moves one materially must be sourced or
+explicitly declared — and the catch is that **relevance depends on the settings you have
+not chosen yet.** `world_int_rate` (OG-Core default `0.04`) is invisible at `zeta_K = 0.10`
+and *sets* `r` at `zeta_K = 0.78`; dropping it to 3.5% moved JPN's `K/Y` from 3.67 to 3.81
+and `K_f/K` from 17% to 27%. So high openness silently transfers the determination of the
+country's interest rate from its own households' preferences to an unsourced global
+constant. Run the sweep **after** the parameters settle, not before. **[net-new: JPN]**
 
 ## Warm-starting the steady state — do this before you debug anything else
 
