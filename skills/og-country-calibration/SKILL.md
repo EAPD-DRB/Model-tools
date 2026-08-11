@@ -868,32 +868,48 @@ and it invites the symptom-by-symptom error above. Put `I/Y`, `I_g/Y`, `G/Y` and
   goods-and-services balance near zero — so a model `NX/Y` of 0.000 is right and
   scoring it against 3.8% would be a concept error.
 
-**`K_f` IS A NET QUANTITY AND `zeta_K` MUST BE CALIBRATED TO A NET TARGET.** This is
-the capital-side twin of the debt-concept rule above, and it is easy to get backwards
-— it was, on JPN, in the direction of a *sign* error.
+**`K_f` GROSS vs NET — settle this before you tune `zeta_K`, because the two
+readings differ in SIGN for a net-creditor country.**
 
-`K_f = zeta_K·(K_demand_open − B + D_d)` is **not clamped**: negative values are legal
-and the accounting handles them, since net outflows are
-`(r + delta)·K_f − new_borrowing_f + debt_service_f`, which simply reverses. So a
-net-creditor country IS representable. What OG-Core does **not** have is *gross*
-positions — one `K_f`, not (foreign-owned-domestic) and (domestic-owned-foreign)
-separately. Households hold domestic capital and domestic government debt; there is no
-foreign asset in their problem, so a two-sided external balance sheet collapses to one
-number.
+The identity is `K = K_d + K_f` with `K_d = B − D_d`, so `K_f` reads as the
+**gross** foreign-owned share of the domestic capital stock — households hold
+domestic capital and domestic government debt, and nothing else. On that reading
+the IIP target is inward direct-investment equity (incl. reinvested earnings) +
+inward portfolio equity, ÷ GDP ÷ `K/Y`. Japan end-2024: (34.5 + 334.8) / 609 / 3.70
+= **+16.4%**, against the 1.5% a placeholder `zeta_K = 0.10` was producing.
 
-**The trap:** the IIP publishes both sides, and the gross liability share is the one
-that reads like "the foreign-owned share of the capital stock". Japan's gross foreign
-equity claims are **+16.4%** of the capital stock; its **net** position is **−23.7%**,
-because it holds ¥1,659tn abroad against ¥1,126tn of liabilities. Calibrating `zeta_K`
-to the gross figure fits `K/Y` better and is *the wrong sign* — it makes the model ship
-`(r+delta)·K_f` abroad every period for a country that is a net receiver.
+But `K_f = zeta_K·(K_demand_open − B + D_d)` is **not clamped**, and the outflow
+term `(r + delta)·K_f − new_borrowing_f + debt_service_f` reverses cleanly, so a
+*negative* `K_f` is arithmetically fine and reads as a **net** creditor position.
+Japan's net IIP is **+¥533tn, 87.5% of GDP** — on the net reading the target is
+**−23.7%**, the opposite sign.
 
-**So:** score `K_f/K` against **net** IIP ÷ GDP ÷ `K/Y`, and check reachability before
-you tune. `K_f` takes the sign of `K_demand_open − K_d`, so with a domestic `r` above
-`world_int_rate`, **`K_f > 0` for every `zeta_K ≥ 0`** and a creditor country is
-structurally unreachable — no value of the parameter is right, and the honest move is a
-low `zeta_K`, a documented limitation, and an open `K/Y` gap. Do not close a gap with a
-parameter whose sign the data contradicts. **[net-new: JPN]**
+**Which to use.** The identity is the stronger argument: `K_d = B − D_d` leaves
+households no foreign asset to hold, so negative `K_f` is an unclamped edge case
+rather than a designed representation. Calibrate to **gross**. But say plainly
+what that costs — the model then omits the country's foreign portfolio entirely:
+household wealth `B` is understated by it, and the primary income it earns is
+absent from the resource constraint. For Japan that is ¥1,659tn of assets and
+roughly 3.8% of GDP a year of income. **This is a genuine OG-Core limitation, not
+a calibration choice:** there is one `K_f`, so a two-sided external balance sheet
+cannot be expressed. Check the sign of the country's NIIP, state which reading you
+took, and note the omission in the audit. **[net-new: JPN]**
+
+**Pension outlays belong in the fiscal identity.** The identity elsewhere in this
+skill reads `alpha_G + alpha_T + alpha_I ≈ revenue/Y − pb*`. For any country with a
+modelled pension system that is **incomplete** — pensions are a primary outlay like
+any other:
+
+```
+alpha_G + alpha_T + alpha_I + agg_pension_outlays/Y  =  revenue/Y − pb*
+```
+
+Omitting them sets `alpha_G` too high by the whole pension bill's worth of error
+(JPN: 0.63pp of GDP). **And the SS will not tell you** — the closure forces `G` to
+the consistent level, so the steady state solves and simply reports a `G/Y` below
+your `alpha_G` input. That silent gap between input and solved `G/Y` IS the
+diagnostic; read it every solve. The transition has no such closure for the first
+`tG1` periods, so it over-spends the full error. **[net-new: JPN]**
 
 ## Validation — test the joint steady state
 
