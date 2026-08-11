@@ -867,15 +867,32 @@ and it invites the symptom-by-symptom error above. Put `I/Y`, `I_g/Y`, `G/Y` and
   goods-and-services balance near zero — so a model `NX/Y` of 0.000 is right and
   scoring it against 3.8% would be a concept error.
 
-**And a structural limit worth knowing before you calibrate any open economy:**
-OG-Core lets foreigners own domestic capital (`K_f`) and domestic debt (`D_f`), but
-domestic households own **no foreign assets whatsoever**. There is no lever for them.
-So a net-creditor country is necessarily modelled as a net debtor to the world, its
-household wealth is understated by the whole of its foreign portfolio, and it earns
-none of the primary income that portfolio generates. Japan — the world's largest net
-creditor, ¥1,659tn of assets against ¥1,126tn of liabilities — is the extreme case.
-Check the sign of the country's NIIP before trusting any open-economy result, and say
-so in the audit. **[net-new: JPN]**
+**`K_f` IS A NET QUANTITY AND `zeta_K` MUST BE CALIBRATED TO A NET TARGET.** This is
+the capital-side twin of the debt-concept rule above, and it is easy to get backwards
+— it was, on JPN, in the direction of a *sign* error.
+
+`K_f = zeta_K·(K_demand_open − B + D_d)` is **not clamped**: negative values are legal
+and the accounting handles them, since net outflows are
+`(r + delta)·K_f − new_borrowing_f + debt_service_f`, which simply reverses. So a
+net-creditor country IS representable. What OG-Core does **not** have is *gross*
+positions — one `K_f`, not (foreign-owned-domestic) and (domestic-owned-foreign)
+separately. Households hold domestic capital and domestic government debt; there is no
+foreign asset in their problem, so a two-sided external balance sheet collapses to one
+number.
+
+**The trap:** the IIP publishes both sides, and the gross liability share is the one
+that reads like "the foreign-owned share of the capital stock". Japan's gross foreign
+equity claims are **+16.4%** of the capital stock; its **net** position is **−23.7%**,
+because it holds ¥1,659tn abroad against ¥1,126tn of liabilities. Calibrating `zeta_K`
+to the gross figure fits `K/Y` better and is *the wrong sign* — it makes the model ship
+`(r+delta)·K_f` abroad every period for a country that is a net receiver.
+
+**So:** score `K_f/K` against **net** IIP ÷ GDP ÷ `K/Y`, and check reachability before
+you tune. `K_f` takes the sign of `K_demand_open − K_d`, so with a domestic `r` above
+`world_int_rate`, **`K_f > 0` for every `zeta_K ≥ 0`** and a creditor country is
+structurally unreachable — no value of the parameter is right, and the honest move is a
+low `zeta_K`, a documented limitation, and an open `K/Y` gap. Do not close a gap with a
+parameter whose sign the data contradicts. **[net-new: JPN]**
 
 ## Validation — test the joint steady state
 
