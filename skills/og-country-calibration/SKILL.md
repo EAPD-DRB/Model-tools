@@ -647,6 +647,52 @@ placeholder (OG-IDN even ships the flat *anchor* gamma/Z as if calibrated). Don'
 multisector JSON as a worked example without checking `input_output.py` has the real
 `get_gamma`/`get_Z`/value-added `get_io_matrix` functions.
 
+## Step zero: write the equations down before you touch a parameter
+
+**Before tuning anything, produce a moment x lever table and commit it.** Not from
+convention, not from this skill's parameter tables — from the equations OG-Core
+actually evaluates, read out of `firm.py`, `aggregates.py`, `household.py`,
+`fiscal.py` and `tax.py`. It takes under an hour and it is the single highest-value
+hour in a calibration.
+
+For each target moment, write three things:
+
+1. **The closed form**, with every symbol in it. Reproduce the solved value from your
+   own formula to 4 decimals before trusting it — a mismatch means you read the wrong
+   equation, and finding that out now costs minutes.
+2. **Every parameter appearing in it**, each marked `sourced` / `tuned-to-<moment>` /
+   `DEFAULT-unexamined`.
+3. **Which other moments share those levers.**
+
+Worked example — `K/Y`, where convention names exactly one instrument (`beta`):
+
+```
+K/Y = (1 - tau_b)·gamma / (r + delta - tau_b·delta_tau - inv_tax_credit·delta)
+      [firm.get_r, Cobb-Douglas]
+
+  gamma            sourced (PWT labour share)
+  delta            sourced (CFC/K)
+  tau_b            = cit_rate x c_corp_share_of_assets x adjustment_factor
+                     c_corp_share_of_assets = 0.55 is a US DEFAULT, and note it is
+                     NOT separately identified from adjustment_factor -- only the
+                     product is
+  delta_tau        DEFAULT 0.027 (US tax depreciation)
+  inv_tax_credit   DEFAULT 0.0
+  r                NOT a parameter -- household Euler pins the PORTFOLIO return r_p,
+                     and r solves r_p = weighted avg of r (on K) and r_gov (on D).
+                     So beta, sigma, g_y, debt_ratio_ss, r_gov_scale/shift,
+                     zeta_K and world_int_rate are ALL levers on K/Y.
+
+  shares levers with: C/Y (via I), I/Y, K_f/K, r
+```
+
+That table has eleven levers. The conventional answer has one. OG-JPN tuned the one,
+watched it run out of road at `beta = 0.984`, wrote "acceptable band", and shipped —
+while `zeta_K` sat at a placeholder that closed over half the gap when set from data.
+
+**The table is also the tuning ORDER.** Sourced levers first, then the tuned dials,
+then re-check anything sharing a lever with what you moved.
+
 ## Finding every lever on a moment — do this BEFORE you tune
 
 The failure this section exists to prevent, in full: OG-JPN's `K/Y` came in at 3.50
@@ -767,6 +813,69 @@ repo is not re-deriving the same shim. The proper fix is upstream — ogcore sho
 derive its seeds from parameters it already has (`b ≈ (K/Y + D_d/Y)·Y` from the firm
 FOC and the debt parameters) and accept a warm start — but the repo-side helper is
 worth having regardless, because it also makes reruns cheap. **[net-new: JPN]**
+
+## Dashboard completeness — an unscored moment cannot pull its parameter
+
+This is the general form of the `zeta_K` failure, and it is worth more than any
+individual parameter tip in this skill. `zeta_K` sat at a placeholder through
+fourteen tuning rounds **because `K_f/K` was not a row on the validation dashboard.**
+Nothing was wrong with the tuning loop. The loop optimised what it could see.
+
+Three rules, all checkable mechanically:
+
+**1. Every tuned parameter's identifying moment must be ON the dashboard.** If you
+tuned a dial to a target, that target is a moment — score it. Cross-check the two
+lists (`grep` the tuned dials, `grep` the dashboard rows) and require a bijection.
+A dial with no scored moment will drift, silently, and nothing will fail.
+
+**2. A dial moved to close a RESIDUAL is a free parameter, not a calibration.**
+OG-JPN's `p_wealth` and `tau_bq` were nominally tuned to property-tax and
+inheritance-tax revenue, but in practice were scaled to close the gap in *total*
+revenue — which meant they absorbed every other line's error. Tune each dial against
+its **own** moment, and let total revenue be the check that the parts add up, never
+the thing you steer.
+
+**3. Score every component of the resource constraint, not just the residual.**
+`C = Y - I - I_g - G - NX`. Scoring only `C/Y` cannot tell you which term is wrong,
+and it invites the symptom-by-symptom error above. Put `I/Y`, `I_g/Y`, `G/Y` and
+`NX/Y` on the dashboard next to it.
+
+**The moments most often tuned-for but never scored, and where the data lives:**
+
+| Moment | Parameter it identifies | Source |
+|---|---|---|
+| `K_f/K` | `zeta_K` | IIP: inward DI equity + portfolio equity, ÷ GDP ÷ `K/Y` |
+| `(I + I_g)/Y` | `delta`, `alpha_I` | national accounts GFCF — **private + public**, `I_total` alone is private |
+| `G/Y` | `alpha_G` | government final consumption. Score the SOLVED value: OG-Core's SS silently forces spending to the budget-consistent level, so it will differ from your `alpha_G` input, and that difference is information |
+| `NX/Y` | `zeta_K`, `zeta_D` | the **trade** balance, not the current account — see below |
+| property / wealth tax / Y | `p_wealth`, `h_wealth` | revenue statistics |
+| bequest tax / Y | `tau_bq` | revenue statistics |
+| `w·L/Y` (solved labour share) | validates `gamma` **and** `epsilon` | PWT `labsh`. JPN solved 0.5700 against 0.571 — a genuine free check, since nothing forces it when `epsilon != 1` |
+| wealth Gini / top shares | the `e` matrix, `beta` | household wealth surveys. Distinct from the INCOME Gini the tilt targets, and a much sharper test of an OG model |
+| `g_n_ss` | the demographic window | the UN projection's own implied CAGR |
+
+**Two traps when you add these rows:**
+
+- **Check whether the SS key is an aggregate or a per-household array.** `wealth_tax`
+  and `bequest_tax` come back shaped `(S, J)`. Summing them gives a number with no
+  units — OG-JPN got 16.7 "of GDP" — which looks so wrong it gets discarded rather
+  than debugged. Weight by `omega_SS` and `lambdas`, and sanity-check every new row
+  against a plausible magnitude before believing a gap.
+- **`NX` is the TRADE balance; the current account is a different object.** For a
+  country with a large net international investment position most of the current
+  account is primary income, not trade. Japan's CA surplus is ~3.8% of GDP against a
+  goods-and-services balance near zero — so a model `NX/Y` of 0.000 is right and
+  scoring it against 3.8% would be a concept error.
+
+**And a structural limit worth knowing before you calibrate any open economy:**
+OG-Core lets foreigners own domestic capital (`K_f`) and domestic debt (`D_f`), but
+domestic households own **no foreign assets whatsoever**. There is no lever for them.
+So a net-creditor country is necessarily modelled as a net debtor to the world, its
+household wealth is understated by the whole of its foreign portfolio, and it earns
+none of the primary income that portfolio generates. Japan — the world's largest net
+creditor, ¥1,659tn of assets against ¥1,126tn of liabilities — is the extreme case.
+Check the sign of the country's NIIP before trusting any open-economy result, and say
+so in the audit. **[net-new: JPN]**
 
 ## Validation — test the joint steady state
 
@@ -1030,6 +1139,11 @@ reform + output tables); the earnings tilt is solved inside `income.py`'s
 `ogcore.utils.safe_read_pickle` on `.../OUTPUT_BASELINE/SS/SS_vars.pkl`, `.../TPI/TPI_vars.pkl`, and
 `model_params.pkl` (then form ratios like `K_f/Y`, `C/Y`, revenue/GDP).
 
+0. **Step zero, before any parameter is touched: write the moment x lever table** from OG-Core's own
+   equations (see *Step zero*), and build the validation dashboard from it — one row per moment you
+   intend to hit, and a row for every component of the resource constraint. **Dashboard first, tuning
+   second.** OG-JPN did it the other way round and a placeholder `zeta_K` survived fourteen tuning
+   rounds because `K_f/K` was never scored. **[net-new: JPN]**
 1. Bootstrap from the closest sibling repo; **immediately fix the copied `country_id`, package name,
    and `egg-info`** (the #1 copy-paste regression).
 2. Environment: `uv sync --extra dev`; confirm the resolved ogcore in `uv.lock` matches the EAPD
