@@ -911,13 +911,34 @@ your `alpha_G` input. That silent gap between input and solved `G/Y` IS the
 diagnostic; read it every solve. The transition has no such closure for the first
 `tG1` periods, so it over-spends the full error. **[net-new: JPN]**
 
-## Validation — test the joint steady state
+## Validation — the near-term fiscal path FIRST, then the joint steady state
 
-### Transition-path validation against the fiscal program [PHL — net-new, replicate everywhere]
+**Priority, and it is the reverse of how most of this family works.** The steady state is a
+destination decades out that nobody will live in. The **near-term fiscal path is the more
+believable test**, and it should be built and scored *before* the SS dashboard is polished:
 
-The SS dashboard can't see timing. After the steady state validates, compare the **baseline TPI
-paths** of the fiscal variables against the country's own published program — the sharpest test of
-whether the calibration tracks *expected* reality:
+- **It is checkable against things that actually happened.** Debt, primary balance and revenue for
+  the last several years are published, and the next few are projected by the IMF/OECD and by the
+  country's own medium-term fiscal framework. A model that reproduces them is credible in a way
+  that "our steady state resembles a stylised long run" never is.
+- **It is the ONLY test that can see the debt level.** In the steady state `D/Y` *is*
+  `debt_ratio_ss` — a policy anchor you chose — so scoring it there compares a choice against a
+  measurement and tells you nothing. `initial_debt_ratio` is a measurement, and only the transition
+  starts from it. **JPN shipped `initial_debt_ratio = 0.864` against an actual 1.148 — a 28pp-of-GDP
+  error — for a full day, in a file whose own `r_gov` derivation used the correct 114.8%.** The SS
+  dashboard was structurally incapable of catching it; a debt-path panel would have shown it in
+  period one. **[net-new: JPN]**
+- **It is where a fiscal miscalibration actually bites.** The SS closure silently forces spending to
+  the consistent level, so the steady state solves and looks fine no matter what. The transition
+  holds `alpha_G`/`alpha_T` at their input values for `tG1` periods and has no such protection.
+
+So: **build the path panel with the SS dashboard, not after it.** Both are required; the path is the
+one that can be falsified by next year's data.
+
+### Transition-path validation against the fiscal program [PHL — net-new; JPN — promoted to first-rank]
+
+Compare the **baseline TPI paths** of the fiscal variables against the country's own published
+program and the international projections:
 
 - **The comparison set** (model from `TPI_vars.pkl`, first ~10–15 years): primary balance
   (`total_tax_revenue − total_primary_government_outlays`)/Y vs the treasury's actual primary
@@ -1173,6 +1194,11 @@ reform + output tables); the earnings tilt is solved inside `income.py`'s
 `ogcore.utils.safe_read_pickle` on `.../OUTPUT_BASELINE/SS/SS_vars.pkl`, `.../TPI/TPI_vars.pkl`, and
 `model_params.pkl` (then form ratios like `K_f/Y`, `C/Y`, revenue/GDP).
 
+0a. **Two dashboards, built together: the near-term fiscal PATH and the steady state.** The path
+   panel (debt, primary balance, revenue, public investment vs actuals + the country's program) is
+   the falsifiable one and catches the errors the SS cannot see — above all a wrong
+   `initial_debt_ratio`, which the SS scores against a policy anchor rather than data. Do not defer
+   it to "after the SS validates". **[net-new: JPN]**
 0. **Step zero, before any parameter is touched: write the moment x lever table** from OG-Core's own
    equations (see *Step zero*), and build the validation dashboard from it — one row per moment you
    intend to hit, and a row for every component of the resource constraint. **Dashboard first, tuning
