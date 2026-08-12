@@ -220,6 +220,7 @@ def validate_account(account: Any) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("account", type=Path)
+    parser.add_argument("--json", dest="json_path", type=Path)
     args = parser.parse_args()
     try:
         account = json.loads(args.account.read_text(encoding="utf-8"))
@@ -227,6 +228,16 @@ def main() -> int:
         print(f"FAIL: {error}", file=sys.stderr)
         return 2
     errors = validate_account(account)
+    report = {
+        "schema": "clews-resource-account-validation-v1",
+        "status": "fail" if errors else "pass",
+        "account": str(args.account.resolve()),
+        "account_id": account.get("account_id") if isinstance(account, dict) else None,
+        "errors": errors,
+    }
+    if args.json_path:
+        args.json_path.parent.mkdir(parents=True, exist_ok=True)
+        args.json_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if errors:
         print("resource account: FAIL", file=sys.stderr)
         for error in errors:

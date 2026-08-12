@@ -28,10 +28,12 @@ def rows(
     return selected if isinstance(selected, list) else []
 
 
-def positive_year_value(row: dict[str, Any], years: list[str]) -> bool:
-    return any(
-        isinstance(row.get(year), (int, float)) and row[year] > 0 for year in years
-    )
+def positive_years(row: dict[str, Any], years: list[str]) -> set[str]:
+    return {
+        year
+        for year in years
+        if isinstance(row.get(year), (int, float)) and row[year] > 0
+    }
 
 
 def numeric_values(row: dict[str, Any], years: list[str]) -> list[float]:
@@ -60,13 +62,31 @@ def all_nonpositive(row: dict[str, Any] | None, years: list[str]) -> bool:
     return not values or max(values) <= 0
 
 
-def has_finite_upper(
+def finite_upper_years(
     row: dict[str, Any] | None, years: list[str], threshold: float
-) -> bool:
+) -> set[str]:
     if row is None:
-        return False
-    values = numeric_values(row, years)
-    return bool(values) and any(-1 < value < threshold for value in values)
+        return set()
+    return {
+        year
+        for year in years
+        if isinstance(row.get(year), (int, float)) and -1 < float(row[year]) < threshold
+    }
+
+
+def positive_cost_years(
+    source: list[dict[str, Any] | None], years: list[str]
+) -> set[str]:
+    return {
+        year
+        for year in years
+        if any(
+            row is not None
+            and isinstance(row.get(year), (int, float))
+            and float(row[year]) > 0
+            for row in source
+        )
+    }
 
 
 def all_zero(row: dict[str, Any] | None, years: list[str]) -> bool:
@@ -111,6 +131,8 @@ def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
 
     mode_inputs: dict[tuple[str, int], set[str]] = defaultdict(set)
     mode_outputs: dict[tuple[str, int], set[str]] = defaultdict(set)
+    mode_input_years: dict[tuple[str, int], set[str]] = defaultdict(set)
+    mode_output_years: dict[tuple[str, int], set[str]] = defaultdict(set)
     producers: dict[str, set[str]] = defaultdict(set)
     consumers: dict[str, set[str]] = defaultdict(set)
     for parameter, target, graph in (
@@ -129,16 +151,32 @@ def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
                 or not isinstance(mode, int)
             ):
                 continue
-            if positive_year_value(row, years):
+            active_years = positive_years(row, years)
+            if active_years:
                 target[(tech, mode)].add(commodity)
                 graph[commodity].add(f"{tech}:{mode}")
+                year_target = (
+                    mode_input_years if parameter == "IAR" else mode_output_years
+                )
+                year_target[(tech, mode)].update(active_years)
 
     findings: list[dict[str, Any]] = []
 
-    def add(kind: str, entity: str, severity: str, message: str, detail: Any) -> None:
+    def add(
+        kind: str,
+        entity: str,
+        severity: str,
+        message: str,
+        detail: Any,
+        *,
+        rule_id: str | None = None,
+    ) -> None:
+        identifier = f"{kind}:{entity}"
+        if rule_id:
+            identifier = f"{kind}:{rule_id}:{entity}"
         findings.append(
             {
-                "finding_id": f"{kind}:{entity}",
+                "finding_id": identifier,
                 "finding_type": kind,
                 "entity_id": entity,
                 "severity": severity,
@@ -194,36 +232,46 @@ def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
             if isinstance(roles.get(tech), dict)
             else None
         )
-        inputs = mode_inputs.get(key, set())
-        if not inputs and role not in ROLE_INPUT_EXEMPT:
+        active_years = mode_output_years.get(key, set())
+        inputless_years = active_years - mode_input_years.get(key, set())
+        if inputless_years and role not in ROLE_INPUT_EXEMPT:
             add(
                 "inputless_output_mode",
                 entity,
                 "medium",
-                "Mode has useful output but no positive modeled input and no exempt declared role",
-                {"outputs": sorted(outputs), "declared_role": role},
+                "Mode has useful output without a positive modeled input in one or more years and no exempt declared role",
+                {
+                    "outputs": sorted(outputs),
+                    "declared_role": role,
+                    "inputless_years": sorted(inputless_years),
+                },
             )
-        activity_bounded = has_finite_upper(
-            tamul.get(key), years, threshold
-        ) or has_finite_upper(tau.get((tech, None)), years, threshold)
-        capacity_bounded = has_finite_upper(
-            tamaxc.get((tech, None)), years, threshold
-        ) or has_finite_upper(tamaxci.get((tech, None)), years, threshold)
-        zero_cost = (
-            all_nonpositive(vc.get(key), years)
-            and all_nonpositive(cc.get((tech, None)), years)
-            and all_nonpositive(fc.get((tech, None)), years)
+        bounded_years = set().union(
+            finite_upper_years(tamul.get(key), years, threshold),
+            finite_upper_years(tau.get((tech, None)), years, threshold),
+            finite_upper_years(tamaxc.get((tech, None)), years, threshold),
+            finite_upper_years(tamaxci.get((tech, None)), years, threshold),
         )
-        if not inputs and zero_cost and not activity_bounded and not capacity_bounded:
+        costed_years = positive_cost_years(
+            [vc.get(key), cc.get((tech, None)), fc.get((tech, None))], years
+        )
+        unbounded_years = active_years - bounded_years
+        zero_cost_years = active_years - costed_years
+        unlimited_free_years = inputless_years & unbounded_years & zero_cost_years
+        if unlimited_free_years:
             add(
                 "unlimited_free_output_candidate",
                 entity,
                 "high",
-                "Inputless output mode has no positive modeled cost or finite activity/capacity upper bound",
+                "Inputless output mode has no positive modeled cost or finite activity/capacity upper bound in one or more years",
                 {
                     "outputs": sorted(outputs),
                     "declared_role": role,
                     "threshold": threshold,
+                    "unlimited_free_years": sorted(unlimited_free_years),
+                    "unbounded_years": sorted(unbounded_years),
+                    "zero_cost_years": sorted(zero_cost_years),
+                    "inputless_years": sorted(inputless_years),
                 },
             )
         if all_zero(tamul.get(key), years) or all_zero(tau.get((tech, None)), years):
@@ -244,13 +292,60 @@ def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
                 },
             )
 
-    for item in rules.get("required_links", []):
+    rule_errors: list[str] = []
+    for tech in sorted(set(roles) - set(technologies)):
+        rule_errors.append(f"technology_roles names unknown technology {tech}")
+    for field, declared, known in (
+        ("terminal_commodity_ids", terminal, set(commodities)),
+        ("exogenous_commodity_ids", exogenous, set(commodities)),
+    ):
+        for commodity in sorted(declared - known):
+            rule_errors.append(f"{field} names unknown commodity {commodity}")
+
+    seen_rule_ids: set[str] = set()
+    for index, item in enumerate(rules.get("required_links", [])):
         if not isinstance(item, dict):
+            rule_errors.append(f"required_links[{index}] must be an object")
             continue
-        required = set(item.get("required_input_commodity_ids", []))
+        rule_id = item.get("rule_id")
+        if not isinstance(rule_id, str) or not rule_id.strip():
+            rule_errors.append(f"required_links[{index}].rule_id must be non-empty")
+            continue
+        if rule_id in seen_rule_ids:
+            rule_errors.append(f"required_links rule_id duplicates {rule_id}")
+        seen_rule_ids.add(rule_id)
+        required_ids = item.get("required_input_commodity_ids", [])
+        technology_ids = item.get("technology_ids", [])
+        if not isinstance(required_ids, list) or not required_ids:
+            rule_errors.append(
+                f"required_links[{rule_id}].required_input_commodity_ids must be non-empty"
+            )
+            required_ids = []
+        if not isinstance(technology_ids, list) or not technology_ids:
+            rule_errors.append(
+                f"required_links[{rule_id}].technology_ids must be non-empty"
+            )
+            technology_ids = []
+        if not isinstance(item.get("require_all", True), bool):
+            rule_errors.append(f"required_links[{rule_id}].require_all must be boolean")
+        required = set(required_ids)
+        unknown_commodities = required - set(commodities)
+        for commodity in sorted(unknown_commodities):
+            rule_errors.append(
+                f"required_links[{rule_id}] names unknown commodity {commodity}"
+            )
         require_all = item.get("require_all", True)
-        for tech in item.get("technology_ids", []):
+        for tech in technology_ids:
+            if tech not in technologies:
+                rule_errors.append(
+                    f"required_links[{rule_id}] names unknown technology {tech}"
+                )
+                continue
             modes = sorted(key for key in mode_outputs if key[0] == tech)
+            if not modes:
+                rule_errors.append(
+                    f"required_links[{rule_id}] technology {tech} has no positive output modes"
+                )
             for key in modes:
                 present = mode_inputs.get(key, set())
                 satisfied = (
@@ -267,26 +362,54 @@ def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
                             or "Declared physical input link is missing"
                         ),
                         {
-                            "rule_id": item.get("rule_id"),
+                            "rule_id": rule_id,
                             "required": sorted(required),
                             "present": sorted(present),
                             "require_all": require_all,
                         },
+                        rule_id=rule_id,
                     )
 
-    exemption_keys = {
-        (item.get("finding_type"), item.get("entity_id")): item
-        for item in rules.get("reviewed_exemptions", [])
-        if isinstance(item, dict)
-    }
+    exemption_keys: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(rules.get("reviewed_exemptions", [])):
+        if not isinstance(item, dict):
+            rule_errors.append(f"reviewed_exemptions[{index}] must be an object")
+            continue
+        finding_id = item.get("finding_id")
+        if not isinstance(finding_id, str) or not finding_id.strip():
+            rule_errors.append(
+                f"reviewed_exemptions[{index}] must name the complete finding_id"
+            )
+            continue
+        if finding_id in exemption_keys:
+            rule_errors.append(f"reviewed_exemptions duplicates {finding_id}")
+        if not isinstance(item.get("reason"), str) or not item["reason"].strip():
+            rule_errors.append(f"reviewed_exemptions[{index}].reason must be non-empty")
+        evidence_ids = item.get("evidence_ids")
+        if (
+            not isinstance(evidence_ids, list)
+            or not evidence_ids
+            or not all(
+                isinstance(value, str) and value.strip() for value in evidence_ids
+            )
+        ):
+            rule_errors.append(
+                f"reviewed_exemptions[{index}].evidence_ids must be non-empty"
+            )
+        exemption_keys[finding_id] = item
     active, exempted = [], []
+    used_exemptions: set[str] = set()
     for finding in findings:
-        exemption = exemption_keys.get((finding["finding_type"], finding["entity_id"]))
+        exemption = exemption_keys.get(finding["finding_id"])
         if exemption:
+            used_exemptions.add(finding["finding_id"])
             finding = {**finding, "exemption": exemption}
             exempted.append(finding)
         else:
             active.append(finding)
+    unused_exemptions = [
+        exemption_keys[key] for key in sorted(set(exemption_keys) - used_exemptions)
+    ]
     counts = {
         severity: sum(item["severity"] == severity for item in active)
         for severity in ("high", "medium", "low")
@@ -298,10 +421,18 @@ def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
         "years": years,
         "technology_count": len(technologies),
         "commodity_count": len(commodities),
-        "status": "findings" if active else "pass",
+        "status": (
+            "fail"
+            if rule_errors or unused_exemptions
+            else "findings"
+            if active
+            else "pass"
+        ),
         "summary": {"active": len(active), "exempted": len(exempted), **counts},
         "findings": active,
         "reviewed_exemptions": exempted,
+        "rule_errors": rule_errors,
+        "unused_exemptions": unused_exemptions,
         "interpretation": "Findings are audit candidates. Resolve, declare with evidence, or defer in the schema ledger after equation and role review.",
     }
 
@@ -323,6 +454,8 @@ def main() -> int:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(rendered, encoding="utf-8")
     print(rendered, end="")
+    if report["status"] == "fail":
+        return 1
     if args.fail_on == "high" and report["summary"]["high"]:
         return 1
     if args.fail_on == "all" and report["summary"]["active"]:

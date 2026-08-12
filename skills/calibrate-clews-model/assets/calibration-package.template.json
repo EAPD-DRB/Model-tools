@@ -4,23 +4,16 @@
     "source_case": "COUNTRY_BASIC",
     "candidate_case": "COUNTRY_REFINED_WORKING",
     "baseline_run": "BASE_STORED",
+    "source_json_dir": "../COUNTRY_BASIC",
+    "candidate_json_dir": ".",
     "scenario": "BASE",
     "horizon": "2020-2050",
     "intended_use": "National CLEWs scenario analysis"
   },
   "provenance": {
     "inherited_ledger_dir": "data_sources",
-    "retained_evidence_dir": "data_sources/evidence",
-    "complete_inherited_copy": true,
-    "requires_previous_version_to_interpret": false,
-    "ledger_validation": {
-      "status": "pending",
-      "artifact": null
-    },
-    "populated_input_coverage": {
-      "status": "pending",
-      "artifact": null
-    }
+    "predecessor_ledger_dir": "../COUNTRY_BASIC/data_sources",
+    "retained_evidence_dir": "data_sources/evidence"
   },
   "backlog": {
     "path": "documentation/calibration-backlog.csv",
@@ -40,7 +33,7 @@
   ],
   "changes": [
     {
-      "change_id": "INPUT_EXISTING_STOCK",
+      "change_id": "CHG_EXISTING_STOCK",
       "package_id": "PKG_EXISTING_STOCK",
       "parameter": "ResidualCapacity",
       "source_file": "RYT.json",
@@ -57,8 +50,7 @@
       ],
       "model_map_ids": [
         "MAP_EXISTING_STOCK"
-      ],
-      "source_diff_allowed": true
+      ]
     }
   ],
   "benchmarks": [
@@ -66,25 +58,12 @@
       "name": "Historical electricity generation",
       "source_ids": [
         "SRC_COUNTRY_GENERATION"
-      ],
-      "affected_parameters": [],
-      "diagnostic_only": true
+      ]
     }
   ],
   "connectivity": {
     "rules": "documentation/connectivity-rules.json",
-    "audit": {
-      "status": "pending",
-      "artifact": null
-    },
-    "finding_dispositions": [
-      {
-        "finding_id": "EXAMPLE_FINDING",
-        "status": "pending",
-        "resolution": "Connect, bound, price, declare, or defer",
-        "evidence_ids": []
-      }
-    ]
+    "finding_dispositions": []
   },
   "runtime": {
     "known_good_seconds": 120,
@@ -92,8 +71,6 @@
     "baseline_artifact": "res/BASE_STORED/results.txt"
   },
   "gates": {
-    "inherited_provenance": {"status": "pending", "artifact": null},
-    "source_diff_allowlist": {"status": "pending", "artifact": null},
     "identifier_integrity": {"status": "pending", "artifact": null},
     "connectivity_review": {"status": "pending", "artifact": null},
     "equation_unit_replay": {"status": "pending", "artifact": null},

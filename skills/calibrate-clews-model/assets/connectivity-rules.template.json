@@ -26,8 +26,7 @@
   ],
   "reviewed_exemptions": [
     {
-      "finding_type": "inputless_output_mode",
-      "entity_id": "TEC_EXAMPLE_IMPORT:1",
+      "finding_id": "inputless_output_mode:TEC_EXAMPLE_IMPORT:1",
       "reason": "Declared import/resource-supply boundary with a finite price",
       "evidence_ids": [
         "SRC_EXAMPLE_IMPORT_PRICE"

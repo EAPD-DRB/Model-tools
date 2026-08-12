@@ -47,6 +47,23 @@ class CompareRunsTest(unittest.TestCase):
         self.assertEqual(activity["status"], "changed")
         self.assertEqual(activity["total_change"], 0)
 
+    def test_reports_tables_present_on_only_one_side(self) -> None:
+        self.write(self.before, "Demand.csv", [("D", 10)])
+        self.write(self.after, "NewCapacity.csv", [("N", 2)])
+        report = COMPARE.compare(self.before, self.after, 1e-9)
+        self.assertEqual(report["baseline_only"], ["Demand.csv"])
+        self.assertEqual(report["candidate_only"], ["NewCapacity.csv"])
+        self.assertEqual(report["structural_summary"]["Demand.csv"], "baseline_only")
+        self.assertEqual(
+            report["structural_summary"]["NewCapacity.csv"], "candidate_only"
+        )
+
+    def test_structural_option_replaces_defaults(self) -> None:
+        self.write(self.before, "CustomAccount.csv", [("A", 1)])
+        self.write(self.after, "CustomAccount.csv", [("A", 2)])
+        report = COMPARE.compare(self.before, self.after, 1e-9, {"CustomAccount.csv"})
+        self.assertEqual(report["structural_summary"], {"CustomAccount.csv": "changed"})
+
 
 if __name__ == "__main__":
     unittest.main()
