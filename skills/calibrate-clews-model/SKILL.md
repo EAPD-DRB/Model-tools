@@ -53,17 +53,21 @@ Record the source and candidate cases, scenario, horizon, intended use, stored
 baseline identity, solver status, objective, runtime, and model dimensions. Start
 the candidate with a complete copy of the current ledger and retained evidence.
 
-Inspect all material inputs and classify country specificity, currency, age,
-proxy use, missingness, and connectivity. Prioritize feasibility risk, decision
-influence, cross-sector importance, defect severity, and evidence availability.
+Use one complete, high-impact sector and its direct CLEWs interfaces as the
+default phase boundary. If the user has not selected the sector, prioritize by
+national importance, current model weakness, cross-sector influence, and public
+data availability. Inspect all material inputs within that boundary and classify
+country specificity, currency, age, proxy use, missingness, and connectivity.
 Use the research hierarchy and trace rules in
 [references/country-data-research.md](references/country-data-research.md).
 
-Size each package around one coherent, independently testable physical or
-accounting boundary, grouping the coupled changes needed to close it. Record its
-completion test, evidence period and post-evidence treatment, source and
-allocation boundary, calibration claim, and measurable invariants. Reuse the
-normal gate artifacts to test those invariants; these declarations add no solve.
+Define whole-sector completion at the simplest defensible national level:
+demand or service, historical accounting, stocks and turnover, applicable
+technologies, costs and efficiencies, resource or infrastructure constraints,
+direct emissions, and material interfaces with other modeled sectors. Group the
+coupled changes needed to close that sector in one package. Record its completion
+test, evidence period and post-evidence treatment, source and allocation boundary,
+calibration claim, and measurable invariants. These declarations add no solve.
 
 ### 2. Audit connectivity
 
@@ -93,6 +97,11 @@ Read the exact local equation and export path for each changed parameter. Verify
 ratio direction, units, indices, guards, defaults, generated-data behavior, and
 national-versus-cluster scope. Use the fewest objects needed for a defensible
 physical chain, leaving choices endogenous beyond documented constraints.
+
+Use transparent, bounded, and replaceable proxies when national evidence is
+unavailable. Resolve conflicting evidence explicitly. For each material proxy,
+record its central value, plausible range, transfer rationale, model consequence,
+and the national authority or dataset that could replace it.
 
 For initial stocks, survival, retirement, or adoption, use
 [references/stock-turnover-patterns.md](references/stock-turnover-patterns.md).
@@ -155,6 +164,11 @@ infeasible rows to equations, indices, bounds, and evidence before changing
 anything. Inspect affected quantities, binding limits, resource balances,
 backstops, residuals, adjacent sectors, and full-horizon behavior. Correct only
 mapping, unit, scope, evidence, or formulation defects—not historical mismatch.
+
+In the central run, inspect the historical-to-future seam, annual technology and
+fuel shares, stock turnover, resource dominance, imports, electricity demand, and
+emissions. Report what the sector can now represent, its historical scale and
+future service path, and which material results remain proxy-driven.
 
 ### 7. Compare and promote
 
