@@ -131,8 +131,11 @@ class CalibrationPackageTest(unittest.TestCase):
             pass_gate(
                 "baseline_comparison",
                 {
-                    "schema": "clews-run-comparison-v1",
+                    "schema": "clews-run-comparison-v2",
                     "status": "pass",
+                    "classification": "EXACT_PARITY",
+                    "strict_row_parity": True,
+                    "structural_parity": True,
                     "common_file_count": 1,
                     "baseline_only": [],
                     "candidate_only": [],
@@ -174,6 +177,52 @@ class CalibrationPackageTest(unittest.TestCase):
 
     def test_complete_package_passes_promotion(self) -> None:
         self.assertEqual(self.validate(self.ready("promotion"), "promotion"), [])
+
+    def test_alternate_optimum_requires_explicit_promotion_decision(self) -> None:
+        package = self.ready("promotion")
+        relative = package["gates"]["baseline_comparison"]["artifact"]
+        artifact = self.root / relative
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+        report.update(
+            {
+                "classification": "STRUCTURAL_PARITY_ALTERNATE_OPTIMUM_CANDIDATE",
+                "strict_row_parity": False,
+                "structural_parity": True,
+            }
+        )
+        artifact.write_text(json.dumps(report), encoding="utf-8")
+        errors = self.validate(package, "promotion")
+        self.assertTrue(any("explicitly accept" in error for error in errors))
+        package["delivery"]["alternate_optimum_decision"] = {
+            "accepted": True,
+            "rationale": "Core annual outcomes are invariant; only equivalent dispatch rows moved.",
+            "comparison_artifact": relative,
+        }
+        self.assertEqual(self.validate(package, "promotion"), [])
+
+    def test_retirement_requires_declared_objects_and_evidence_artifacts(self) -> None:
+        package = self.ready("pre-solve")
+        change = package["changes"][0]
+        change["change_type"] = "object_retirement"
+        errors = self.validate(package, "pre-solve")
+        self.assertTrue(any("retired_object_ids" in error for error in errors))
+        self.assertTrue(
+            any("reference_inventory_artifact" in error for error in errors)
+        )
+        self.assertTrue(
+            any("inactivity_evidence_artifact" in error for error in errors)
+        )
+
+        for name in ("reference-inventory.json", "inactivity-evidence.json"):
+            (self.root / "documentation" / name).write_text("{}\n", encoding="utf-8")
+        change.update(
+            {
+                "retired_object_ids": ["TEC_OLD", "COM_OLD"],
+                "reference_inventory_artifact": "documentation/reference-inventory.json",
+                "inactivity_evidence_artifact": "documentation/inactivity-evidence.json",
+            }
+        )
+        self.assertEqual(self.validate(package, "pre-solve"), [])
 
     def test_source_input_patch_passes_without_solver_gates(self) -> None:
         package = self.ready("source-input-patch")

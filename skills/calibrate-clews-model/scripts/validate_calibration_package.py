@@ -39,6 +39,17 @@ FINDING_STATUSES = {"pending", "resolved", "declared", "deferred"}
 OPTIONAL_GATES = {"matrix_check", "stock_resource_account_checks"}
 DELIVERY_STATES = {"working", "source_input_patch", "promoted"}
 RESULT_STATUSES = {"absent", "stale", "fresh"}
+CHANGE_TYPES = {
+    "parameter_update",
+    "object_addition",
+    "object_retirement",
+    "coupling_change",
+}
+COMPARISON_CLASSIFICATIONS = {
+    "EXACT_PARITY",
+    "STRUCTURAL_PARITY_ALTERNATE_OPTIMUM_CANDIDATE",
+    "MATERIAL_CHANGE",
+}
 LEDGER_IDS = {
     "SOURCES.csv": "source_id",
     "CALCULATIONS.csv": "calculation_id",
@@ -476,6 +487,26 @@ def validate_package(
             "physical_effect",
         ):
             require_text(item, field, location, errors)
+        change_type = item.get("change_type", "parameter_update")
+        if change_type not in CHANGE_TYPES:
+            errors.append(
+                f"{location}.change_type must be one of {sorted(CHANGE_TYPES)}"
+            )
+        if change_type == "object_retirement":
+            require_text_list(item, "retired_object_ids", location, errors)
+            for field in (
+                "reference_inventory_artifact",
+                "inactivity_evidence_artifact",
+            ):
+                require_text(item, field, location, errors)
+                artifact = item.get(field)
+                if (
+                    stage in MATERIAL_STAGES
+                    and isinstance(artifact, str)
+                    and artifact.strip()
+                    and not resolve(base_dir, artifact).is_file()
+                ):
+                    errors.append(f"{location}.{field} does not exist: {artifact}")
         change_id = item.get("change_id")
         if isinstance(change_id, str):
             if change_id in change_ids:
@@ -610,6 +641,31 @@ def validate_package(
                 f"delivery.result_status must be one of {sorted(RESULT_STATUSES)}"
             )
         require_text(delivery, "recertification_command", "delivery", errors)
+        alternate_decision = delivery.get("alternate_optimum_decision")
+        if alternate_decision is not None:
+            if not isinstance(alternate_decision, dict):
+                errors.append("delivery.alternate_optimum_decision must be an object")
+            else:
+                if not isinstance(alternate_decision.get("accepted"), bool):
+                    errors.append(
+                        "delivery.alternate_optimum_decision.accepted must be boolean"
+                    )
+                rationale = alternate_decision.get("rationale")
+                if rationale is not None and (
+                    not isinstance(rationale, str) or not rationale.strip()
+                ):
+                    errors.append(
+                        "delivery.alternate_optimum_decision.rationale must be null "
+                        "or non-empty text"
+                    )
+                artifact = alternate_decision.get("comparison_artifact")
+                if artifact is not None and (
+                    not isinstance(artifact, str) or not artifact.strip()
+                ):
+                    errors.append(
+                        "delivery.alternate_optimum_decision.comparison_artifact "
+                        "must be null or non-empty text"
+                    )
         if stage == "source-input-patch":
             if state != "source_input_patch":
                 errors.append(
@@ -672,7 +728,7 @@ def validate_package(
                         path,
                         f"gates.{name}",
                         errors,
-                        schema="clews-run-comparison-v1",
+                        schema="clews-run-comparison-v2",
                     )
                 elif name == "stock_resource_account_checks":
                     report = validate_report(
@@ -795,6 +851,79 @@ def validate_package(
                     errors.append(
                         f"gates.baseline_comparison artifact.{field} must be a list"
                     )
+            classification = comparison.get("classification")
+            if classification not in COMPARISON_CLASSIFICATIONS:
+                errors.append(
+                    "gates.baseline_comparison artifact.classification must be one "
+                    f"of {sorted(COMPARISON_CLASSIFICATIONS)}"
+                )
+            for field in ("strict_row_parity", "structural_parity"):
+                if not isinstance(comparison.get(field), bool):
+                    errors.append(
+                        f"gates.baseline_comparison artifact.{field} must be boolean"
+                    )
+            strict_parity = comparison.get("strict_row_parity")
+            structural_parity = comparison.get("structural_parity")
+            expected_parity = {
+                "EXACT_PARITY": (True, True),
+                "STRUCTURAL_PARITY_ALTERNATE_OPTIMUM_CANDIDATE": (False, True),
+                "MATERIAL_CHANGE": (False, False),
+            }.get(classification)
+            if (
+                expected_parity
+                and (
+                    strict_parity,
+                    structural_parity,
+                )
+                != expected_parity
+            ):
+                errors.append(
+                    "gates.baseline_comparison artifact parity flags are inconsistent "
+                    f"with classification {classification}"
+                )
+            if (
+                stage == "promotion"
+                and classification == "STRUCTURAL_PARITY_ALTERNATE_OPTIMUM_CANDIDATE"
+            ):
+                decision = (
+                    delivery.get("alternate_optimum_decision")
+                    if isinstance(delivery, dict)
+                    else None
+                )
+                if (
+                    not isinstance(decision, dict)
+                    or decision.get("accepted") is not True
+                ):
+                    errors.append(
+                        "delivery.alternate_optimum_decision must explicitly accept "
+                        "the alternate-optimum candidate at promotion"
+                    )
+                else:
+                    artifact = decision.get("comparison_artifact")
+                    rationale = decision.get("rationale")
+                    gate_artifact = (
+                        gates.get("baseline_comparison", {}).get("artifact")
+                        if isinstance(gates, dict)
+                        else None
+                    )
+                    if not isinstance(artifact, str) or not artifact.strip():
+                        errors.append(
+                            "delivery.alternate_optimum_decision.comparison_artifact "
+                            "is required at promotion"
+                        )
+                    if not isinstance(rationale, str) or not rationale.strip():
+                        errors.append(
+                            "delivery.alternate_optimum_decision.rationale is required "
+                            "at promotion"
+                        )
+                    elif not isinstance(gate_artifact, str) or (
+                        resolve(base_dir, artifact).resolve()
+                        != resolve(base_dir, gate_artifact).resolve()
+                    ):
+                        errors.append(
+                            "delivery.alternate_optimum_decision.comparison_artifact "
+                            "must match gates.baseline_comparison.artifact"
+                        )
 
         special = {
             "connectivity_review",

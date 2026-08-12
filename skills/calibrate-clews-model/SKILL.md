@@ -82,6 +82,11 @@ finding by connecting or bounding it, declaring a sourced legitimate role, or
 recording a consequential gap. Follow
 [references/connectivity-audit.md](references/connectivity-audit.md).
 
+When a branch is referenced but demonstrably inactive, use the conditional
+retirement procedure in
+[references/inactive-branch-retirement.md](references/inactive-branch-retirement.md).
+Do not add dummy demand, supply, or disposal solely to silence a warning.
+
 ### 3. Design the representation
 
 Read the exact local equation and export path for each changed parameter. Verify
@@ -153,16 +158,22 @@ mapping, unit, scope, evidence, or formulation defects—not historical mismatch
 
 ### 7. Compare and promote
 
-Compare structural totals before row-level activity. Add project-specific land,
-water, or resource tables with repeated `--structural` options when needed:
+Compare core annual outcomes before row-level activity. Add project-specific
+land, water, or resource tables with repeated `--structural` options when needed.
+Use `--rules` to filter exact retired identifiers and aggregate explicitly
+equivalent routes:
 
 ```bash
 python scripts/compare_clews_runs.py BASELINE_CSV_DIR CANDIDATE_CSV_DIR \
+  --rules CASE_DIR/documentation/comparison-rules.json \
   --output CASE_DIR/documentation/run-comparison.json
 ```
 
 Investigate tables present on only one side, aggregate equivalent routes, and do
 not mistake alternative-optimum dispatch reallocations for physical change.
+Record the comparator's exact-parity, alternate-optimum-candidate, or
+material-change classification. An alternate-optimum candidate requires an
+explicit promotion acceptance with rationale and the comparison artifact.
 Benchmarks remain diagnostic, never fitted.
 
 Regenerate the live case from validated source, solve once fresh, create the
