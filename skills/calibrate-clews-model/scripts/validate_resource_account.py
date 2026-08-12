@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import sys
@@ -27,7 +28,26 @@ def text_list(value: Any) -> bool:
     )
 
 
-def validate_account(account: Any) -> list[str]:
+def read_ledger_ids(ledger_dir: Path) -> dict[str, set[str]]:
+    specifications = {
+        "sources": ("SOURCES.csv", "source_id"),
+        "calculations": ("CALCULATIONS.csv", "calculation_id"),
+        "assumptions": ("ASSUMPTIONS.csv", "assumption_id"),
+    }
+    result: dict[str, set[str]] = {}
+    for name, (filename, column) in specifications.items():
+        with (ledger_dir / filename).open(newline="", encoding="utf-8-sig") as stream:
+            result[name] = {
+                row.get(column, "").strip()
+                for row in csv.DictReader(stream)
+                if row.get(column, "").strip()
+            }
+    return result
+
+
+def validate_account(
+    account: Any, ledger_ids: dict[str, set[str]] | None = None
+) -> list[str]:
     errors: list[str] = []
     if not isinstance(account, dict):
         return ["account root must be an object"]
@@ -84,8 +104,16 @@ def validate_account(account: Any) -> list[str]:
                 errors.append(
                     "model_control_total does not equal base-year account total"
                 )
-        if not text_list(reconciliation.get("calculation_ids")):
+        calculation_ids = reconciliation.get("calculation_ids")
+        if not text_list(calculation_ids):
             errors.append("boundary_reconciliation.calculation_ids must be non-empty")
+        elif ledger_ids is not None:
+            for identifier in calculation_ids:
+                if identifier not in ledger_ids["calculations"]:
+                    errors.append(
+                        "boundary_reconciliation.calculation_ids does not resolve: "
+                        f"{identifier}"
+                    )
 
     classes = account.get("classes")
     if not isinstance(classes, list) or not classes:
@@ -145,8 +173,14 @@ def validate_account(account: Any) -> list[str]:
             errors.append(
                 f"{location} residual route has an effectively unbounded upper limit"
             )
-        if not text_list(item.get("evidence_ids")):
+        evidence_ids = item.get("evidence_ids")
+        if not text_list(evidence_ids):
             errors.append(f"{location}.evidence_ids must be non-empty")
+        elif ledger_ids is not None:
+            allowed = set().union(*ledger_ids.values())
+            for identifier in evidence_ids:
+                if identifier not in allowed:
+                    errors.append(f"{location}.evidence_ids does not resolve: {identifier}")
 
     if base_year in totals and abs(base_sum - totals[base_year]) > 1e-9:
         errors.append("base-year class values do not close to the account total")
@@ -185,8 +219,14 @@ def validate_account(account: Any) -> list[str]:
             errors.append(
                 f"{location} claims an annual maximum without an adjacent-year or gross-flow constraint"
             )
-        if not text_list(item.get("evidence_ids")):
+        evidence_ids = item.get("evidence_ids")
+        if not text_list(evidence_ids):
             errors.append(f"{location}.evidence_ids must be non-empty")
+        elif ledger_ids is not None:
+            allowed = set().union(*ledger_ids.values())
+            for identifier in evidence_ids:
+                if identifier not in allowed:
+                    errors.append(f"{location}.evidence_ids does not resolve: {identifier}")
 
     scope = account.get("index_scope")
     if not isinstance(scope, dict):
@@ -202,6 +242,14 @@ def validate_account(account: Any) -> list[str]:
             errors.append(
                 "different account and constraint scopes require allocation_evidence_ids"
             )
+        if text_list(allocation) and ledger_ids is not None:
+            allowed = set().union(*ledger_ids.values())
+            for identifier in allocation:
+                if identifier not in allowed:
+                    errors.append(
+                        "index_scope.allocation_evidence_ids does not resolve: "
+                        f"{identifier}"
+                    )
 
     export = account.get("export_checks")
     check = export.get("zero_and_sentinel_bounds") if isinstance(export, dict) else None
@@ -220,6 +268,7 @@ def validate_account(account: Any) -> list[str]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("account", type=Path)
+    parser.add_argument("--ledger-dir", type=Path)
     parser.add_argument("--json", dest="json_path", type=Path)
     args = parser.parse_args()
     try:
@@ -227,11 +276,17 @@ def main() -> int:
     except (OSError, json.JSONDecodeError) as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 2
-    errors = validate_account(account)
+    try:
+        ledger_ids = read_ledger_ids(args.ledger_dir) if args.ledger_dir else None
+    except OSError as error:
+        print(f"FAIL: {error}", file=sys.stderr)
+        return 2
+    errors = validate_account(account, ledger_ids)
     report = {
         "schema": "clews-resource-account-validation-v1",
         "status": "fail" if errors else "pass",
         "account": str(args.account.resolve()),
+        "ledger_dir": str(args.ledger_dir.resolve()) if args.ledger_dir else None,
         "account_id": account.get("account_id") if isinstance(account, dict) else None,
         "errors": errors,
     }

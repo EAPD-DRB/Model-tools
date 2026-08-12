@@ -24,6 +24,17 @@ class ResourceAccountTest(unittest.TestCase):
     def test_template_passes(self) -> None:
         self.assertEqual(VALIDATOR.validate_account(self.account), [])
 
+    def test_ledger_references_are_resolved(self) -> None:
+        ledger = {
+            "sources": {"SRC_ACCOUNT_STOCK", "SRC_TRANSITION_RATE"},
+            "calculations": {"CALC_ACCOUNT_RECONCILIATION"},
+            "assumptions": set(),
+        }
+        self.assertEqual(VALIDATOR.validate_account(self.account, ledger), [])
+        self.account["transitions"][0]["evidence_ids"] = ["SRC_MISSING"]
+        errors = VALIDATOR.validate_account(self.account, ledger)
+        self.assertTrue(any("SRC_MISSING" in error for error in errors))
+
     def test_missing_land_is_detected(self) -> None:
         account = copy.deepcopy(self.account)
         account["total"]["2021"] = 120

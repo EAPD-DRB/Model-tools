@@ -1,4 +1,4 @@
 interface:
   display_name: "Calibrate CLEWs Model"
-  short_description: "Refine CLEWs country data and physical connections"
-  default_prompt: "Use $calibrate-clews-model to replace generic inputs with sourced country data, repair disconnected systems, and deliver a solved, fully traceable MUIO/OSeMOSYS case without forcing historical outcomes."
+  short_description: "Calibrate a complete CLEWs sector from evidence"
+  default_prompt: "Use $calibrate-clews-model to calibrate a complete country sector from sourced evidence, with bounded solves, full lineage, and no historical fitting."

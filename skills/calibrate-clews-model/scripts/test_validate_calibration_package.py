@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import importlib.util
 import json
 import subprocess
@@ -30,13 +31,18 @@ class CalibrationPackageTest(unittest.TestCase):
     def write_ledgers(self) -> None:
         contents = {
             "SOURCES.csv": (
-                "source_id\n"
-                "SRC_COUNTRY_PLANT_REGISTER\n"
-                "SRC_COUNTRY_GENERATION\n"
-                "SRC_CONNECTIVITY\n"
+                "source_id,exact_locator\n"
+                "SRC_COUNTRY_PLANT_REGISTER,table 1\n"
+                "SRC_COUNTRY_GENERATION,table 2\n"
+                "SRC_CONNECTIVITY,table 3\n"
             ),
-            "CALCULATIONS.csv": ("calculation_id\nCALC_EXISTING_STOCK_SURVIVAL\n"),
-            "ASSUMPTIONS.csv": "assumption_id\nASM_CONNECTIVITY\n",
+            "CALCULATIONS.csv": (
+                "calculation_id,source_ids,assumption_ids,input_calculation_ids\n"
+                "CALC_EXISTING_STOCK_SURVIVAL,SRC_COUNTRY_PLANT_REGISTER,,\n"
+            ),
+            "ASSUMPTIONS.csv": (
+                "assumption_id,evidence_source_ids\nASM_CONNECTIVITY,SRC_CONNECTIVITY\n"
+            ),
             "MODEL_MAP.csv": (
                 "map_id,model_file,parameter,superseded_by\n"
                 "MAP_EXISTING_STOCK,RYT.json,ResidualCapacity,\n"
@@ -116,6 +122,18 @@ class CalibrationPackageTest(unittest.TestCase):
                     "reviewed_exemptions": [],
                     "rule_errors": [],
                     "unused_exemptions": [],
+                },
+            )
+            pass_gate(
+                "no_forcing_audit",
+                {
+                    "schema": "clews-non-forcing-audit-v1",
+                    "status": "pass",
+                    "case_dir": str(self.root),
+                    "unresolved_candidates": [],
+                    "invalid_dispositions": [],
+                    "prohibited_solve_attempts": [],
+                    "benchmark_lineage_failures": [],
                 },
             )
         pass_gate(
@@ -357,6 +375,167 @@ class CalibrationPackageTest(unittest.TestCase):
         (self.root / "candidate_json/OTHER.json").write_text("{}\n", encoding="utf-8")
         errors = self.validate(package, "pre-solve")
         self.assertTrue(any("actual changed source JSON" in e for e in errors))
+
+    def test_formatting_only_json_churn_is_ignored(self) -> None:
+        package = self.ready("pre-solve")
+        (self.root / "source_json/OTHER.json").write_text(
+            '{"a":1,"b":2}\n', encoding="utf-8"
+        )
+        (self.root / "candidate_json/OTHER.json").write_text(
+            '{\n  "b": 2,\n  "a": 1\n}\n', encoding="utf-8"
+        )
+        self.assertEqual(self.validate(package, "pre-solve"), [])
+
+    def test_regeneration_change_requires_matching_hashes(self) -> None:
+        package = self.ready("pre-solve")
+        before = self.root / "source_json/OTHER.json"
+        after = self.root / "candidate_json/OTHER.json"
+        before.write_text('{"metadata":"old"}\n', encoding="utf-8")
+        after.write_text('{"metadata":"new"}\n', encoding="utf-8")
+        package["regeneration_changes"] = [
+            {
+                "source_file": "OTHER.json",
+                "before_sha256": hashlib.sha256(before.read_bytes()).hexdigest(),
+                "after_sha256": hashlib.sha256(after.read_bytes()).hexdigest(),
+                "classification": "metadata_only",
+                "reason": "UpdateCase refreshes its version marker",
+            }
+        ]
+        self.assertEqual(self.validate(package, "pre-solve"), [])
+
+    def test_resolved_and_reviewed_exemption_dispositions_are_retained(self) -> None:
+        package = self.ready("promotion")
+        package["connectivity"]["finding_dispositions"] = [
+            {
+                "finding_id": "old:finding",
+                "status": "resolved",
+                "resolution": "Route connected in this wave",
+                "evidence_ids": ["SRC_CONNECTIVITY"],
+                "gap_items": [],
+            },
+            {
+                "finding_id": "reviewed:exemption",
+                "status": "exempted",
+                "resolution": "Legitimate sourced boundary",
+                "evidence_ids": ["SRC_CONNECTIVITY"],
+                "gap_items": [],
+            },
+        ]
+        artifact = self.root / package["gates"]["connectivity_review"]["artifact"]
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+        report["reviewed_exemptions"] = [{"finding_id": "reviewed:exemption"}]
+        artifact.write_text(json.dumps(report), encoding="utf-8")
+        self.assertEqual(self.validate(package, "promotion"), [])
+
+    def test_deferred_finding_cites_gap_not_evidence(self) -> None:
+        package = self.ready("promotion")
+        finding_id = "required_link_missing:RULE:USE:1"
+        artifact = self.root / package["gates"]["connectivity_review"]["artifact"]
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+        report["status"] = "findings"
+        report["findings"] = [{"finding_id": finding_id}]
+        artifact.write_text(json.dumps(report), encoding="utf-8")
+        package["packages"][0]["connectivity_finding_ids"] = [finding_id]
+        package["connectivity"]["finding_dispositions"] = [
+            {
+                "finding_id": finding_id,
+                "status": "deferred",
+                "resolution": "National routing evidence is not yet available",
+                "evidence_ids": [],
+                "gap_items": ["GAP_EXAMPLE"],
+            }
+        ]
+        self.assertEqual(self.validate(package, "promotion"), [])
+
+    def test_audited_source_locator_correction_is_allowed(self) -> None:
+        package = self.ready("pre-solve")
+        source = self.root / "data_sources/SOURCES.csv"
+        source.write_text(
+            source.read_text(encoding="utf-8").replace("table 1", "table 1 page 7"),
+            encoding="utf-8",
+        )
+        artifact = self.root / "documentation/source-correction.md"
+        artifact.write_text("Verified against the retained source.\n", encoding="utf-8")
+        package["provenance"]["corrections"] = [
+            {
+                "table": "SOURCES.csv",
+                "id": "SRC_COUNTRY_PLANT_REGISTER",
+                "field": "exact_locator",
+                "before": "table 1",
+                "after": "table 1 page 7",
+                "reason": "Correct the inherited page locator",
+                "evidence_artifact": "documentation/source-correction.md",
+            }
+        ]
+        self.assertEqual(self.validate(package, "pre-solve"), [])
+
+    def test_benchmark_overlap_is_transitive_and_requires_reason(self) -> None:
+        package = self.ready("pre-solve")
+        content = (
+            "calculation_id,source_ids,assumption_ids,input_calculation_ids\n"
+            "CALC_EXISTING_STOCK_SURVIVAL,SRC_COUNTRY_GENERATION,,\n"
+        )
+        for path in (
+            self.root / "data_sources/CALCULATIONS.csv",
+            self.root / "predecessor/data_sources/CALCULATIONS.csv",
+        ):
+            path.write_text(content, encoding="utf-8")
+        errors = self.validate(package, "pre-solve")
+        self.assertTrue(any("diagnostic benchmark sources" in e for e in errors))
+        package["changes"][0]["benchmark_source_exceptions"] = [
+            {
+                "source_id": "SRC_COUNTRY_GENERATION",
+                "reason": "The cited table independently measures the physical initial stock",
+            }
+        ]
+        self.assertEqual(self.validate(package, "pre-solve"), [])
+
+    def test_inherited_coverage_gap_can_continue_but_not_promote(self) -> None:
+        package = self.ready("pre-solve")
+        artifact = self.root / package["gates"]["schema_ledger_validation"]["artifact"]
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+        report["model_inputs"] = {
+            "uncovered_inputs": ["Legacy.csv"],
+            "uncovered_required_inputs": [],
+            "legacy_uncovered_inputs": ["Legacy.csv"],
+        }
+        artifact.write_text(json.dumps(report), encoding="utf-8")
+        package["provenance"]["inherited_coverage_gaps"] = [
+            {
+                "model_file": "Legacy.csv",
+                "reason": "Untouched inherited input",
+                "backlog_item": "X",
+            }
+        ]
+        self.assertEqual(self.validate(package, "pre-solve"), [])
+
+    def test_inherited_coverage_gap_blocks_promotion(self) -> None:
+        package = self.ready("promotion")
+        artifact = self.root / package["gates"]["schema_ledger_validation"]["artifact"]
+        report = json.loads(artifact.read_text(encoding="utf-8"))
+        report["model_inputs"] = {
+            "uncovered_inputs": ["Legacy.csv"],
+            "uncovered_required_inputs": [],
+            "legacy_uncovered_inputs": ["Legacy.csv"],
+        }
+        artifact.write_text(json.dumps(report), encoding="utf-8")
+        package["provenance"]["inherited_coverage_gaps"] = [
+            {
+                "model_file": "Legacy.csv",
+                "reason": "Untouched inherited input",
+                "backlog_item": "X",
+            }
+        ]
+        errors = self.validate(package, "promotion")
+        self.assertTrue(any("promotion requires complete" in e for e in errors))
+
+    def test_repair_solve_limit_requires_explicit_authorization(self) -> None:
+        package = copy.deepcopy(self.package)
+        package["runtime"]["repair_solves_used"] = 4
+        errors = VALIDATOR.validate_package(package, "design")
+        self.assertTrue(any("additional_solve_authorization" in e for e in errors))
+        package["runtime"]["additional_solve_authorization"] = "User requested one more solve"
+        self.assertEqual(VALIDATOR.validate_package(package, "design"), [])
 
     def test_cli_infers_case_root_for_documentation_package(self) -> None:
         package = self.ready("pre-solve")

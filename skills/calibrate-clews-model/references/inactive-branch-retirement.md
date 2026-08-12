@@ -30,8 +30,10 @@ artifact, and the inactivity-evidence artifact. Start from the complete current
 provenance ledger and retained evidence; supersede retired model-map records and
 add a change record rather than deleting history.
 
-Remove the complete inactive lineage from source inputs, regenerate through the
-normal application chain, and solve fresh. Never create dummy demand, supply,
+Remove the complete inactive lineage from source inputs and regenerate through the
+normal application chain. Include all retirements in the current calibration
+wave and verify them from that wave's single solve; do not solve once per
+retirement. Never create dummy demand, supply,
 disposal, or activity merely to suppress a missing-target warning.
 
 ## Verify and promote

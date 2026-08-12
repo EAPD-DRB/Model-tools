@@ -269,10 +269,14 @@ class LedgerValidator:
         ledger_dir: Path,
         stage: str = "build",
         model_inputs: Optional[Path] = None,
+        required_inputs: Optional[Sequence[str]] = None,
+        allow_inherited_coverage_gaps: bool = False,
     ) -> None:
         self.ledger_dir = ledger_dir
         self.stage = stage
         self.model_inputs = model_inputs
+        self.required_inputs = [str(value) for value in (required_inputs or [])]
+        self.allow_inherited_coverage_gaps = allow_inherited_coverage_gaps
         self.failures: List[str] = []
         self.warnings: List[str] = []
         self.fields: Dict[str, List[str]] = {}
@@ -898,6 +902,20 @@ class LedgerValidator:
             for relative in populated
             if not any(covers(model_file, relative) for model_file in mapped_csv)
         ]
+        required_populated = {
+            relative
+            for relative in populated
+            if any(covers(required, relative) for required in self.required_inputs)
+        }
+        for required in self.required_inputs:
+            if not any(covers(required, relative) for relative in populated):
+                self.fail(
+                    "required touched input matches no populated model input: {0}".format(
+                        required
+                    )
+                )
+        uncovered_required = sorted(set(uncovered) & required_populated)
+        legacy_uncovered = sorted(set(uncovered) - required_populated)
         unmatched = sorted(
             {
                 model_file
@@ -909,12 +927,20 @@ class LedgerValidator:
             self.fail(
                 "no populated input CSV found under {0}".format(inputs_dir)
             )
-        if uncovered:
+        if uncovered_required:
             self.fail(
-                "populated model inputs have no MODEL_MAP row: {0}".format(
-                    ", ".join(uncovered)
+                "touched model inputs have no MODEL_MAP row: {0}".format(
+                    ", ".join(uncovered_required)
                 )
             )
+        if legacy_uncovered:
+            message = "inherited untouched model inputs have no MODEL_MAP row: {0}".format(
+                ", ".join(legacy_uncovered)
+            )
+            if self.allow_inherited_coverage_gaps and self.stage != "delivery":
+                self.warn(message)
+            else:
+                self.fail(message)
         for model_file in unmatched:
             self.warn(
                 "MODEL_MAP.csv: model_file {0} matches no populated input under "
@@ -925,6 +951,9 @@ class LedgerValidator:
             "populated_input_count": len(populated),
             "covered_input_count": len(populated) - len(uncovered),
             "uncovered_inputs": uncovered,
+            "required_inputs": sorted(self.required_inputs),
+            "uncovered_required_inputs": uncovered_required,
+            "legacy_uncovered_inputs": legacy_uncovered,
         }
 
     # ------------------------------------------------------------------ drive
@@ -988,11 +1017,15 @@ def validate(
     ledger_dir: Path,
     stage: str = "build",
     model_inputs: Optional[Path] = None,
+    required_inputs: Optional[Sequence[str]] = None,
+    allow_inherited_coverage_gaps: bool = False,
 ) -> Dict[str, object]:
     validator = LedgerValidator(
         Path(ledger_dir).expanduser(),
         stage,
         Path(model_inputs).expanduser() if model_inputs else None,
+        required_inputs,
+        allow_inherited_coverage_gaps,
     )
     return validator.run()
 
@@ -1039,10 +1072,27 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         type=Path,
         help="directory of model input CSVs to check for MODEL_MAP coverage",
     )
+    parser.add_argument(
+        "--required-input",
+        action="append",
+        default=[],
+        help="populated input file in the touched calibration scope; repeat as needed",
+    )
+    parser.add_argument(
+        "--allow-inherited-coverage-gaps",
+        action="store_true",
+        help="warn on uncovered inherited untouched inputs before delivery",
+    )
     parser.add_argument("--json", dest="json_path", type=Path, help="write a JSON report")
     args = parser.parse_args(argv)
 
-    report = validate(args.ledger_dir, args.stage, args.model_inputs)
+    report = validate(
+        args.ledger_dir,
+        args.stage,
+        args.model_inputs,
+        args.required_input,
+        args.allow_inherited_coverage_gaps,
+    )
     print(render(report))
     if args.json_path:
         destination = args.json_path.expanduser()

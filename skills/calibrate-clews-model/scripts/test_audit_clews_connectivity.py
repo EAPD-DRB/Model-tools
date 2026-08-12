@@ -122,6 +122,18 @@ class ConnectivityAuditTest(unittest.TestCase):
             ],
         )
 
+    def test_reviewed_exemption_evidence_must_resolve_when_ledger_is_given(self) -> None:
+        self.rules["reviewed_exemptions"] = [
+            {
+                "finding_id": "inputless_output_mode:TEC_SUPPLY:1",
+                "reason": "Sourced resource boundary",
+                "evidence_ids": ["SRC_MISSING"],
+            }
+        ]
+        report = AUDITOR.audit(self.root, self.rules, {"SRC_OTHER"})
+        self.assertEqual(report["status"], "fail")
+        self.assertTrue(any("SRC_MISSING" in error for error in report["rule_errors"]))
+
     def test_partial_horizon_bound_does_not_hide_free_route(self) -> None:
         gen = json.loads((self.root / "genData.json").read_text(encoding="utf-8"))
         gen["osy-years"] = ["2020", "2025", "2030"]

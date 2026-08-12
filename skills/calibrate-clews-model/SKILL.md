@@ -1,6 +1,6 @@
 ---
 name: calibrate-clews-model
-description: "Calibrate a solved country CLEWs model by replacing generic inputs with traceable national evidence, repairing physical connectivity and resource accounts, validating lineage, solving, and comparing behavior. Not for initial CLEWs Global builds—use build-clews-model—or value-neutral structural cleanup—use clews-model-fix."
+description: "Calibrate a solved country CLEWs model when explicitly requested or when localizing a complete sector, closed resource account, or coupled interface package with traceable national evidence. Not for isolated value refreshes or minor calibration fixes—record those in the calibration backlog—nor for initial builds (use build-clews-model) or value-neutral cleanup (use clews-model-fix)."
 ---
 
 # Calibrate a CLEWs country model
@@ -14,6 +14,11 @@ until outputs resemble history.
 
 Require a solved country baseline. Use `build-clews-model` if none exists and
 `clews-model-fix` for edits that cannot change any model value.
+
+Use this workflow only when the user invokes it explicitly or the work closes a
+complete sector, resource account, or coupled interface. Put isolated value
+updates, citation refreshes, and minor calibration fixes in
+`calibration-backlog.csv` and batch them into the next coherent wave.
 
 Apply the counterfactual test in
 [references/non-forcing.md](references/non-forcing.md):
@@ -58,10 +63,11 @@ with its publisher, version, raw inputs, published outputs, manifest, and rerun
 requirement. Treat raw solver results as authoritative for optimizer behavior.
 
 Use one complete, high-impact sector and its direct CLEWs interfaces as the
-default phase boundary. If the user has not selected the sector, prioritize by
-national importance, current model weakness, cross-sector influence, and public
-data availability. Inspect all material inputs within that boundary and classify
-country specificity, currency, age, proxy use, missingness, and connectivity.
+minimum implicit phase boundary. If the user has not selected the sector,
+prioritize by national importance, current model weakness, cross-sector
+influence, and public data availability. Inspect all material inputs within that
+boundary and classify country specificity, currency, age, proxy use, missingness,
+and connectivity.
 Use the research hierarchy and trace rules in
 [references/country-data-research.md](references/country-data-research.md).
 
@@ -69,9 +75,11 @@ Define whole-sector completion at the simplest defensible national level:
 demand or service, historical accounting, stocks and turnover, applicable
 technologies, costs and efficiencies, resource or infrastructure constraints,
 direct emissions, and material interfaces with other modeled sectors. Group the
-coupled changes needed to close that sector in one package. Record its completion
-test, evidence period and post-evidence treatment, source and allocation boundary,
-calibration claim, and measurable invariants. These declarations add no solve.
+coupled changes needed to close that sector in one wave. A wave may contain
+multiple packages, but they share one generated candidate, one solve, and one
+set of verification artifacts. Record each package's completion test, evidence
+period and post-evidence treatment, source and allocation boundary, calibration
+claim, and measurable invariants. These declarations add no solve.
 
 ### 2. Audit connectivity
 
@@ -81,6 +89,7 @@ links explicitly; never infer them from prefixes. Run:
 ```bash
 python scripts/audit_clews_connectivity.py CASE_DIR \
   --rules CASE_DIR/documentation/connectivity-rules.json \
+  --ledger-dir LEDGER_DIR \
   --output CASE_DIR/documentation/connectivity-audit.json
 ```
 
@@ -105,7 +114,10 @@ physical chain, leaving choices endogenous beyond documented constraints.
 Use transparent, bounded, and replaceable proxies when national evidence is
 unavailable. Resolve conflicting evidence explicitly. For each material proxy,
 record its central value, plausible range, transfer rationale, model consequence,
-and the national authority or dataset that could replace it.
+and the national authority or dataset that could replace it. A plausible range
+documents uncertainty; do not run variants, sweeps, or sensitivity analysis to
+select a value. Leave new `ASSUMPTIONS.csv` lower and upper bounds blank in this
+workflow; carry inherited bounds forward unchanged.
 
 For initial stocks, survival, retirement, or adoption, use
 [references/stock-turnover-patterns.md](references/stock-turnover-patterns.md).
@@ -114,6 +126,7 @@ For land, water, biomass, fisheries, emissions, or another closed account, use
 
 ```bash
 python scripts/validate_resource_account.py RESOURCE_ACCOUNT.json \
+  --ledger-dir LEDGER_DIR \
   --json CASE_DIR/documentation/resource-account-validation.json
 ```
 
@@ -125,13 +138,21 @@ and write its JSON report for the package gate:
 
 ```bash
 python scripts/provenance.py LEDGER_DIR --stage build \
-  --model-inputs MODEL_INPUT_DIR --json documentation/provenance.json
+  --model-inputs MODEL_INPUT_DIR \
+  --required-input AFFECTED_INPUT.csv \
+  --allow-inherited-coverage-gaps \
+  --json documentation/provenance.json
 ```
 
 Modify source parameter JSON and `genData.json`, then regenerate through
 `UpdateCase` and the normal application chain. Never promote generated-data, LP,
 or solver-output-only edits. The package validator requires the actual changed
 top-level source JSON files to equal `changes[].source_file`.
+Formatting-only JSON churn is ignored. Record deterministic semantic regeneration
+churn in `regeneration_changes` with before/after hashes and a reason; never use
+that list to hide a numerical or structural model change. Record inherited
+source-metadata corrections in `provenance.corrections`; create or supersede a
+ledger record when a numerical claim or lineage changes.
 
 For a source-only handoff before solving, set `delivery.state` to
 `source_input_patch`, update the history artifact, mark existing results `stale`
@@ -151,7 +172,17 @@ does not certify a solve or promote the case.
 ### 5. Pass pre-solve gates
 
 Attach the machine reports named by the package's `gates` keys, resolve every
-active connectivity finding, then run:
+active connectivity finding, and run the mandatory non-forcing audit. A deferred
+finding must cite its `GAPS.csv` item; it does not masquerade as evidence.
+
+```bash
+python scripts/audit_no_forcing.py CASE_DIR \
+  --package CASE_DIR/documentation/calibration-package.json \
+  --ledger-dir LEDGER_DIR \
+  --output CASE_DIR/documentation/no-forcing-audit.json
+```
+
+Then run:
 
 ```bash
 python scripts/validate_calibration_package.py \
@@ -163,16 +194,23 @@ Treat failures as data or design errors rather than solver diagnostics.
 
 ### 6. Solve and diagnose
 
-Solve through the normal application chain within the recorded budget. Map
+Solve the complete wave through the normal application chain within the recorded
+budget. All packages, inactive-branch retirements, and invariants ride this same
+solve. Map
 infeasible rows to equations, indices, bounds, and evidence before changing
 anything. Inspect affected quantities, binding limits, resource balances,
 backstops, residuals, adjacent sectors, and full-horizon behavior. Correct only
 mapping, unit, scope, evidence, or formulation defects—not historical mismatch.
+Allow at most three repair re-solves by default. At that point, consolidate the
+diagnosis and park the unresolved package as a documented gap while continuing
+independent work; run more only with explicit user authorization. Never run an
+unchanged control, parameter sweep, scenario ranking, or calibration A/B.
 
-After each solve, run every declared postprocessed reporting publisher, verify
-its manifest against the current raw-result hashes and allowlisted outputs, and
-attach the `reporting_layers_current` report. Disclose which displayed results
-depend on postprocessing. This adds publication and hash checks, not another solve.
+After each retained feasible solve, run every declared postprocessed reporting
+publisher, verify its manifest against the current raw-result hashes and
+allowlisted outputs, and attach the `reporting_layers_current` report. Disclose
+which displayed results depend on postprocessing. This adds publication and hash
+checks, not another solve.
 
 In the central run, inspect the historical-to-future seam, annual technology and
 fuel shares, stock turnover, resource dominance, imports, electricity demand, and
@@ -201,9 +239,10 @@ material-change classification. An alternate-optimum candidate requires an
 explicit promotion acceptance with rationale and the comparison artifact.
 Benchmarks remain diagnostic, never fitted.
 
-Regenerate the live case from validated source, solve once fresh, create the
-result-free archive, verify live/archive source identity, run provenance at
-`--stage delivery`, set `delivery.state` to `promoted` and
+Regenerate the live case from validated source and verify its source hash. Reuse
+the successful wave solve when its recorded source hash is identical; otherwise
+solve once fresh. Create the result-free archive, verify live/archive source
+identity, run provenance at `--stage delivery`, set `delivery.state` to `promoted` and
 `delivery.result_status` to `fresh`, and finish with:
 
 ```bash

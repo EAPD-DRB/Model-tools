@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import sys
 from collections import defaultdict
@@ -16,6 +17,23 @@ ROLE_INPUT_EXEMPT = {"resource_supply", "accounting", "environmental_sink"}
 
 def load(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def read_ledger_evidence_ids(ledger_dir: Path) -> set[str]:
+    specifications = (
+        ("SOURCES.csv", "source_id"),
+        ("CALCULATIONS.csv", "calculation_id"),
+        ("ASSUMPTIONS.csv", "assumption_id"),
+    )
+    identifiers: set[str] = set()
+    for filename, column in specifications:
+        with (ledger_dir / filename).open(newline="", encoding="utf-8-sig") as stream:
+            identifiers.update(
+                row.get(column, "").strip()
+                for row in csv.DictReader(stream)
+                if row.get(column, "").strip()
+            )
+    return identifiers
 
 
 def rows(
@@ -96,7 +114,11 @@ def all_zero(row: dict[str, Any] | None, years: list[str]) -> bool:
     return bool(values) and all(value == 0 for value in values)
 
 
-def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
+def audit(
+    case_dir: Path,
+    rules: dict[str, Any],
+    ledger_evidence_ids: set[str] | None = None,
+) -> dict[str, Any]:
     gen = load(case_dir / "genData.json")
     rytcm = load(case_dir / "RYTCM.json")
     ryt = load(case_dir / "RYT.json")
@@ -396,6 +418,13 @@ def audit(case_dir: Path, rules: dict[str, Any]) -> dict[str, Any]:
             rule_errors.append(
                 f"reviewed_exemptions[{index}].evidence_ids must be non-empty"
             )
+        elif ledger_evidence_ids is not None:
+            for evidence_id in evidence_ids:
+                if evidence_id not in ledger_evidence_ids:
+                    rule_errors.append(
+                        f"reviewed_exemptions[{index}].evidence_ids does not resolve: "
+                        f"{evidence_id}"
+                    )
         exemption_keys[finding_id] = item
     active, exempted = [], []
     used_exemptions: set[str] = set()
@@ -441,11 +470,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("case_dir", type=Path)
     parser.add_argument("--rules", type=Path, required=True)
+    parser.add_argument("--ledger-dir", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--fail-on", choices=("none", "high", "all"), default="none")
     args = parser.parse_args()
     try:
-        report = audit(args.case_dir.resolve(), load(args.rules))
+        ledger_ids = (
+            read_ledger_evidence_ids(args.ledger_dir.resolve())
+            if args.ledger_dir
+            else None
+        )
+        report = audit(args.case_dir.resolve(), load(args.rules), ledger_ids)
     except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 2

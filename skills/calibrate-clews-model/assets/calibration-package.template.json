@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "case": {
     "source_case": "COUNTRY_BASIC",
     "candidate_case": "COUNTRY_REFINED_WORKING",
@@ -13,7 +13,9 @@
   "provenance": {
     "inherited_ledger_dir": "data_sources",
     "predecessor_ledger_dir": "../COUNTRY_BASIC/data_sources",
-    "retained_evidence_dir": "data_sources/evidence"
+    "retained_evidence_dir": "data_sources/evidence",
+    "corrections": [],
+    "inherited_coverage_gaps": []
   },
   "backlog": {
     "path": "documentation/calibration-backlog.csv",
@@ -66,13 +68,16 @@
       ],
       "model_unit": "GW",
       "physical_effect": "Surviving installed generating capacity",
+      "evidence_role": "initial_stock",
+      "counterfactual_reason": "The registered physical stock is required even if no historical generation outcome is inspected",
       "evidence_ids": [
         "SRC_COUNTRY_PLANT_REGISTER",
         "CALC_EXISTING_STOCK_SURVIVAL"
       ],
       "model_map_ids": [
         "MAP_EXISTING_STOCK"
-      ]
+      ],
+      "benchmark_source_exceptions": []
     }
   ],
   "benchmarks": [
@@ -80,18 +85,27 @@
       "name": "Historical electricity generation",
       "source_ids": [
         "SRC_COUNTRY_GENERATION"
-      ]
+      ],
+      "diagnostic_only": true
     }
   ],
   "connectivity": {
     "rules": "documentation/connectivity-rules.json",
     "finding_dispositions": []
   },
+  "non_forcing": {
+    "candidate_dispositions": []
+  },
+  "regeneration_changes": [],
   "reporting_layers": [],
   "runtime": {
+    "wave_id": "WAVE_ENERGY_01",
     "known_good_seconds": 120,
     "candidate_budget_seconds": 360,
-    "baseline_artifact": "res/BASE_STORED/results.txt"
+    "baseline_artifact": "res/BASE_STORED/results.txt",
+    "repair_solve_limit": 3,
+    "repair_solves_used": 0,
+    "additional_solve_authorization": null
   },
   "delivery": {
     "state": "working",
@@ -112,6 +126,7 @@
     "stock_resource_account_checks": {"status": "pending", "artifact": null},
     "matrix_check": {"status": "pending", "artifact": null},
     "schema_ledger_validation": {"status": "pending", "artifact": null},
+    "no_forcing_audit": {"status": "pending", "artifact": null},
     "solver_run": {"status": "pending", "artifact": null},
     "baseline_comparison": {"status": "pending", "artifact": null},
     "reporting_layers_current": {"status": "not_applicable", "artifact": null, "reason": "No postprocessed reporting layers are declared"},

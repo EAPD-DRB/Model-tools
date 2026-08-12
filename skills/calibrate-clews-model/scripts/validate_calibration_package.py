@@ -7,6 +7,7 @@ import argparse
 import csv
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -20,6 +21,7 @@ PRE_SOLVE_GATES = (
     "stock_resource_account_checks",
     "matrix_check",
     "schema_ledger_validation",
+    "no_forcing_audit",
 )
 SOURCE_INPUT_PATCH_GATES = (
     "identifier_integrity",
@@ -35,7 +37,7 @@ PROMOTION_GATES = PRE_SOLVE_GATES + (
     "result_free_archive_identity",
 )
 MATERIAL_STAGES = {"source-input-patch", "pre-solve", "promotion"}
-FINDING_STATUSES = {"pending", "resolved", "declared", "deferred"}
+FINDING_STATUSES = {"pending", "resolved", "declared", "exempted", "deferred"}
 OPTIONAL_GATES = {"matrix_check", "stock_resource_account_checks"}
 DELIVERY_STATES = {"working", "source_input_patch", "promoted"}
 RESULT_STATUSES = {"absent", "stale", "fresh"}
@@ -45,6 +47,31 @@ CHANGE_TYPES = {
     "object_addition",
     "object_retirement",
     "coupling_change",
+}
+EVIDENCE_ROLES = {
+    "physical_input",
+    "final_demand",
+    "initial_stock",
+    "documented_constraint",
+    "transparent_proxy",
+}
+REGENERATION_CHANGE_CLASSES = {"metadata_only", "deterministic_regeneration"}
+CORRECTABLE_FIELDS = {
+    "SOURCES.csv": {
+        "provider",
+        "product",
+        "edition",
+        "reference_period",
+        "geography",
+        "variable",
+        "source_unit",
+        "exact_locator",
+        "url",
+        "access_date",
+        "license",
+        "local_file",
+        "sha256",
+    }
 }
 COMPARISON_CLASSIFICATIONS = {
     "EXACT_PARITY",
@@ -144,6 +171,15 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def semantically_equal_json(before: Path, after: Path) -> bool:
+    try:
+        return json.loads(before.read_text(encoding="utf-8")) == json.loads(
+            after.read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return sha256(before) == sha256(after)
+
+
 def changed_source_json(baseline: Path, candidate: Path) -> set[str]:
     before = {path.name: path for path in baseline.glob("*.json") if path.is_file()}
     after = {path.name: path for path in candidate.glob("*.json") if path.is_file()}
@@ -152,13 +188,52 @@ def changed_source_json(baseline: Path, candidate: Path) -> set[str]:
         for name in set(before) | set(after)
         if name not in before
         or name not in after
-        or sha256(before[name]) != sha256(after[name])
+        or not semantically_equal_json(before[name], after[name])
     }
 
 
+def split_ids(value: Any) -> list[str]:
+    if not isinstance(value, str):
+        return []
+    return [item for item in re.split(r"[;,\s]+", value.strip()) if item]
+
+
+def source_lineage(
+    evidence_ids: list[str], ledger_rows: dict[str, dict[str, dict[str, str]]]
+) -> set[str]:
+    sources: set[str] = set()
+    pending = list(evidence_ids)
+    seen: set[str] = set()
+    while pending:
+        identifier = pending.pop()
+        if identifier in seen:
+            continue
+        seen.add(identifier)
+        if identifier in ledger_rows.get("SOURCES.csv", {}):
+            sources.add(identifier)
+        elif identifier in ledger_rows.get("CALCULATIONS.csv", {}):
+            row = ledger_rows["CALCULATIONS.csv"][identifier]
+            for field in ("source_ids", "assumption_ids", "input_calculation_ids"):
+                pending.extend(split_ids(row.get(field)))
+        elif identifier in ledger_rows.get("ASSUMPTIONS.csv", {}):
+            pending.extend(
+                split_ids(
+                    ledger_rows["ASSUMPTIONS.csv"][identifier].get(
+                        "evidence_source_ids"
+                    )
+                )
+            )
+    return sources
+
+
 def validate_inheritance(
-    predecessor: Path, current: Path, retained_evidence: Path, errors: list[str]
+    predecessor: Path,
+    current: Path,
+    retained_evidence: Path,
+    corrections: dict[tuple[str, str, str], dict[str, Any]],
+    errors: list[str],
 ) -> None:
+    used_corrections: set[tuple[str, str, str]] = set()
     predecessor_ids, predecessor_rows = read_ledger(predecessor, errors)
     current_ids, current_rows = read_ledger(current, errors)
     for filename, id_field in LEDGER_IDS.items():
@@ -184,10 +259,35 @@ def validate_inheritance(
                 for key, value in current_rows[filename][identifier].items()
                 if key not in ignored
             }
-            if before != after:
-                errors.append(
-                    f"provenance inheritance altered retained {filename} row {identifier}"
-                )
+            differing = {
+                field
+                for field in set(before) | set(after)
+                if before.get(field) != after.get(field)
+            }
+            for field in sorted(differing):
+                correction = corrections.get((filename, identifier, field))
+                if correction is None:
+                    errors.append(
+                        f"provenance inheritance altered retained {filename} row "
+                        f"{identifier} field {field} without a correction record"
+                    )
+                    continue
+                used_corrections.add((filename, identifier, field))
+                if str(correction.get("before", "")) != str(before.get(field, "")):
+                    errors.append(
+                        f"provenance correction before value does not match "
+                        f"{filename} {identifier} {field}"
+                    )
+                if str(correction.get("after", "")) != str(after.get(field, "")):
+                    errors.append(
+                        f"provenance correction after value does not match "
+                        f"{filename} {identifier} {field}"
+                    )
+    for key in sorted(set(corrections) - used_corrections):
+        errors.append(
+            "provenance correction does not correspond to an inherited row change: "
+            + "/".join(key)
+        )
     previous_evidence = predecessor / "evidence"
     if not previous_evidence.is_dir():
         errors.append(
@@ -279,8 +379,12 @@ def validate_package(
     ledger_dir: Path | None = None
     if not isinstance(package, dict):
         return ["package root must be a JSON object"]
-    if package.get("schema_version") != 2:
-        errors.append("schema_version must equal 2")
+    if package.get("schema_version") != 3:
+        errors.append("schema_version must equal 3")
+    regeneration_changes = package.get("regeneration_changes")
+    if not isinstance(regeneration_changes, list):
+        errors.append("regeneration_changes must be a list")
+        regeneration_changes = []
 
     case = package.get("case")
     if not isinstance(case, dict):
@@ -323,13 +427,64 @@ def validate_package(
                     if isinstance(item, dict)
                     and isinstance(item.get("source_file"), str)
                 }
+                regeneration_files = {
+                    item.get("source_file")
+                    for item in regeneration_changes
+                    if isinstance(item, dict)
+                    and isinstance(item.get("source_file"), str)
+                }
+                overlap = declared_files & regeneration_files
+                if overlap:
+                    errors.append(
+                        "source files cannot be both model changes and regeneration changes: "
+                        f"{sorted(overlap)}"
+                    )
+                declared_files |= regeneration_files
                 if changed_files != declared_files:
                     errors.append(
                         "actual changed source JSON files must exactly match changes[].source_file: "
                         f"actual={sorted(changed_files)} declared={sorted(declared_files)}"
                     )
+                if isinstance(regeneration_changes, list):
+                    for index, item in enumerate(regeneration_changes):
+                        location = f"regeneration_changes[{index}]"
+                        if not isinstance(item, dict):
+                            errors.append(f"{location} must be an object")
+                            continue
+                        for field in (
+                            "source_file",
+                            "before_sha256",
+                            "after_sha256",
+                            "classification",
+                            "reason",
+                        ):
+                            require_text(item, field, location, errors)
+                        if item.get("classification") not in REGENERATION_CHANGE_CLASSES:
+                            errors.append(
+                                f"{location}.classification must be one of "
+                                f"{sorted(REGENERATION_CHANGE_CLASSES)}"
+                            )
+                        name = item.get("source_file")
+                        if isinstance(name, str):
+                            before = source_dirs["source_json_dir"] / name
+                            after = source_dirs["candidate_json_dir"] / name
+                            if not before.is_file() or not after.is_file():
+                                errors.append(
+                                    f"{location}.source_file must exist on both sides"
+                                )
+                            else:
+                                if item.get("before_sha256") != sha256(before):
+                                    errors.append(
+                                        f"{location}.before_sha256 does not match source"
+                                    )
+                                if item.get("after_sha256") != sha256(after):
+                                    errors.append(
+                                        f"{location}.after_sha256 does not match candidate"
+                                    )
 
     provenance = package.get("provenance")
+    corrections_by_key: dict[tuple[str, str, str], dict[str, Any]] = {}
+    inherited_coverage_gaps: set[str] = set()
     if not isinstance(provenance, dict):
         errors.append("provenance must be an object")
     else:
@@ -339,6 +494,62 @@ def validate_package(
             "retained_evidence_dir",
         ):
             require_text(provenance, field, "provenance", errors)
+        corrections = provenance.get("corrections")
+        if not isinstance(corrections, list):
+            errors.append("provenance.corrections must be a list")
+            corrections = []
+        for index, item in enumerate(corrections):
+            location = f"provenance.corrections[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{location} must be an object")
+                continue
+            for field in ("table", "id", "field", "reason", "evidence_artifact"):
+                require_text(item, field, location, errors)
+            if "before" not in item or "after" not in item:
+                errors.append(f"{location}.before and .after are required")
+            table, identifier, field = (
+                item.get("table"),
+                item.get("id"),
+                item.get("field"),
+            )
+            if (
+                table not in CORRECTABLE_FIELDS
+                or field not in CORRECTABLE_FIELDS.get(str(table), set())
+            ):
+                errors.append(
+                    f"{location} may correct only approved source-metadata fields; "
+                    "create or supersede a ledger record for numerical or lineage changes"
+                )
+            if all(isinstance(value, str) and value for value in (table, identifier, field)):
+                key = (table, identifier, field)
+                if key in corrections_by_key:
+                    errors.append(f"{location} duplicates correction {'/'.join(key)}")
+                corrections_by_key[key] = item
+            artifact = item.get("evidence_artifact")
+            if (
+                stage in MATERIAL_STAGES
+                and isinstance(artifact, str)
+                and artifact.strip()
+                and not resolve(base_dir, artifact).is_file()
+            ):
+                errors.append(f"{location}.evidence_artifact does not exist: {artifact}")
+
+        coverage_gaps = provenance.get("inherited_coverage_gaps")
+        if not isinstance(coverage_gaps, list):
+            errors.append("provenance.inherited_coverage_gaps must be a list")
+            coverage_gaps = []
+        for index, item in enumerate(coverage_gaps):
+            location = f"provenance.inherited_coverage_gaps[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{location} must be an object")
+                continue
+            for field in ("model_file", "reason", "backlog_item"):
+                require_text(item, field, location, errors)
+            model_file = item.get("model_file")
+            if isinstance(model_file, str) and model_file.strip():
+                if model_file in inherited_coverage_gaps:
+                    errors.append(f"{location}.model_file duplicates {model_file}")
+                inherited_coverage_gaps.add(model_file)
         if stage in MATERIAL_STAGES:
             resolved: dict[str, Path] = {}
             for field in (
@@ -364,9 +575,16 @@ def validate_package(
                 and predecessor.is_dir()
                 and retained.is_dir()
             ):
-                validate_inheritance(predecessor, ledger_dir, retained, errors)
+                validate_inheritance(
+                    predecessor,
+                    ledger_dir,
+                    retained,
+                    corrections_by_key,
+                    errors,
+                )
 
     backlog = package.get("backlog")
+    backlog_ids: set[str] = set()
     if not isinstance(backlog, dict):
         errors.append("backlog must be an object")
     else:
@@ -380,6 +598,33 @@ def validate_package(
                 and not resolve(base_dir, value).is_file()
             ):
                 errors.append(f"backlog.path does not exist: {value}")
+            elif isinstance(value, str) and value.strip():
+                try:
+                    with resolve(base_dir, value).open(
+                        newline="", encoding="utf-8-sig"
+                    ) as stream:
+                        backlog_ids = {
+                            row.get("item_id", "").strip()
+                            for row in csv.DictReader(stream)
+                            if row.get("item_id", "").strip()
+                        }
+                except OSError as error:
+                    errors.append(f"cannot read backlog {value}: {error}")
+        if isinstance(provenance, dict):
+            for index, item in enumerate(
+                provenance.get("inherited_coverage_gaps", [])
+                if isinstance(provenance.get("inherited_coverage_gaps"), list)
+                else []
+            ):
+                if (
+                    stage in MATERIAL_STAGES
+                    and isinstance(item, dict)
+                    and item.get("backlog_item") not in backlog_ids
+                ):
+                    errors.append(
+                        f"provenance.inherited_coverage_gaps[{index}].backlog_item "
+                        "does not resolve"
+                    )
 
     packages = package.get("packages")
     package_ids: set[str] = set()
@@ -470,6 +715,8 @@ def validate_package(
 
     changes = package.get("changes")
     change_ids: set[str] = set()
+    change_source_lineages: dict[str, set[str]] = {}
+    change_benchmark_exceptions: dict[str, set[str]] = {}
     if not isinstance(changes, list) or not changes:
         errors.append("changes must be a non-empty list")
         changes = []
@@ -486,8 +733,14 @@ def validate_package(
             "coordinates",
             "model_unit",
             "physical_effect",
+            "evidence_role",
+            "counterfactual_reason",
         ):
             require_text(item, field, location, errors)
+        if item.get("evidence_role") not in EVIDENCE_ROLES:
+            errors.append(
+                f"{location}.evidence_role must be one of {sorted(EVIDENCE_ROLES)}"
+            )
         change_type = item.get("change_type", "parameter_update")
         if change_type not in CHANGE_TYPES:
             errors.append(
@@ -518,6 +771,29 @@ def validate_package(
         require_text_list(item, "local_equations", location, errors)
         evidence_ids = require_text_list(item, "evidence_ids", location, errors)
         model_map_ids = require_text_list(item, "model_map_ids", location, errors)
+        exception_ids: set[str] = set()
+        exceptions = item.get("benchmark_source_exceptions")
+        if not isinstance(exceptions, list):
+            errors.append(f"{location}.benchmark_source_exceptions must be a list")
+            exceptions = []
+        for exception_index, exception in enumerate(exceptions):
+            exception_location = (
+                f"{location}.benchmark_source_exceptions[{exception_index}]"
+            )
+            if not isinstance(exception, dict):
+                errors.append(f"{exception_location} must be an object")
+                continue
+            require_text(exception, "source_id", exception_location, errors)
+            require_text(exception, "reason", exception_location, errors)
+            source_id = exception.get("source_id")
+            if isinstance(source_id, str):
+                if source_id in exception_ids:
+                    errors.append(
+                        f"{exception_location}.source_id duplicates {source_id}"
+                    )
+                exception_ids.add(source_id)
+        if isinstance(change_id, str):
+            change_benchmark_exceptions[change_id] = exception_ids
         if stage in MATERIAL_STAGES and ledger_ids:
             evidence = set().union(
                 ledger_ids["SOURCES.csv"],
@@ -525,6 +801,10 @@ def validate_package(
                 ledger_ids["ASSUMPTIONS.csv"],
             )
             require_resolves(evidence_ids, evidence, f"{location}.evidence_ids", errors)
+            if isinstance(change_id, str):
+                change_source_lineages[change_id] = source_lineage(
+                    evidence_ids, ledger_rows
+                )
             require_resolves(
                 model_map_ids,
                 ledger_ids["MODEL_MAP.csv"],
@@ -555,6 +835,7 @@ def validate_package(
                     )
 
     benchmarks = package.get("benchmarks")
+    benchmark_source_ids: set[str] = set()
     if not isinstance(benchmarks, list):
         errors.append("benchmarks must be a list")
         benchmarks = []
@@ -565,10 +846,29 @@ def validate_package(
             continue
         require_text(item, "name", location, errors)
         source_ids = require_text_list(item, "source_ids", location, errors)
+        benchmark_source_ids.update(source_ids)
+        if item.get("diagnostic_only") is not True:
+            errors.append(f"{location}.diagnostic_only must be true")
         if stage in MATERIAL_STAGES and ledger_ids:
             require_resolves(
                 source_ids, ledger_ids["SOURCES.csv"], f"{location}.source_ids", errors
             )
+
+    if stage in MATERIAL_STAGES and ledger_ids:
+        for change_id, lineage_sources in change_source_lineages.items():
+            overlap = lineage_sources & benchmark_source_ids
+            exceptions = change_benchmark_exceptions.get(change_id, set())
+            missing = sorted(overlap - exceptions)
+            unused = sorted(exceptions - overlap)
+            if missing:
+                errors.append(
+                    f"change {change_id} uses diagnostic benchmark sources in its "
+                    f"transitive evidence lineage without explicit physical-use reasons: {missing}"
+                )
+            if unused:
+                errors.append(
+                    f"change {change_id} declares unused benchmark-source exceptions: {unused}"
+                )
 
     reporting_layers = package.get("reporting_layers", [])
     has_postprocessed_layers = False
@@ -636,13 +936,70 @@ def validate_package(
             evidence = require_text_list(
                 item, "evidence_ids", location, errors, nonempty=False
             )
+            gap_items = require_text_list(
+                item, "gap_items", location, errors, nonempty=False
+            )
             if (
                 stage == "promotion"
-                and status in {"resolved", "declared", "deferred"}
+                and status in {"resolved", "declared", "exempted"}
                 and not evidence
             ):
                 errors.append(f"{location}.evidence_ids are required at promotion")
+            if stage in {"pre-solve", "promotion"} and status == "deferred":
+                if not gap_items:
+                    errors.append(
+                        f"{location}.gap_items are required for a deferred finding"
+                    )
+            elif gap_items:
+                errors.append(
+                    f"{location}.gap_items are only valid for a deferred finding"
+                )
             if stage in {"pre-solve", "promotion"} and ledger_ids:
+                lineage = set().union(
+                    ledger_ids["SOURCES.csv"],
+                    ledger_ids["CALCULATIONS.csv"],
+                    ledger_ids["ASSUMPTIONS.csv"],
+                )
+                require_resolves(evidence, lineage, f"{location}.evidence_ids", errors)
+                require_resolves(
+                    gap_items,
+                    ledger_ids["GAPS.csv"],
+                    f"{location}.gap_items",
+                    errors,
+                )
+
+    non_forcing = package.get("non_forcing")
+    if not isinstance(non_forcing, dict):
+        errors.append("non_forcing must be an object")
+    else:
+        dispositions = non_forcing.get("candidate_dispositions")
+        if not isinstance(dispositions, list):
+            errors.append("non_forcing.candidate_dispositions must be a list")
+            dispositions = []
+        candidate_ids: set[str] = set()
+        for index, item in enumerate(dispositions):
+            location = f"non_forcing.candidate_dispositions[{index}]"
+            if not isinstance(item, dict):
+                errors.append(f"{location} must be an object")
+                continue
+            for field in ("candidate_id", "status", "reason"):
+                require_text(item, field, location, errors)
+            candidate_id = item.get("candidate_id")
+            if isinstance(candidate_id, str):
+                if candidate_id in candidate_ids:
+                    errors.append(f"{location}.candidate_id duplicates {candidate_id}")
+                candidate_ids.add(candidate_id)
+            status = item.get("status")
+            if status not in {"allowed_physical_input", "fixed", "rejected"}:
+                errors.append(f"{location}.status is invalid")
+            evidence = require_text_list(
+                item, "evidence_ids", location, errors, nonempty=False
+            )
+            if status == "allowed_physical_input" and not evidence:
+                errors.append(
+                    f"{location}.evidence_ids are required for allowed physical inputs"
+                )
+            if stage in MATERIAL_STAGES and ledger_ids:
                 lineage = set().union(
                     ledger_ids["SOURCES.csv"],
                     ledger_ids["CALCULATIONS.csv"],
@@ -654,11 +1011,25 @@ def validate_package(
     if not isinstance(runtime, dict):
         errors.append("runtime must be an object")
     else:
+        require_text(runtime, "wave_id", "runtime", errors)
         for field in ("known_good_seconds", "candidate_budget_seconds"):
             value = runtime.get(field)
             if not isinstance(value, (int, float)) or value <= 0:
                 errors.append(f"runtime.{field} must be positive")
         require_text(runtime, "baseline_artifact", "runtime", errors)
+        limit = runtime.get("repair_solve_limit")
+        used = runtime.get("repair_solves_used")
+        if not isinstance(limit, int) or isinstance(limit, bool) or limit < 1:
+            errors.append("runtime.repair_solve_limit must be a positive integer")
+        if not isinstance(used, int) or isinstance(used, bool) or used < 0:
+            errors.append("runtime.repair_solves_used must be a nonnegative integer")
+        if isinstance(limit, int) and isinstance(used, int) and used > limit:
+            authorization = runtime.get("additional_solve_authorization")
+            if not isinstance(authorization, str) or not authorization.strip():
+                errors.append(
+                    "runtime.additional_solve_authorization is required when the "
+                    "repair solve limit is exceeded"
+                )
 
     delivery = package.get("delivery")
     if not isinstance(delivery, dict):
@@ -770,6 +1141,13 @@ def validate_package(
                         errors,
                         schema="clews-resource-account-validation-v1",
                     )
+                elif name == "no_forcing_audit":
+                    report = validate_report(
+                        path,
+                        f"gates.{name}",
+                        errors,
+                        schema="clews-non-forcing-audit-v1",
+                    )
                 else:
                     report = validate_report(path, f"gates.{name}", errors)
                 if report is not None:
@@ -855,9 +1233,15 @@ def validate_package(
                     if isinstance(item, dict)
                     and isinstance(item.get("finding_id"), str)
                 }
+                exempted_ids = audit_ids - active_ids
+                retained_resolved_ids = {
+                    finding_id
+                    for finding_id, disposition in dispositions_by_id.items()
+                    if disposition.get("status") == "resolved"
+                }
                 require_resolves(
                     sorted(package_finding_ids),
-                    audit_ids,
+                    audit_ids | retained_resolved_ids,
                     "packages[].connectivity_finding_ids",
                     errors,
                 )
@@ -871,10 +1255,23 @@ def validate_package(
                         errors.append(
                             f"connectivity finding disposition remains pending: {finding_id}"
                         )
+                    elif disposition.get("status") == "exempted":
+                        errors.append(
+                            f"active connectivity finding cannot be marked exempted: {finding_id}"
+                        )
                 for finding_id in sorted(set(dispositions_by_id) - active_ids):
-                    errors.append(
-                        f"connectivity disposition does not resolve to an active finding: {finding_id}"
-                    )
+                    disposition = dispositions_by_id[finding_id]
+                    status = disposition.get("status")
+                    if finding_id in exempted_ids:
+                        if status not in {"exempted", "declared"}:
+                            errors.append(
+                                f"reviewed exemption disposition must be exempted or declared: {finding_id}"
+                            )
+                    elif status != "resolved":
+                        errors.append(
+                            "connectivity disposition is neither active, reviewed-exempt, "
+                            f"nor retained resolved history: {finding_id}"
+                        )
 
         provenance_report = gate_reports.get("schema_ledger_validation")
         if provenance_report and ledger_dir:
@@ -893,10 +1290,64 @@ def validate_package(
                     f"gates.schema_ledger_validation artifact stage must be one of {sorted(allowed_stages)}"
                 )
             coverage = provenance_report.get("model_inputs")
-            if not isinstance(coverage, dict) or coverage.get("uncovered_inputs"):
+            if not isinstance(coverage, dict):
                 errors.append(
-                    "gates.schema_ledger_validation artifact must prove complete model-input coverage"
+                    "gates.schema_ledger_validation artifact must report model-input coverage"
                 )
+            else:
+                uncovered = coverage.get("uncovered_inputs")
+                required_uncovered = coverage.get("uncovered_required_inputs", [])
+                legacy = coverage.get("legacy_uncovered_inputs", [])
+                if not all(
+                    isinstance(value, list)
+                    for value in (uncovered, required_uncovered, legacy)
+                ):
+                    errors.append(
+                        "gates.schema_ledger_validation artifact coverage lists are invalid"
+                    )
+                elif required_uncovered:
+                    errors.append(
+                        "gates.schema_ledger_validation artifact leaves touched inputs uncovered"
+                    )
+                elif stage == "promotion":
+                    if uncovered:
+                        errors.append(
+                            "promotion requires complete model-input coverage"
+                        )
+                    if inherited_coverage_gaps:
+                        errors.append(
+                            "promotion cannot retain inherited provenance coverage gaps"
+                        )
+                elif set(legacy) != inherited_coverage_gaps:
+                    errors.append(
+                        "documented inherited coverage gaps must exactly match the "
+                        "provenance report's legacy_uncovered_inputs"
+                    )
+
+        no_forcing_report = gate_reports.get("no_forcing_audit")
+        if no_forcing_report:
+            reported_case = Path(str(no_forcing_report.get("case_dir", "")))
+            if not reported_case.is_absolute():
+                reported_case = resolve(base_dir, str(reported_case))
+            if reported_case.resolve() != base_dir.resolve():
+                errors.append(
+                    "gates.no_forcing_audit artifact case_dir does not match case root"
+                )
+            for field, label in (
+                ("unresolved_candidates", "unresolved candidates"),
+                ("invalid_dispositions", "invalid dispositions"),
+                ("prohibited_solve_attempts", "prohibited solve attempts"),
+                ("benchmark_lineage_failures", "benchmark-lineage failures"),
+            ):
+                value = no_forcing_report.get(field)
+                if not isinstance(value, list):
+                    errors.append(
+                        f"gates.no_forcing_audit artifact.{field} must be a list"
+                    )
+                elif value:
+                    errors.append(
+                        f"gates.no_forcing_audit artifact contains {label}"
+                    )
 
         comparison = gate_reports.get("baseline_comparison")
         if comparison:
@@ -1011,6 +1462,7 @@ def validate_package(
             "schema_ledger_validation",
             "baseline_comparison",
             "stock_resource_account_checks",
+            "no_forcing_audit",
         }
         for name, report in gate_reports.items():
             if name in special:
