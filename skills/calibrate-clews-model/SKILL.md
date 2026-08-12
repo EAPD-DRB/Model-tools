@@ -52,6 +52,10 @@ be `not_applicable`, with a reason. Do not solve while the design gate fails.
 Record the source and candidate cases, scenario, horizon, intended use, stored
 baseline identity, solver status, objective, runtime, and model dimensions. Start
 the candidate with a complete copy of the current ledger and retained evidence.
+Classify result surfaces as raw solver output, ordinary generated views, or
+postprocessed reporting. Record each postprocessed layer in `reporting_layers`
+with its publisher, version, raw inputs, published outputs, manifest, and rerun
+requirement. Treat raw solver results as authoritative for optimizer behavior.
 
 Use one complete, high-impact sector and its direct CLEWs interfaces as the
 default phase boundary. If the user has not selected the sector, prioritize by
@@ -165,6 +169,11 @@ anything. Inspect affected quantities, binding limits, resource balances,
 backstops, residuals, adjacent sectors, and full-horizon behavior. Correct only
 mapping, unit, scope, evidence, or formulation defects—not historical mismatch.
 
+After each solve, run every declared postprocessed reporting publisher, verify
+its manifest against the current raw-result hashes and allowlisted outputs, and
+attach the `reporting_layers_current` report. Disclose which displayed results
+depend on postprocessing. This adds publication and hash checks, not another solve.
+
 In the central run, inspect the historical-to-future seam, annual technology and
 fuel shares, stock turnover, resource dominance, imports, electricity demand, and
 emissions. Report what the sector can now represent, its historical scale and
@@ -185,6 +194,8 @@ python scripts/compare_clews_runs.py BASELINE_CSV_DIR CANDIDATE_CSV_DIR \
 
 Investigate tables present on only one side, aggregate equivalent routes, and do
 not mistake alternative-optimum dispatch reallocations for physical change.
+Compare raw solver results for model behavior and refreshed published layers for
+reporting; never compare a stale derived view with a current solver run.
 Record the comparator's exact-parity, alternate-optimum-candidate, or
 material-change classification. An alternate-optimum candidate requires an
 explicit promotion acceptance with rationale and the comparison artifact.

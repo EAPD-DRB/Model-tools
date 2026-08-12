@@ -39,6 +39,7 @@ FINDING_STATUSES = {"pending", "resolved", "declared", "deferred"}
 OPTIONAL_GATES = {"matrix_check", "stock_resource_account_checks"}
 DELIVERY_STATES = {"working", "source_input_patch", "promoted"}
 RESULT_STATUSES = {"absent", "stale", "fresh"}
+REPORTING_LAYER_TYPES = {"solver_native", "postprocessed"}
 CHANGE_TYPES = {
     "parameter_update",
     "object_addition",
@@ -569,6 +570,38 @@ def validate_package(
                 source_ids, ledger_ids["SOURCES.csv"], f"{location}.source_ids", errors
             )
 
+    reporting_layers = package.get("reporting_layers", [])
+    has_postprocessed_layers = False
+    layer_ids: set[str] = set()
+    if not isinstance(reporting_layers, list):
+        errors.append("reporting_layers must be a list")
+        reporting_layers = []
+    for index, item in enumerate(reporting_layers):
+        location = f"reporting_layers[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{location} must be an object")
+            continue
+        for field in ("layer_id", "purpose", "type"):
+            require_text(item, field, location, errors)
+        layer_id = item.get("layer_id")
+        if isinstance(layer_id, str):
+            if layer_id in layer_ids:
+                errors.append(f"{location}.layer_id duplicates {layer_id}")
+            layer_ids.add(layer_id)
+        layer_type = item.get("type")
+        if layer_type not in REPORTING_LAYER_TYPES:
+            errors.append(
+                f"{location}.type must be one of {sorted(REPORTING_LAYER_TYPES)}"
+            )
+        require_text_list(item, "raw_inputs", location, errors)
+        require_text_list(item, "published_outputs", location, errors)
+        if layer_type == "postprocessed":
+            has_postprocessed_layers = True
+            for field in ("publisher_script", "publisher_version", "manifest"):
+                require_text(item, field, location, errors)
+            if item.get("rerun_after_every_solve") is not True:
+                errors.append(f"{location}.rerun_after_every_solve must be true")
+
     connectivity = package.get("connectivity")
     dispositions_by_id: dict[str, dict[str, Any]] = {}
     if not isinstance(connectivity, dict):
@@ -741,6 +774,31 @@ def validate_package(
                     report = validate_report(path, f"gates.{name}", errors)
                 if report is not None:
                     gate_reports[name] = report
+
+        reporting_gate = gates.get("reporting_layers_current")
+        if reporting_gate is None:
+            if has_postprocessed_layers:
+                errors.append(
+                    "gates.reporting_layers_current is required when a "
+                    "postprocessed reporting layer is declared"
+                )
+        else:
+            path = validate_gate(
+                reporting_gate,
+                "gates.reporting_layers_current",
+                stage == "promotion" and has_postprocessed_layers,
+                base_dir,
+                errors,
+                gate_name="reporting_layers_current",
+            )
+            report = validate_report(
+                path,
+                "gates.reporting_layers_current",
+                errors,
+                schema="clews-reporting-layer-validation-v1",
+            )
+            if report is not None:
+                gate_reports["reporting_layers_current"] = report
 
     if stage in MATERIAL_STAGES:
         rules = connectivity.get("rules") if isinstance(connectivity, dict) else None
@@ -924,6 +982,29 @@ def validate_package(
                             "delivery.alternate_optimum_decision.comparison_artifact "
                             "must match gates.baseline_comparison.artifact"
                         )
+
+        reporting_report = gate_reports.get("reporting_layers_current")
+        if reporting_report:
+            reported_ids = reporting_report.get("layer_ids")
+            if (
+                not isinstance(reported_ids, list)
+                or not all(isinstance(value, str) for value in reported_ids)
+                or len(reported_ids) != len(set(reported_ids))
+                or set(reported_ids) != layer_ids
+            ):
+                errors.append(
+                    "gates.reporting_layers_current artifact.layer_ids must match "
+                    "declared reporting_layers"
+                )
+            for field in (
+                "raw_result_hashes_verified",
+                "publisher_manifests_current",
+                "allowlisted_outputs_only",
+            ):
+                if reporting_report.get(field) is not True:
+                    errors.append(
+                        f"gates.reporting_layers_current artifact.{field} must be true"
+                    )
 
         special = {
             "connectivity_review",

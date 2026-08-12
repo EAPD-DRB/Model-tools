@@ -87,6 +87,7 @@
     "rules": "documentation/connectivity-rules.json",
     "finding_dispositions": []
   },
+  "reporting_layers": [],
   "runtime": {
     "known_good_seconds": 120,
     "candidate_budget_seconds": 360,
@@ -113,6 +114,7 @@
     "schema_ledger_validation": {"status": "pending", "artifact": null},
     "solver_run": {"status": "pending", "artifact": null},
     "baseline_comparison": {"status": "pending", "artifact": null},
+    "reporting_layers_current": {"status": "not_applicable", "artifact": null, "reason": "No postprocessed reporting layers are declared"},
     "live_regeneration": {"status": "pending", "artifact": null},
     "result_free_archive_identity": {"status": "pending", "artifact": null}
   }

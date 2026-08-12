@@ -178,6 +178,51 @@ class CalibrationPackageTest(unittest.TestCase):
     def test_complete_package_passes_promotion(self) -> None:
         self.assertEqual(self.validate(self.ready("promotion"), "promotion"), [])
 
+    def test_postprocessed_layer_requires_current_publication_report(self) -> None:
+        package = self.ready("promotion")
+        package["reporting_layers"] = [
+            {
+                "layer_id": "ENV_WATER_PIVOT",
+                "purpose": "Publish authoritative water accounting in Pivot",
+                "type": "postprocessed",
+                "publisher_script": "scripts/publish_water.py",
+                "publisher_version": "v1",
+                "raw_inputs": ["res/BASE/RateOfActivity.csv"],
+                "published_outputs": ["view/RYTM.json"],
+                "manifest": "documentation/water-publication.json",
+                "rerun_after_every_solve": True,
+            }
+        ]
+        package["gates"]["reporting_layers_current"] = {
+            "status": "not_applicable",
+            "artifact": None,
+            "reason": "incorrectly skipped",
+        }
+        errors = self.validate(package, "promotion")
+        self.assertTrue(any("mandatory and cannot" in error for error in errors))
+
+        artifact = self.root / "documentation/reporting_layers_current.json"
+        artifact.write_text(
+            json.dumps(
+                {
+                    "schema": "clews-reporting-layer-validation-v1",
+                    "status": "pass",
+                    "case": package["case"]["candidate_case"],
+                    "scenario": package["case"]["scenario"],
+                    "layer_ids": ["ENV_WATER_PIVOT"],
+                    "raw_result_hashes_verified": True,
+                    "publisher_manifests_current": True,
+                    "allowlisted_outputs_only": True,
+                }
+            ),
+            encoding="utf-8",
+        )
+        package["gates"]["reporting_layers_current"] = {
+            "status": "passed",
+            "artifact": "documentation/reporting_layers_current.json",
+        }
+        self.assertEqual(self.validate(package, "promotion"), [])
+
     def test_alternate_optimum_requires_explicit_promotion_decision(self) -> None:
         package = self.ready("promotion")
         relative = package["gates"]["baseline_comparison"]["artifact"]

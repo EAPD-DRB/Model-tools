@@ -106,3 +106,13 @@ Report selected-year stocks, annual changes, binding bounds, residual routes,
 productive versus idle quantities, total closure, objective effect, adjacent
 sector effects, and known alternative optima. Solver optimality alone does not
 establish a credible resource account.
+
+## 11. Prove constraint representability
+
+Write the intended identity with its actual region, technology, mode, year, and
+timeslice indices, then map every term to the available constraint parameters.
+Classify it as exact, approximate, or unsupported. A technology-level multiplier
+is not exact when the required coefficient varies by mode. Include demand, trade,
+capacity-linked flows, and other non-activity balance terms. Test each resource
+account independently. If exact representation fails, record the gap or extend
+the formulation; route reporting-only accounting to `add-environmental-accounting`.
