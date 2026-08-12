@@ -21,14 +21,24 @@ PRE_SOLVE_GATES = (
     "matrix_check",
     "schema_ledger_validation",
 )
+SOURCE_INPUT_PATCH_GATES = (
+    "identifier_integrity",
+    "generated_data_inspection",
+    "schema_ledger_validation",
+    "live_regeneration",
+    "result_free_archive_identity",
+)
 PROMOTION_GATES = PRE_SOLVE_GATES + (
     "solver_run",
     "baseline_comparison",
     "live_regeneration",
     "result_free_archive_identity",
 )
+MATERIAL_STAGES = {"source-input-patch", "pre-solve", "promotion"}
 FINDING_STATUSES = {"pending", "resolved", "declared", "deferred"}
 OPTIONAL_GATES = {"matrix_check", "stock_resource_account_checks"}
+DELIVERY_STATES = {"working", "source_input_patch", "promoted"}
+RESULT_STATUSES = {"absent", "stale", "fresh"}
 LEDGER_IDS = {
     "SOURCES.csv": "source_id",
     "CALCULATIONS.csv": "calculation_id",
@@ -279,7 +289,7 @@ def validate_package(
             errors.append(
                 "case.candidate_case must be disposable and distinct from source_case"
             )
-        if stage in {"pre-solve", "promotion"}:
+        if stage in MATERIAL_STAGES:
             source_dirs: dict[str, Path] = {}
             for field in ("source_json_dir", "candidate_json_dir"):
                 value = case.get(field)
@@ -317,7 +327,7 @@ def validate_package(
             "retained_evidence_dir",
         ):
             require_text(provenance, field, "provenance", errors)
-        if stage in {"pre-solve", "promotion"}:
+        if stage in MATERIAL_STAGES:
             resolved: dict[str, Path] = {}
             for field in (
                 "inherited_ledger_dir",
@@ -350,7 +360,7 @@ def validate_package(
     else:
         require_text(backlog, "path", "backlog", errors)
         require_text(backlog, "prioritization_basis", "backlog", errors)
-        if stage in {"pre-solve", "promotion"}:
+        if stage in MATERIAL_STAGES:
             value = backlog.get("path")
             if (
                 isinstance(value, str)
@@ -414,7 +424,7 @@ def validate_package(
         require_text_list(item, "local_equations", location, errors)
         evidence_ids = require_text_list(item, "evidence_ids", location, errors)
         model_map_ids = require_text_list(item, "model_map_ids", location, errors)
-        if stage in {"pre-solve", "promotion"} and ledger_ids:
+        if stage in MATERIAL_STAGES and ledger_ids:
             evidence = set().union(
                 ledger_ids["SOURCES.csv"],
                 ledger_ids["CALCULATIONS.csv"],
@@ -461,7 +471,7 @@ def validate_package(
             continue
         require_text(item, "name", location, errors)
         source_ids = require_text_list(item, "source_ids", location, errors)
-        if stage in {"pre-solve", "promotion"} and ledger_ids:
+        if stage in MATERIAL_STAGES and ledger_ids:
             require_resolves(
                 source_ids, ledger_ids["SOURCES.csv"], f"{location}.source_ids", errors
             )
@@ -524,6 +534,43 @@ def validate_package(
                 errors.append(f"runtime.{field} must be positive")
         require_text(runtime, "baseline_artifact", "runtime", errors)
 
+    delivery = package.get("delivery")
+    if not isinstance(delivery, dict):
+        errors.append("delivery must be an object")
+    else:
+        state = delivery.get("state")
+        if state not in DELIVERY_STATES:
+            errors.append(f"delivery.state must be one of {sorted(DELIVERY_STATES)}")
+        require_text(delivery, "history_artifact", "delivery", errors)
+        result_status = delivery.get("result_status")
+        if result_status not in RESULT_STATUSES:
+            errors.append(
+                f"delivery.result_status must be one of {sorted(RESULT_STATUSES)}"
+            )
+        require_text(delivery, "recertification_command", "delivery", errors)
+        if stage == "source-input-patch":
+            if state != "source_input_patch":
+                errors.append(
+                    "delivery.state must equal source_input_patch at source-input-patch"
+                )
+            if result_status not in {"absent", "stale"}:
+                errors.append(
+                    "delivery.result_status must be absent or stale at source-input-patch"
+                )
+        elif stage == "promotion":
+            if state != "promoted":
+                errors.append("delivery.state must equal promoted at promotion")
+            if result_status != "fresh":
+                errors.append("delivery.result_status must equal fresh at promotion")
+        if stage in {"source-input-patch", "promotion"}:
+            history = delivery.get("history_artifact")
+            if (
+                isinstance(history, str)
+                and history.strip()
+                and not resolve(base_dir, history).is_file()
+            ):
+                errors.append(f"delivery.history_artifact does not exist: {history}")
+
     gates = package.get("gates")
     gate_reports: dict[str, dict[str, Any]] = {}
     if not isinstance(gates, dict):
@@ -534,7 +581,9 @@ def validate_package(
         if missing:
             errors.append(f"gates missing required entries: {missing}")
         required = set()
-        if stage == "pre-solve":
+        if stage == "source-input-patch":
+            required = set(SOURCE_INPUT_PATCH_GATES)
+        elif stage == "pre-solve":
             required = set(PRE_SOLVE_GATES)
         elif stage == "promotion":
             required = set(PROMOTION_GATES)
@@ -575,10 +624,11 @@ def validate_package(
                 if report is not None:
                     gate_reports[name] = report
 
-    if stage in {"pre-solve", "promotion"}:
+    if stage in MATERIAL_STAGES:
         rules = connectivity.get("rules") if isinstance(connectivity, dict) else None
         if (
-            isinstance(rules, str)
+            stage in {"pre-solve", "promotion"}
+            and isinstance(rules, str)
             and rules.strip()
             and not resolve(base_dir, rules).is_file()
         ):
@@ -707,7 +757,7 @@ def main() -> int:
     parser.add_argument("package", type=Path)
     parser.add_argument(
         "--stage",
-        choices=("design", "pre-solve", "promotion"),
+        choices=("design", "source-input-patch", "pre-solve", "promotion"),
         default="design",
     )
     parser.add_argument(

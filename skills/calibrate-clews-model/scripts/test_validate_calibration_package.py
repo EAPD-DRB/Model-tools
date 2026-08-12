@@ -70,6 +70,9 @@ class CalibrationPackageTest(unittest.TestCase):
         (documentation / "calibration-backlog.csv").write_text(
             "item_id,status\nX,resolved\n", encoding="utf-8"
         )
+        (documentation / "HISTORY.md").write_text(
+            "# History\n\nSource inputs updated.\n", encoding="utf-8"
+        )
         (documentation / "connectivity-rules.json").write_text("{}\n", encoding="utf-8")
 
         def pass_gate(name: str, report: dict[str, object]) -> None:
@@ -81,8 +84,14 @@ class CalibrationPackageTest(unittest.TestCase):
             }
 
         names = VALIDATOR.PRE_SOLVE_GATES
-        if stage == "promotion":
+        if stage == "source-input-patch":
+            names = VALIDATOR.SOURCE_INPUT_PATCH_GATES
+            package["delivery"]["state"] = "source_input_patch"
+            package["delivery"]["result_status"] = "stale"
+        elif stage == "promotion":
             names = VALIDATOR.PROMOTION_GATES
+            package["delivery"]["state"] = "promoted"
+            package["delivery"]["result_status"] = "fresh"
         generic = {
             "status": "pass",
             "case": package["case"]["candidate_case"],
@@ -95,19 +104,20 @@ class CalibrationPackageTest(unittest.TestCase):
             "artifact": None,
             "reason": "Synthetic package has no closed resource account",
         }
-        pass_gate(
-            "connectivity_review",
-            {
-                "schema": "clews-connectivity-audit-v1",
-                "status": "pass",
-                "case_dir": str(self.root),
-                "scenario": package["case"]["scenario"],
-                "findings": [],
-                "reviewed_exemptions": [],
-                "rule_errors": [],
-                "unused_exemptions": [],
-            },
-        )
+        if stage != "source-input-patch":
+            pass_gate(
+                "connectivity_review",
+                {
+                    "schema": "clews-connectivity-audit-v1",
+                    "status": "pass",
+                    "case_dir": str(self.root),
+                    "scenario": package["case"]["scenario"],
+                    "findings": [],
+                    "reviewed_exemptions": [],
+                    "rule_errors": [],
+                    "unused_exemptions": [],
+                },
+            )
         pass_gate(
             "schema_ledger_validation",
             {
@@ -140,6 +150,23 @@ class CalibrationPackageTest(unittest.TestCase):
 
     def test_complete_package_passes_promotion(self) -> None:
         self.assertEqual(self.validate(self.ready("promotion"), "promotion"), [])
+
+    def test_source_input_patch_passes_without_solver_gates(self) -> None:
+        package = self.ready("source-input-patch")
+        self.assertEqual(package["gates"]["solver_run"]["status"], "pending")
+        self.assertEqual(self.validate(package, "source-input-patch"), [])
+
+    def test_source_input_patch_requires_truthful_delivery_state(self) -> None:
+        package = self.ready("source-input-patch")
+        package["delivery"]["state"] = "working"
+        package["delivery"]["result_status"] = "fresh"
+        package["delivery"]["recertification_command"] = ""
+        (self.root / "documentation/HISTORY.md").unlink()
+        errors = self.validate(package, "source-input-patch")
+        self.assertTrue(any("must equal source_input_patch" in e for e in errors))
+        self.assertTrue(any("must be absent or stale" in e for e in errors))
+        self.assertTrue(any("recertification_command" in e for e in errors))
+        self.assertTrue(any("history_artifact does not exist" in e for e in errors))
 
     def test_pre_solve_checks_inherited_records(self) -> None:
         package = self.ready("pre-solve")

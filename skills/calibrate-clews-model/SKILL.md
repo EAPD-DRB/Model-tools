@@ -6,7 +6,9 @@ description: "Calibrate a solved country CLEWs model by replacing generic inputs
 # Calibrate a CLEWs country model
 
 Refine an existing solved country model with defensible evidence and physical
-structure. Calibration does not mean tuning inputs until outputs resemble history.
+structure. Calibration here means country localization and physical calibration
+from evidence independent of model-output error; it does not mean tuning inputs
+until outputs resemble history.
 
 ## Boundary
 
@@ -107,6 +109,21 @@ Modify source parameter JSON and `genData.json`, then regenerate through
 or solver-output-only edits. The package validator requires the actual changed
 top-level source JSON files to equal `changes[].source_file`.
 
+For a source-only handoff before solving, set `delivery.state` to
+`source_input_patch`, update the history artifact, mark existing results `stale`
+or `absent`, and record the command needed to recertify them. Regenerate the live
+source, create its result-free archive, verify live/archive source identity, and
+run the lightweight checkpoint:
+
+```bash
+python scripts/validate_calibration_package.py \
+  CASE_DIR/documentation/calibration-package.json \
+  --case-dir CASE_DIR --stage source-input-patch
+```
+
+This checkpoint certifies the source, provenance, and archive identity only; it
+does not certify a solve or promote the case.
+
 ### 5. Pass pre-solve gates
 
 Attach the machine reports named by the package's `gates` keys, resolve every
@@ -144,7 +161,8 @@ Benchmarks remain diagnostic, never fitted.
 
 Regenerate the live case from validated source, solve once fresh, create the
 result-free archive, verify live/archive source identity, run provenance at
-`--stage delivery`, and finish with:
+`--stage delivery`, set `delivery.state` to `promoted` and
+`delivery.result_status` to `fresh`, and finish with:
 
 ```bash
 python scripts/validate_calibration_package.py \

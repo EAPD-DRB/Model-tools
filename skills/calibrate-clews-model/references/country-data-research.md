@@ -54,6 +54,20 @@ annually repeated activity. Keep country-specific values, formulas, assumptions,
 and supporting sources in the country evidence and calculation notes rather
 than in this generic guidance.
 
+When future substitution is part of the question, express demand as the service
+required—such as useful energy, passenger-kilometres, tonne-kilometres, or
+delivered water—and let eligible carriers and technologies compete. Treat
+historical carrier use as calibration evidence unless a carrier-fixed demand is
+itself the intended policy boundary.
+
+## Missing, zero, and inapplicable observations
+
+Classify every absent observation as `observed_zero`,
+`structurally_inapplicable`, `unreported`, or `unavailable`. A blank or omitted
+value is not evidence of zero. Encode zero or remove a physical branch only when
+the source definition and independent country evidence support that
+interpretation; otherwise retain the uncertainty as a documented gap.
+
 ## Transformations
 
 Write every nontrivial transformation in `CALCULATIONS.csv` using actual input

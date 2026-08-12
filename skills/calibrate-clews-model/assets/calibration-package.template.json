@@ -70,6 +70,12 @@
     "candidate_budget_seconds": 360,
     "baseline_artifact": "res/BASE_STORED/results.txt"
   },
+  "delivery": {
+    "state": "working",
+    "history_artifact": "documentation/HISTORY.md",
+    "result_status": "absent",
+    "recertification_command": "Run the normal application solve, then validate this package with --stage promotion"
+  },
   "gates": {
     "identifier_integrity": {"status": "pending", "artifact": null},
     "connectivity_review": {"status": "pending", "artifact": null},
