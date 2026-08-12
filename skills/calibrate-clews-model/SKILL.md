@@ -59,6 +59,12 @@ influence, cross-sector importance, defect severity, and evidence availability.
 Use the research hierarchy and trace rules in
 [references/country-data-research.md](references/country-data-research.md).
 
+Size each package around one coherent, independently testable physical or
+accounting boundary, grouping the coupled changes needed to close it. Record its
+completion test, evidence period and post-evidence treatment, source and
+allocation boundary, calibration claim, and measurable invariants. Reuse the
+normal gate artifacts to test those invariants; these declarations add no solve.
+
 ### 2. Audit connectivity
 
 Start from `assets/connectivity-rules.template.json`. Declare roles and physical

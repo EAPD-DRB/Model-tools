@@ -148,6 +148,30 @@ class CalibrationPackageTest(unittest.TestCase):
     def test_template_passes_design(self) -> None:
         self.assertEqual(VALIDATOR.validate_package(self.package, "design"), [])
 
+    def test_package_scope_fields_are_required(self) -> None:
+        package = copy.deepcopy(self.package)
+        package["packages"][0]["coherence_basis"] = ""
+        package["packages"][0]["temporal_boundary"]["latest_evidence_year"] = "2024"
+        package["packages"][0]["evidence_boundary"]["allocation_rule"] = ""
+        package["packages"][0]["claim_scope"] = ""
+        package["packages"][0]["invariants"] = []
+        errors = VALIDATOR.validate_package(package, "design")
+        self.assertTrue(any("coherence_basis" in error for error in errors))
+        self.assertTrue(any("latest_evidence_year" in error for error in errors))
+        self.assertTrue(any("allocation_rule" in error for error in errors))
+        self.assertTrue(any("claim_scope" in error for error in errors))
+        self.assertTrue(
+            any("invariants must be a non-empty list" in error for error in errors)
+        )
+
+    def test_invariant_names_must_be_unique(self) -> None:
+        package = copy.deepcopy(self.package)
+        package["packages"][0]["invariants"].append(
+            copy.deepcopy(package["packages"][0]["invariants"][0])
+        )
+        errors = VALIDATOR.validate_package(package, "design")
+        self.assertTrue(any(".name duplicates" in error for error in errors))
+
     def test_complete_package_passes_promotion(self) -> None:
         self.assertEqual(self.validate(self.ready("promotion"), "promotion"), [])
 

@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "case": {
     "source_case": "COUNTRY_BASIC",
     "candidate_case": "COUNTRY_REFINED_WORKING",
@@ -25,6 +25,27 @@
       "name": "Existing generation stock and retirement",
       "current_weakness": "Generic residual capacity and lifetime assumptions",
       "objective": "Replace generic stocks with a sourced national plant inventory",
+      "coherence_basis": "One independently testable national generation-stock accounting boundary",
+      "completion_test": "Installed capacity and surviving stock reconcile to the documented inventory and retirement rules",
+      "temporal_boundary": {
+        "evidence_period": "2020-2024",
+        "latest_evidence_year": 2024,
+        "post_evidence_treatment": "Apply documented retirement rules to the latest observed stock"
+      },
+      "evidence_boundary": {
+        "geography": "National",
+        "quantity": "Installed grid-connected generating capacity by plant and technology",
+        "allocation_rule": "Map each registered unit once to its model technology and commissioning year",
+        "quality_status": "Primary national plant register reconciled against published generation statistics"
+      },
+      "claim_scope": "Physical stock accounting using observed capacity as an exogenous historical boundary",
+      "invariants": [
+        {
+          "name": "Unchanged demand sectors remain stable",
+          "metric": "Annual final-energy demand outside electricity supply",
+          "acceptance_rule": "No change beyond numerical solver tolerance"
+        }
+      ],
       "affected_sectors": [
         "energy"
       ],

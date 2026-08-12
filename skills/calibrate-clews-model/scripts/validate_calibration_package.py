@@ -267,8 +267,8 @@ def validate_package(
     ledger_dir: Path | None = None
     if not isinstance(package, dict):
         return ["package root must be a JSON object"]
-    if package.get("schema_version") != 1:
-        errors.append("schema_version must equal 1")
+    if package.get("schema_version") != 2:
+        errors.append("schema_version must equal 2")
 
     case = package.get("case")
     if not isinstance(case, dict):
@@ -380,7 +380,15 @@ def validate_package(
         if not isinstance(item, dict):
             errors.append(f"{location} must be an object")
             continue
-        for field in ("package_id", "name", "current_weakness", "objective"):
+        for field in (
+            "package_id",
+            "name",
+            "current_weakness",
+            "objective",
+            "coherence_basis",
+            "completion_test",
+            "claim_scope",
+        ):
             require_text(item, field, location, errors)
         package_id = item.get("package_id")
         if isinstance(package_id, str):
@@ -388,6 +396,60 @@ def validate_package(
                 errors.append(f"{location}.package_id duplicates {package_id}")
             package_ids.add(package_id)
         require_text_list(item, "affected_sectors", location, errors)
+        temporal = item.get("temporal_boundary")
+        if not isinstance(temporal, dict):
+            errors.append(f"{location}.temporal_boundary must be an object")
+        else:
+            require_text(
+                temporal,
+                "evidence_period",
+                f"{location}.temporal_boundary",
+                errors,
+            )
+            latest_year = temporal.get("latest_evidence_year")
+            if not isinstance(latest_year, int) or isinstance(latest_year, bool):
+                errors.append(
+                    f"{location}.temporal_boundary.latest_evidence_year must be an integer"
+                )
+            require_text(
+                temporal,
+                "post_evidence_treatment",
+                f"{location}.temporal_boundary",
+                errors,
+            )
+        evidence_boundary = item.get("evidence_boundary")
+        if not isinstance(evidence_boundary, dict):
+            errors.append(f"{location}.evidence_boundary must be an object")
+        else:
+            for field in (
+                "geography",
+                "quantity",
+                "allocation_rule",
+                "quality_status",
+            ):
+                require_text(
+                    evidence_boundary,
+                    field,
+                    f"{location}.evidence_boundary",
+                    errors,
+                )
+        invariants = item.get("invariants")
+        if not isinstance(invariants, list) or not invariants:
+            errors.append(f"{location}.invariants must be a non-empty list")
+        else:
+            invariant_names: set[str] = set()
+            for invariant_index, invariant in enumerate(invariants):
+                invariant_location = f"{location}.invariants[{invariant_index}]"
+                if not isinstance(invariant, dict):
+                    errors.append(f"{invariant_location} must be an object")
+                    continue
+                for field in ("name", "metric", "acceptance_rule"):
+                    require_text(invariant, field, invariant_location, errors)
+                name = invariant.get("name")
+                if isinstance(name, str):
+                    if name in invariant_names:
+                        errors.append(f"{invariant_location}.name duplicates {name}")
+                    invariant_names.add(name)
         package_finding_ids.update(
             require_text_list(
                 item, "connectivity_finding_ids", location, errors, nonempty=False
