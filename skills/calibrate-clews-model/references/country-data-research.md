@@ -44,6 +44,16 @@ Before using a number, verify:
 - nominal versus real currency, base year, and exchange rate;
 - annual, seasonal, timeslice, national, regional, and cluster scope.
 
+## Demand drivers and annualization
+
+For exogenous demand and intensity series, prefer transparent physical
+identities—such as population × per-capita demand × coverage × loss adjustment,
+or area × event intensity × annual frequency ÷ system efficiency—over
+unexplained growth rates. Clearly distinguish unique service area or stock from
+annually repeated activity. Keep country-specific values, formulas, assumptions,
+and supporting sources in the country evidence and calculation notes rather
+than in this generic guidance.
+
 ## Transformations
 
 Write every nontrivial transformation in `CALCULATIONS.csv` using actual input
