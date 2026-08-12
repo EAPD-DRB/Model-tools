@@ -4,6 +4,12 @@
 **Scope:** the six CLEWs/MUIO skills plus the two handoff skills (~48,800 of the repo's
 62,000 skill words). OG skills and `fable-mode` excluded.
 
+> Historical design note: the 2026-07-29 class-routed calibration-plan architecture described
+> below was superseded in August 2026. The current `calibrate-clews-model` workflow treats
+> evidence-based country refinement, complete schema-ledger provenance, and physical
+> connectivity repair as its core purpose. A/B/C remains only `CHANGES.csv` chronology
+> metadata; outcome fitting is not an authorized calibration path.
+
 ## In plain terms
 
 The skills currently work by **telling the model to read a lot of instructions and then

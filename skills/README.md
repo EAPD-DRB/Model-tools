@@ -51,17 +51,19 @@ from forking into six divergent copies again.
   `clews-model-fix`, whose only hard gate is that flag — so the fast path works when it is
   the one skill installed.
 
-## Choosing a skill: size the ceremony to the change
+## Choosing a skill
 
-| Class | Test | Skill |
-|---|---|---|
-| **A — structural** | No parameter value changes, no source data changes | `clews-model-fix` |
-| **B — sourced change** | A number changes, chosen *without* reference to an observed outcome | `calibrate-clews-model` / `add-*`, with provenance |
-| **C — calibration** | A value chosen *with reference to* an observed outcome | `calibrate-clews-model`, full plan |
+- Use `build-clews-model` to create the initial solved CLEWs Global country model.
+- Use `calibrate-clews-model` to replace generic or weak inputs with better country data,
+  repair disconnected systems, add physical stocks and constraints, and maintain complete
+  source/calculation/assumption provenance.
+- Use an `add-*` skill for a specialized sector package it explicitly covers.
+- Use `clews-model-fix` only for edits that cannot change any model value.
+- Use `assess-clews-calibration` to grade an existing model.
 
-The discriminator is the counterfactual test: *would this exact change still be made if no
-historical outcome were known?* The evidence a change requires scales with what the change
-can affect, not with the importance of the model.
+The A/B/C value in `CHANGES.csv` is administrative chronology, not a workflow selector. The
+non-forcing counterfactual test still applies to every parameter: *would this exact change still
+be made if no historical outcome were known?* If not, do not promote it as country calibration.
 
 ## Available skills
 
@@ -73,9 +75,10 @@ can affect, not with the importance of the model.
 - [`assess-clews-calibration`](assess-clews-calibration/SKILL.md): assess
   technical validity, historical adequacy, forcing, evidence, and fitness for
   purpose.
-- [`calibrate-clews-model`](calibrate-clews-model/SKILL.md): implement
-  equation-led, non-forcing, source-traceable calibration changes with
-  deterministic pre-solve and bounded runtime gates.
+- [`calibrate-clews-model`](calibrate-clews-model/SKILL.md): refine a solved basic
+  CLEWs Global country model with better sourced national data, physical stocks and
+  constraints, connectivity repairs, complete schema-ledger provenance, and integrated
+  solve/diagnostic gates.
 - [`build-clews-model`](build-clews-model/SKILL.md): build and package an
   uncalibrated country CLEWS model.
 - [`clews-model-fix`](clews-model-fix/SKILL.md): make a structural fix that
