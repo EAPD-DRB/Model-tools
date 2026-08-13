@@ -121,6 +121,9 @@ workflow; carry inherited bounds forward unchanged.
 
 For initial stocks, survival, retirement, or adoption, use
 [references/stock-turnover-patterns.md](references/stock-turnover-patterns.md).
+For annual technology entry, project pipelines, commissioning rates, or
+`TotalAnnualMaxCapacityInvestment`, use
+[references/deployment-envelopes.md](references/deployment-envelopes.md).
 For land, water, biomass, fisheries, emissions, or another closed account, use
 [references/resource-accounting.md](references/resource-accounting.md) and run:
 
