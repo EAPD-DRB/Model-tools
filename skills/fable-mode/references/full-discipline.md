@@ -2,7 +2,7 @@
 
 Load this when running on a weaker model (Sonnet, Haiku), when a task keeps
 failing under the compressed loop, or when you want the full reasoning behind a
-gate. On Claude 5 (Fable/Opus) most of this is native behaviour — the compressed
+gate. On the frontier tier most of this is native behaviour — the compressed
 skeleton in SKILL.md is enough, and the load-bearing parts (the model-run
 ritual, routing, the delegation brief) live there.
 
