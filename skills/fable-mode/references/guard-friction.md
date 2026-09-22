@@ -1,44 +1,37 @@
-# Guard friction — the detail
+# Guard friction — across runtimes
 
-Read this when a flag actually fires, or before a stretch of guard-prone work. The standing
-rules that prevent flags live in SKILL.md; this file is what the classifier reads and what to
-do after one trips.
+Read this when a safety restriction interrupts the work, or when the request needs clearer
+authorization and purpose. Provider policies and client behavior change; this skill is not
+a substitute for the active rules. Do not transfer Claude-specific fallback or configuration
+instructions into Codex, or vice versa.
 
-**Dated content warning.** The category boundaries, the fallback behaviour and the recovery
-keystrokes below were true on 2026-09-04. Classifier behaviour changes between models: a newer
-model may false-positive less, may route a flag somewhere else, or may permit work this file
-says is near the line. Re-read the current model's own prompting page before relying on the
-specifics; the practice at the top of SKILL.md is the durable part.
+## Establish what actually happened
 
-## Where the lines actually sit
+Read the returned error or restriction. Distinguish a safety refusal from a sandbox denial,
+missing permission, rate limit, unavailable model, and ordinary provider failure. They require
+different responses. Record the relevant message and request id when available, without secrets.
 
-- **Bio.** The gated set is virology, toxicology and molecular design. Actuarial tables and
-  UN-WPP / DHS demographic statistics are explicitly on the allowed side, which is why
-  mortality and fertility work reads adjacent without being in scope.
-- **Cyber.** The policy line is authorization. "With the system owner's consent" is allowed
-  vocabulary; offense without authorization is the gated thing. As of 2026-09, finding
-  vulnerabilities in source code is explicitly permitted, and false positives are fewer than
-  they were at the previous model's launch.
+The visible context may include workspace files, instructions, or delegated briefs, not only
+the last user message. Inspect relevant context if the explanation points there. Do not assume
+which hidden classifier fired or that a particular word caused it.
 
-## The classifier reads more than the prompt
+## Clarify; do not circumvent
 
-File contents, filenames, git status, CLAUDE.md and subagent system prompts are all input.
+- State the true owner, purpose, authorization, data source, and intended operation. Clarify a
+  genuine misunderstanding when the active rules permit it; do not manufacture permission.
+- Assess the substance of the task. A demographic dataset is not a wet-lab experiment, but
+  a label such as "research" or "our own repository" does not settle every safety question.
+- Ask for evidence and an explanation of the result, not private internal reasoning.
+- Do not obfuscate, fragment the task, switch models, or start fresh sessions to get around
+  a restriction. Do not disable safeguards or change fallback settings as a skill ritual.
+- If the restriction remains, stop the restricted part, explain it, and offer a permitted
+  alternative where possible. For an ordinary permissions request, use the host's approval
+  mechanism without widening the requested action.
 
-- Keep security-review subagent prompts lean, or run the review inline. Documented case: the
-  same review passed inline and was flagged as a keyword-dense subagent.
-- A first-message flag in a security-heavy repo can be workspace context alone. Starting the
-  session in safe mode isolates that.
-- Never write show-your-reasoning or transcribe-your-thinking instructions into a skill or
-  CLAUDE.md. That is the one documented self-inflicted trigger, and it is a standing rule in
-  SKILL.md rather than an incident-response item.
+## Provider-specific recovery
 
-## When a guard fires
-
-1. Never retry the same words, and never rephrase to obscure. One retry carrying fuller true
-   context is the officially supported move.
-2. In Claude Code: disable switch-models-on-flag in config, edit the request, retry. Otherwise
-   the session falls back to a lower-tier model by refusal category and returns afterwards.
-3. Flags cascade. Move the flagged work to a fresh session and keep guard-prone work out of
-   long mixed sessions.
-4. Report a false positive through feedback or a claude-code issue with the request id.
-   Sustained security work can apply to the Cyber Verification Program.
+Consult the active client's current documentation and the returned error for any supported
+recovery or feedback procedure. Claude Code and Codex do not share fallback settings, account
+programs, or session commands. Honor project and host approval requirements before changing
+configuration or filing an external report. Give the user a concise, factual report rather
+than declaring every interruption a false positive.
