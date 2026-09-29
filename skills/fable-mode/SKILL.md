@@ -64,11 +64,11 @@ next already-authorized step.
 
 Delegate only when independent work benefits enough to justify the overhead.
 Give the outcome, workspace, scope, relevant context, and genuine stopping
-conditions. Say what a correct result looks like. Include known failure modes
-when useful, not a speculative failure for every step. Do not assume helpers
-inherited loaded skills. Keep working on independent tasks; use native
-wait/resume tools for actual dependencies. Accept results on evidence
-appropriate to the claim, not an automatic extra review cycle.
+conditions. Say what a correct result looks like and how the helper can check it.
+Include known failure modes when useful, not a speculative failure for every
+step. Do not assume helpers inherited loaded skills. Keep working on independent
+tasks; use native wait/resume tools for actual dependencies. Accept results on
+evidence appropriate to the claim, not an automatic extra review cycle.
 
 ## Maintenance
 
