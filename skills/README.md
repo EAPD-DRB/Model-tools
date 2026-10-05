@@ -86,8 +86,8 @@ be made if no historical outcome were known?* If not, do not promote it as count
   adjust technology groups. **Start here for small changes.**
 - [`clews-model-review`](clews-model-review/SKILL.md): review structure and data
   consistency; also gates whether an object is safe to delete (`--removable`).
-- [`fable-mode`](fable-mode/SKILL.md): apply a disciplined evidence, execution,
-  and verification loop.
+- [`fable-mode`](fable-mode/SKILL.md): resolve consequential uncertainty or stalled
+  work, then finish the requested work (a method, not a model).
 - [`og-analysis-studio`](og-analysis-studio/SKILL.md): free-form OG-Core scenario
   design, result interrogation, and bespoke figures.
 - [`og-country-calibration`](og-country-calibration/SKILL.md): calibrate or

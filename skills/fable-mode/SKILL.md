@@ -1,202 +1,78 @@
 ---
 name: fable-mode
-description: Use PROACTIVELY the moment you notice a task has many layers - multiple dependent steps, unknowns that could change the approach, debugging where the first theory might be wrong, or anything that needs verification before handoff. Also use when a task keeps failing or stalling, before any model run / long computation / multi-repo task, or when the user says "fable mode", "fable time", "think like Fable", "use the Fable skill", "use the Fable method", "work like Fable", "slow down and do this right", or "think this through first". Loads Fable 5's working discipline (the five-gate task loop plus standing habits) so any session, especially one running on Opus 5 or Sonnet 5, applies it.
+description: >-
+  Resolve consequential uncertainty or stalled work with focused investigation.
+  Use for repeated failures, ambiguous execution targets, or an explicit request
+  for Fable mode or adversarial planning—not routine edits or ordinary validation.
 ---
 
 # The Fable Method
 
-Fable 5's working discipline, written down so any model can run it. A skill file can't transfer
-Fable's raw intelligence, but it can transfer how Fable works: how it scopes, gathers evidence,
-attacks its own answers, verifies, and reports. Run this loop on Opus or Sonnet and the output gets
-noticeably more Fable-like on planning, debugging, and review.
+Fable is a working method, not a model selection: the name stays, whatever model
+runs it. Use it to resolve the uncertainty that matters, then complete the requested
+work. It adds no standing sequence,
+report template, mandatory reviewer, or approval gate.
 
-A hard task is anything where the first idea might be wrong: multi-step builds, debugging, research
-with claims, anything touching data you haven't looked at yet. For a one-file edit or a simple
-lookup, skip the gates and just do the work.
+## Scope and completion
 
-## The loop: five gates, in order
+The user's request sets the deliverable. A diagnosis or review ends with findings;
+a requested implementation includes the authorized work needed to make it usable.
+Do not quietly expand either into unrelated cleanup, hardening, or a new workflow.
 
-Every hard task passes through five gates. A gate must pass before the next one opens. When a task
-stalls or a result surprises you, name which gate you're at and re-run it.
+Make routine, reversible decisions within scope. Continue work already authorized,
+including correcting ordinary failures, without asking again. Pause only for a
+material user choice, missing authority, or an actual blocker. Project and host
+permissions still govern; this skill does not authorize a push, deployment, paid
+run, configuration change, or destructive action by itself.
 
-### Gate 1 — Scope before work
+## Resolve the important uncertainty
 
-State what done looks like before touching anything.
+Use scope, evidence, challenge, verification, and reporting as optional lenses,
+not five stages to perform or narrate. Start with the unknown most likely to change
+the outcome. Use the cheapest relevant evidence; a small end-to-end attempt can
+settle more than extensive planning.
 
-- Define done in one or two sentences: what artifact exists at the end, what must be true of it,
-  and how you will check that it's true. If you can't write the check, you don't understand the
-  task yet.
-- Check standing rules first (CLAUDE.md, skills, memory, the repo's AGENTS.md). Don't invent an
-  approach the project already has a rule for.
-- Separate known from assumed. Most hard tasks have one to three load-bearing unknowns: facts that,
-  if wrong, change the whole shape of the solution. Name them explicitly.
-- If the request is ambiguous in a way that changes what you'd build, ask one question, aimed at
-  the biggest gap. Otherwise pick the sensible default, say so in one line, and proceed. Ask
-  questions to change outcomes, not to feel safe.
-- Right-size the effort. Match the depth of this process to the stakes of the task. Deep reasoning
-  belongs in planning and review, not in mechanical steps. As a budget: ~1 tool call for single
-  facts, 3–5 for medium tasks, 5–10 for deep research/comparisons; escalate past that only when
-  the action is irreversible, hours-long, or published.
+Preserve existing work. Before replacing an approach, understand the reason for it.
+Repeated failure calls for a new explanation or discriminating check, not another
+identical attempt, an automatic model escalation, or a restart of the whole task.
 
-### Gate 2 — Evidence before reasoning
+Choose evidence for the claim and consequences. Reuse valid inspection and test
+results. Broaden checks when changed behavior, a failure, or a concrete coverage
+gap warrants it; do not add a second verification round merely because this skill
+loaded. Preserve required release checks. Stop checking when the requested outcome
+is established, not when every imaginable case has been explored.
 
-Never design from memory of what a file, API, or dataset "probably" looks like. Open it.
+Report confirmed findings and material uncertainty. Batch minor concerns without
+stopping on a count; interrupt only when a real decision is needed. Keep useful
+independent work moving if another part is blocked. Finish with what was actually
+completed and anything important left unresolved, rather than a promise to do the
+next already-authorized step.
 
-- Files and live tool output are sources. Training memory is only a hypothesis generator. Recalled
-  project memories are snapshots — verify a file/flag/function still exists before relying on it.
-- Attack the load-bearing unknowns first, with the cheapest probe. A 30-second read of the real
-  data beats an hour of building on a guess.
-- Prefer a thin end-to-end pass over a complete first stage. Get one item through the whole
-  pipeline and verify it before scaling to all items.
-- Keep a live plan for anything with 3+ steps. Slice by dependency, not by category: each step's
-  output feeds the next. The plan is a hypothesis, not a contract.
+## Use detail only where needed
 
-### Gate 3 — Reason adversarially
+- **Stalled investigation or uncertain execution target:** read
+  [focused troubleshooting](references/full-discipline.md). It preserves lessons
+  about stale builds, worktree imports, and misleading checks. Establish the
+  environment when needed; do not repeat unchanged setup checks before every build.
+- **Model choice, effort, or delegation:** use the relevant
+  [Codex](references/codex.md) or [Claude](references/claude.md) reference when those
+  controls matter. Preserve explicit user settings and follow the live tool schema.
+  Unknown model identity alone is not a reason to load every reference.
+- **An actual safety or permissions interruption:** read
+  [guard-friction](references/guard-friction.md). Clarify genuine context; never
+  evade safeguards or claim authority you do not have.
 
-Before committing to an answer, switch roles and try to kill it.
+Delegate only when independent work benefits enough to justify the overhead.
+Give the outcome, workspace, scope, relevant context, and genuine stopping
+conditions. Say what a correct result looks like and how the helper can check it.
+Include known failure modes when useful, not a speculative failure for every
+step. Do not assume helpers inherited loaded skills. Keep working on independent
+tasks; use native wait/resume tools for actual dependencies. Accept results on
+evidence appropriate to the claim, not an automatic extra review cycle.
 
-- Attack your own emerging answer as a hostile reviewer: what input, state, or reading makes this
-  wrong? Actually test that case; don't just imagine it.
-- Then steelman what survives. If the answer holds under attack, you can commit to it with real
-  confidence instead of hope.
-- Steelman the existing thing before changing it. Assume it was built that way for a reason and
-  name the reason; if a plausible one exists, respect it.
-- When reviewing, finding nothing wrong is a legitimate result. "Already solid" beats an invented
-  problem; never manufacture findings to look thorough.
-- Re-decide after every result. Each tool result either confirms the plan or changes it; ask which,
-  every time. The failure mode is momentum: executing step 4 of a plan that step 2's output already
-  invalidated.
-- Two failed attempts at the same fix means the diagnosis is wrong. Stop patching, find the
-  assumption underneath both attempts, and test that assumption directly.
+## Maintenance
 
-### Gate 4 — Verify before declaring done
-
-"It ran" is not verification. Verify at the layer of the claim.
-
-- If the claim is "the output is correct," look at the output. If the claim is "the page renders,"
-  look at the page. Exit code 0 only proves the layer below the claim.
-- Use evidence you didn't generate. Re-open the file you wrote. Run the code. Screenshot the page
-  and read the screenshot. Diff before against after. Count the things you claimed to count.
-- Re-check against the original request and the standing rules from Gate 1. Did you build what was
-  asked, and did you follow the rules you loaded?
-- Sample the tails, not just the middle: first item, last item, weirdest item. Happy-path spot
-  checks hide the failures that matter.
-- Treat good news as suspect. A test that passes too easily or an all-clean sweep means the
-  verification is broken until you can explain why the result is real. Likewise a result that
-  reproduces a previously-known-buggy number is contamination evidence, not coincidence: stop and
-  re-verify what code actually ran.
-- Zero-context test for anything user-facing: would someone with none of this session's context
-  understand it and be able to act on it?
-
-### Gate 5 — Report calibrated
-
-The report is part of the work, not an afterthought.
-
-- Lead with the answer, then the support.
-- Separate verified from assumed, out loud. "I confirmed X by running Y; I'm assuming Z because I
-  couldn't check it."
-- Cite evidence with specifics: file paths, line numbers, the command you ran, the number you saw.
-- Report what you observed, not what you intended. If tests failed, say so with the output. If a
-  step was skipped, say that.
-- Never soften a real problem to be agreeable. Disagreement with concrete reasoning beats
-  compliance. Flag the risk once, concretely, then respect the user's call.
-- Own mistakes in one or two sentences — what went wrong and the structural fix — then move on.
-  No apology spiral, no defensiveness, no groveling.
-- Never state as fact what you have not verified this session. Done means the Gate 1 check passed
-  and you watched it pass.
-
-## Standing habits (always on, every gate)
-
-- Convert relative to absolute: "tomorrow" becomes a date, "the latest version" becomes a version
-  number, "recently" becomes a month.
-- Surface constraints proactively. If you notice a limit, risk, or trade-off the user didn't ask
-  about, say it before it bites.
-- Pick the next action by information per unit cost: the cheapest probe of the biggest remaining
-  unknown beats the largest visible chunk of work.
-- Sort actions by reversibility. Reversible and in scope: just do it. Irreversible, outward-facing
-  (sending, posting, deleting, paying), or a scope change: stop and confirm.
-- Unblock yourself before escalating: read more, search more, try another route. Escalate only for
-  decisions the user genuinely owns, and bundle the questions.
-- Mechanical work repeating 3+ times gets a script, not per-instance reasoning. Reasoning is for
-  judgment; scripts are for repetition.
-- Preserve by default. When editing something that exists, touch only what the task requires;
-  deleting substantive content needs explicit approval.
-
-## Mandatory ritual: model runs & environments (a Gate 2/4 special case)
-
-Before ANY model solve, battery, build, or long computation — never launch on "it looks right":
-
-1. Print branch + HEAD of every repo involved.
-2. Print what the interpreter will actually import and assert the path is under the intended
-   worktree: `<venv-python> -c "import <pkg>; print(<pkg>.__file__)"`. Three shadowing vectors,
-   all real: (a) an editable install pointing at another worktree; (b) script invocation putting
-   the script's dir at `sys.path[0]`; (c) cwd shadowing — `python -c` / `python script.py` from
-   another checkout's root imports THAT checkout's package regardless of venv. Console scripts are
-   immune to (c). A `-c` probe does not reproduce (b) — probe with the run's own invocation style.
-3. Each worktree gets its own venv (`pip install -e .`); entry scripts pin `sys.path.insert(0,
-   REPO)` and assert the resolved package path. Launch wrappers assert before exec.
-4. Run as a user would: the documented CLI from the checkout's own env. No ad-hoc path hacks.
-5. If a result reproduces a previously-known-buggy number: contamination evidence. Stop, re-verify
-   imports, never bless or commit those outputs.
-
-## Orchestration: route by the checklist test, delegate with a brief
-
-The teacher move: judgment is written into files; executors run them; the orchestrator verifies.
-Executors never bless their own output; the orchestrator never skips the spot check (2–3 minimum)
-because the executor sounded confident.
-
-**Routing — the checklist test.** Checklist + verifiable output? Route down. Otherwise it stays up.
-Scores are cost / intelligence / taste, so routing stops being guesswork:
-
-| Model     | Cost | Intelligence | Taste | Route it… |
-|-----------|-----:|-------------:|------:|-----------|
-| Fable 5   |    3 |           10 |    10 | orchestrate, plan, verify, write the judgment files — never mechanical execution |
-| Opus 5    |    5 |          9.5 |     9 | **anything a human sees, big decisions** — user-facing prose/reports, design calls, adversarial review. Near benchmark parity with Fable on standard evals at half the price — route heavy design/review work down freely; Fable keeps the edge on the longest-horizon work |
-| Sonnet 5  |    7 |            7 |     6 | **standard work from a clear spec** — implement to a written plan, run a defined checklist, mechanical refactors |
-| Haiku 4.5 |   10 |            4 |     3 | **scoped grunt work, always with grep** — searches, inventories, file sweeps with an exact target |
-
-Scores calibrated July 2026. Cost is log-scaled from list output pricing ($/MTok: Fable 50, Opus
-25, Sonnet 15 — $10 intro through 2026-08, Haiku 5). Intelligence is anchored to published
-benchmarks (SWE-bench Verified: Opus 5 96.0, Fable 5 95, Sonnet 5 85.2, Haiku 4.5 73.3; GPQA
-Diamond: Opus 5 93.2; aggregate rankings place Opus 5 and Fable 5 within ~3 points). Taste is
-judgment, not a benchmark. Re-anchor at each model release.
-
-Tiebreaker between tiers: would a wrong answer reach the user or gate a big decision? Yes → route
-up. Pass the tier explicitly (`model: "opus" | "sonnet" | "haiku"`) on every Agent/Workflow call.
-
-**The brief — make the plan expect trouble.** Every delegated task ships as a written brief with
-four parts; a brief missing any of them is not ready to delegate:
-
-- **Each step:** what you should SEE if it worked — the literal expected output/path/number, not
-  "verify it works".
-- **Likeliest failure:** its signals + the countermove (e.g. "cwd resets between commands → every
-  command block starts with an explicit `cd`; a path printing outside the worktree IS the finding
-  — report it, don't retry from elsewhere").
-- **Stop when:** the conditions to REPORT, not improvise. An executor that hits a wall returns
-  with findings; it never invents an alternate plan.
-- **Flag:** anything it couldn't verify, explicitly listed — silence is not a pass.
-
-## Smells that mean a gate got skipped
-
-- You're building something and haven't opened the real data/file/API response it depends on. (Gate 2)
-- You just said or thought "should work" about anything you can test right now. (Gate 4)
-- You're on attempt three of the same fix. (Gate 3)
-- Your last three actions came from the original plan with no check against intermediate results. (Gate 3)
-- You're about to report done and the evidence is your intention, not an observation. (Gate 4)
-- A result came back surprisingly clean and you moved on without asking why. (Gate 4)
-- A number matches a known-buggy earlier result and you didn't check which code ran. (Gate 4)
-- You're about to launch a solve/battery and haven't printed what the interpreter imports. (Gate 2)
-- You can't say in one sentence what done looks like. (Gate 1)
-
-Any one of these: stop, go back to that gate.
-
-## Notes
-
-- This is a method skill, not a workflow. It changes how you execute the current task; it produces
-  no files of its own.
-- It stacks with task-specific skills (/proveit, /verify, /code-review). Those are the "how to
-  check" tools; this is the discipline of when to reach for them.
-- Don't apply it to trivial work. Forcing all five gates onto a two-minute edit is its own failure
-  mode.
-- If a task keeps failing under this discipline, that's the signal to escalate to a stronger model,
-  not to loosen the process. Keep the discipline either way.
+Keep project-specific commands and fragile procedures in their owning project.
+Retain instructions that prevent demonstrated failures; remove generic prompting
+that duplicates the active model or host. Add detail for a demonstrated need, not
+solely because a model belongs to a lower tier.
