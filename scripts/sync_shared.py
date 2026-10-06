@@ -42,6 +42,10 @@ VENDORED = {
         "add-fisheries-sector",
         "assess-clews-calibration",
     ),
+    "og-run-rules.md": (
+        "og-country-calibration",
+        "og-multi-industry-calibration",
+    ),
     "provenance/SCHEMA.md": (
         "build-clews-model",
         "calibrate-clews-model",
