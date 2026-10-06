@@ -88,15 +88,13 @@ be made if no historical outcome were known?* If not, do not promote it as count
   consistency; also gates whether an object is safe to delete (`--removable`).
 - [`fable-mode`](fable-mode/SKILL.md): apply a disciplined evidence, execution,
   and verification loop.
-- [`og-analysis-studio`](og-analysis-studio/SKILL.md): free-form OG-Core scenario
-  design, result interrogation, and bespoke figures.
 - [`og-country-calibration`](og-country-calibration/SKILL.md): calibrate or
   refine an OG-Core country model.
 - [`og-multi-industry-calibration`](og-multi-industry-calibration/SKILL.md):
   build a multi-industry OG-Core calibration from a SAM or IO tables and keep it
   consistent with the single-industry model.
-- [`og-scenario-report`](og-scenario-report/SKILL.md): turn a finished OG-Core
-  baseline-vs-reform run into the standard deliverable.
+- [`og-scenario-report`](og-scenario-report/SKILL.md): design OG-Core reforms,
+  produce the standard baseline-vs-reform deliverable, and analyse results further.
 - [`pull-handoff`](pull-handoff/SKILL.md): update the Fiji, Philippines, and
   Model-tools repositories and install the latest MUIO cases.
 - [`push-handoff`](push-handoff/SKILL.md): package, document, commit, and push
