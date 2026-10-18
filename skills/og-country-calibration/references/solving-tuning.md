@@ -65,9 +65,12 @@ The rules are in og-run-rules.md. The evidence behind them:
 **[PHL]** The tuning loop is cheap: use real solves, not algebra. A warm-guess SS solve takes
 seconds, so *solve → read the revenue dashboard → adjust dials → re-solve* converges in 3–5
 iterations for half a dozen simultaneous dials (GS φ2, `tau_c`, CIT adjustment, `p_wealth`,
-`r_gov_shift`, `zeta_K`). Keep a small driver that loads the packaged JSON plus an overrides dict,
-builds the same worker pool as the example script, calls `runner(..., time_path=False,
-client=client)`, and prints model vs target by instrument. Two things it is not:
+`r_gov_shift`, `zeta_K`). Ship a small tuning script in the repo (`examples/tune_ss.py`) that loads
+the packaged JSON plus an overrides dict, builds the same worker pool as the example script, calls
+`runner(..., time_path=False, client=client)`, and prints model vs target by instrument. Because the
+repo ships it, it runs from the installed copy like any repo code (og-run-rules.md, "Calibration
+tuning runs through repo code too"); a driver in a scratch folder is the departure the run rules
+forbid. Two things it is not:
 
 - not an official run: once the dials settle, fold the overrides into the JSON and run the example
   script through the client;

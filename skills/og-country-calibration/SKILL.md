@@ -133,7 +133,8 @@ Copy this into the work log and tick it off. Mechanics throughout: run with
           The path catches what the SS cannot, above all a wrong initial_debt_ratio.
 - [ ] 0.  Step zero: moment x lever table from OG-Core's equations; one dashboard row per target
           moment and per resource-constraint component. Dashboard first, tuning second.
-- [ ] 1.  Bootstrap from the closest sibling; fix the copied country_id, package name, egg-info.
+- [ ] 1.  Bootstrap from the closest sibling, then de-sibling it (below): every hard-coded country
+          value in code, tests and docs, and an audit of every inherited JSON value.
 - [ ] 2.  Environment: uv sync --extra dev; note the resolved ogcore in uv.lock; check
           TPI_outer_method exists; run og-run-preflight.
 - [ ] 3.  Demographics: country_id as a named constant + regression test; data window to the
@@ -177,6 +178,25 @@ Loop-backs. Do not move forward past a failed check:
   Tuning against a transition artifact bakes the artifact in.
 - **If the steady state is right but the transition runs away, check the fiscal identity before any
   solver setting.** Damping and Anderson do not fix an unbalanced budget.
+
+### De-siblinging a bootstrap copy
+
+A copied repo carries its sibling's country in the code as well as the JSON, and the code copies
+fail silently. **[KOR]** Before any solve:
+
+- **Search, do not trust the rename.** After renaming the package, grep code, tests and docs for the
+  sibling's ISO code, UN code, country name and demonym, and currency symbol; list every hit in the
+  work log and resolve each. Known carriers: the UN `country_id`; ISO codes defaulted inside
+  live-download functions (`macro_params`); survey-derived constants (a Gini default in
+  `get_e_interp`, remittance-allocation shares in the demographics tool); currency labels; SAM/IO
+  data; sibling-specific tests, which either fail or, worse, pass on the sibling's numbers.
+- **Make the new example offline.** If the sibling's example calls `Calibration(p,
+  update_from_api=True)` when online, the copy downloads data with the sibling's codes and writes it
+  over the new country's values. The new country's example reads the packaged JSON only.
+- **Audit every inherited JSON value** (mental model 1b): diff the JSON against the sibling's and
+  list each key as sourced, tuned to a named moment, or defaulted with a reason. Include solver
+  settings (`TPI_outer_method`, `nu`, `initial_guess_*`): a sibling can predate a run rule (KOR
+  inherited `nu` 0.4 with Anderson from PHL).
 
 Why the baseline TPI is not optional: the steady state consumes one number from each time-varying
 path (its terminal value), so a whole mis-specified path is invisible to it. On JPN a wrong

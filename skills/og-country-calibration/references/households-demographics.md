@@ -66,6 +66,14 @@ state is a long-run object, so a mid-transition snapshot is a category error. UN
 and ogcore asserts against going beyond `start_year + 74` (and a 2099 cap).
 **[net-new: JPN; worth a fleet sweep]**
 
+**The last usable year is one before the last year of data you actually have.** `get_pop` reads
+`final_data_year + 1` to infer immigration, and which data you have depends on the token: without a
+UN API token ogcore falls back to the Population-Data archive, and the archive's last year can be
+earlier than the API's (it ended at 2099 for KOR, so 2098 was the limit while ogcore's assert
+allows 2099). Check the archive's last year for your country and set the window to one less. Too
+late a year fails far from the cause, as an `UnboundLocalError` in `pop_rebin`. Put the year in a
+named constant with this reason next to it. **[KOR]**
+
 ## Discontinuities: the frozen window and fixper
 
 A finite window leaves a discontinuity, and ogcore adds a second. Where the rates freeze, and again
