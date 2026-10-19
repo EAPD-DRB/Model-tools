@@ -17,3 +17,8 @@ copy a country's values into another country's calibration. How to add a lesson:
 - [KOR](KOR.md): Republic of Korea
 - [PHL](PHL.md): Philippines
 - [ZAF](ZAF.md): South Africa
+
+Entries are grouped by the skill file a lesson sat in when written. Since 2026-10-19 the
+og-country-calibration sections "Step zero", "Finding every lever on a moment" and "Dashboard
+completeness" are in `references/method.md`, and "De-siblinging a bootstrap copy" is in
+`references/bootstrap.md`; their entries are still filed under `SKILL.md`.
