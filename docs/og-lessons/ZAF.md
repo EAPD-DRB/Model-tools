@@ -105,7 +105,7 @@ still ships the old calibration.
   [OG-ZAF#135](https://github.com/EAPD-DRB/OG-ZAF/pull/135) ("Why the fiscal reconciliation");
   [macro.md at 8292bbe](https://github.com/EAPD-DRB/OG-ZAF/blob/8292bbe4b32e7630d1ddbc5a63606b5fc1962f42/docs/book/content/calibration/macro.md)
   ("Fiscal consistency"); session notes, local file
-  `/Users/mlafleur/.claude/projects/-Users-mlafleur-Projects-OG-ZAF/memory/zaf-tax-informality.md`.
+  the author's working notes (zaf-tax-informality, unpublished).
 - **When:** 2026-07 (ogcore 0.16.3 and 0.16.4).
 
 ### The budget identity: alpha_I is a placeholder on OG-ZAF main
@@ -147,7 +147,7 @@ still ships the old calibration.
   surplus; after it, `pb*` was ~1.4% and `alpha_G` could sit at 0.19.
 - **Evidence:** [ebbfdf7](https://github.com/EAPD-DRB/OG-ZAF/commit/ebbfdf798a5041bbc590785abafe33065ac3f3af);
   [OG-ZAF#135](https://github.com/EAPD-DRB/OG-ZAF/pull/135) (`r_gov−g ≈ 1.9pp`); local file
-  `/Users/mlafleur/.claude/projects/-Users-mlafleur-Projects-OG-ZAF/memory/zaf-tax-informality.md`
+  the author's working notes (zaf-tax-informality, unpublished)
   (the 2.6% figure).
 - **When:** 2026-07.
 
@@ -165,7 +165,7 @@ still ships the old calibration.
 - **Evidence:** [taxes.md at 571376e](https://github.com/EAPD-DRB/OG-ZAF/blob/571376efe3149050d354a1bd6af0147aff4e1fc5/docs/book/content/calibration/taxes.md);
   [tests/test_default_parameters.py at 571376e](https://github.com/EAPD-DRB/OG-ZAF/blob/571376efe3149050d354a1bd6af0147aff4e1fc5/tests/test_default_parameters.py)
   (pins `[0.464, 1.39288, 1.5314e-08]`); local file
-  `/Users/mlafleur/.claude/projects/-Users-mlafleur-Projects-OG-ZAF/memory/zaf-tax-informality.md` (the 9.7%).
+  the author's working notes (zaf-tax-informality, unpublished) (the 9.7%).
 - **When:** 2026-07 (set); 2026-10-19 (checked).
 
 ### Progressive-fit recipe (GS): tune φ2 to collections (also PHL)
@@ -197,7 +197,7 @@ still ships the old calibration.
   [29cbdb9](https://github.com/EAPD-DRB/Model-tools/commit/29cbdb91e40c0e8ed23a889417aed6801a0127b4)
   (og-country-calibration, "HSV recipe"); [taxes.md at 571376e](https://github.com/EAPD-DRB/OG-ZAF/blob/571376efe3149050d354a1bd6af0147aff4e1fc5/docs/book/content/calibration/taxes.md)
   (why GS over HSV); local file
-  `/Users/mlafleur/.claude/projects/-Users-mlafleur-Projects-OG-ZAF/memory/zaf-tax-informality.md`.
+  the author's working notes (zaf-tax-informality, unpublished).
 - **When:** 2026-07.
 
 ## og-country-calibration/references/calibration-pr.md
@@ -260,7 +260,7 @@ still ships the old calibration.
   activities exactly once.
 - **Evidence:** [a143ee7](https://github.com/EAPD-DRB/OG-ZAF/commit/a143ee713cf501512f7fd0c255154fee39d7cea3)
   (`ogzaf/constants.py` diff); local file
-  `/Users/mlafleur/.claude/projects/-Users-mlafleur-Projects-OG-ZAF/memory/multi-industry-port-plan.md`.
+  the author's working notes (multi-industry-port-plan, unpublished).
 - **When:** 2026-07.
 
 ### Defining industries and goods: utility industries (also PHL, BRA)
@@ -316,7 +316,7 @@ still ships the old calibration.
   solved cold from the shared base seeds, with no continuation.
 - **Evidence:** [OG-ZAF#142](https://github.com/EAPD-DRB/OG-ZAF/pull/142) (the 23% and 0.865);
   [firms.md at 571376e](https://github.com/EAPD-DRB/OG-ZAF/blob/571376efe3149050d354a1bd6af0147aff4e1fc5/docs/book/content/calibration/firms.md);
-  local file `/Users/mlafleur/.claude/projects/-Users-mlafleur-Projects-OG-ZAF/memory/single-multi-compat-key-lessons.md`
+  the author's working notes (single-multi-compat-key-lessons, unpublished)
   (the slope ≈ 1.8).
 - **When:** 2026-07 (ogcore 0.16.3).
 

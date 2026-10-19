@@ -8,10 +8,10 @@ country's calibration.
 
 All KOR work is local and was never pushed. OG-KOR was a timed test of the og-country-calibration
 skill on 2026-10-18, with an overnight follow-up into 2026-10-19. The written record is in
-`/Users/mlafleur/Projects/OG-KOR-demo` (branch `calib/initial-kor`, plus `test/*` branches):
+`OG-KOR-demo` (local test repo, unpublished) (branch `calib/initial-kor`, plus `test/*` branches):
 `DEMO_LOG.md` (the timed log), `OVERNIGHT_BRIEFING.md`, `data_notes/` (sources) and
 `docs/book/content/calibration/` (the calibration chapters). Each run was an official-installer copy
-in `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-NN/OG-KOR/`, with its log in `logs/` and its
+in `OG-KOR-demo-runs/install-NN/OG-KOR/` (local test repo, unpublished), with its log in `logs/` and its
 output in `examples/OG-KOR-Example/`. Below, "OG-KOR commit" means a commit in that local repo, and
 "install-NN" means that run folder. OG-Core 0.21.2 from PyPI unless an entry says otherwise. The
 skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/MUIOGO-AI#8.
@@ -28,9 +28,9 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   608 and PHL tax tests. The audit also caught `nu` 0.4 with Anderson inherited from PHL (the run
   rules want 0.2 or lower). PHL's `initial_guess_TR_SS` put KOR's GDP guess 4.6x too high and
   stalled steady-state round r03.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/DEMO_LOG.md` (steps 1, 1b, 0a/0 and
+- **Evidence:** local: `OG-KOR-demo/DEMO_LOG.md` (local test repo, unpublished) (steps 1, 1b, 0a/0 and
   5-9); OG-KOR commits 18ebc0e (bootstrap), ce52de6 (de-sibling: tests, live macro path off),
-  d1dc5d0 (`nu` 0.4 → 0.2); `/Users/mlafleur/Projects/OG-KOR-demo-runs/overrides/r03.json` (no TR
+  d1dc5d0 (`nu` 0.4 → 0.2); `OG-KOR-demo-runs/overrides/r03.json` (local test repo, unpublished) (no TR
   seed, so PHL's applied) and `r03b.json` (KOR's own TR seed 0.0267).
 - **When:** 2026-10, OG-KOR commits above, ogcore 0.21.2.
 
@@ -41,7 +41,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
 - **What happened:** OG-PHL's example reform is a CIT cut and a debt change. OG-KOR's example uses
   the enacted 2026 corporate-rate rise, +1 point in every bracket (`cit_rate` 0.275). In the final
   run it lowered GDP by 0.12% over 2025-34 and 0.14% in the steady state.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/examples/run_og_kor.py` (reform
+- **Evidence:** local: `OG-KOR-demo/examples/run_og_kor.py` (local test repo, unpublished) (reform
   block); OG-KOR commit 069a4a2 ("Korean reform (2026 CIT +1pt)"); `DEMO_LOG.md`, "Final run E
   results".
 - **When:** 2026-10, OG-KOR commit 069a4a2.
@@ -57,9 +57,9 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   (end-2025), mostly the National Pension Service fund (54% of GDP). OG-KOR used D2 with the
   effective rate on gross debt. About 2.4% of GDP of government property income is then missing from
   revenue, and the budget closure set steady-state `G/Y` at 13.0% against 17.5% in the data.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/docs/book/content/calibration/macro.md`
+- **Evidence:** local: `OG-KOR-demo/docs/book/content/calibration/macro.md` (local test repo, unpublished)
   ("Government debt and the public balance sheet" and the fit table);
-  `/Users/mlafleur/Projects/OG-KOR-demo/data_notes/macro.md` (row 35: GG net financial assets 50.8%
+  `OG-KOR-demo/data_notes/macro.md` (local test repo, unpublished) (row 35: GG net financial assets 50.8%
   of GDP, end-2025p); `docs/book/content/calibration/taxes.md` (the 2.4% not captured).
 - **When:** 2026-10.
 
@@ -73,7 +73,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   of +8.4%. A positive share would have needed a world rate near 3.7%, which no source supports.
   `zeta_K` was set to 0.5 and judged on the transition, where the first-year foreign share was 9.0%
   (run B) and 9.1% (final run E).
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/docs/book/content/calibration/macro.md`
+- **Evidence:** local: `OG-KOR-demo/docs/book/content/calibration/macro.md` (local test repo, unpublished)
   ("Open economy"); OG-KOR commit 069a4a2 ("zeta_K 0.5 (level not identified at r~r*)");
   `DEMO_LOG.md` step 5-9.
 - **When:** 2026-10, ogcore 0.21.2.
@@ -95,7 +95,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
 - **Evidence:** https://github.com/PSLmodels/OG-Core/pull/1250,
   https://github.com/PSLmodels/OG-Core/pull/1251, https://github.com/PSLmodels/OG-Core/pull/1189,
   https://github.com/PSLmodels/OG-Core/issues/1247. Local:
-  `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-11/OG-KOR/logs/example_run_C.log` (PR #1250 at
+  `OG-KOR-demo-runs/install-11/OG-KOR/logs/example_run_C.log` (local test repo, unpublished) (PR #1250 at
   5118f34, OG-KOR commit eca770a on `test/pr1250-initial-wealth`);
   `install-12/OG-KOR/logs/example_run_D.log` (PR #1189 merged locally as OG-Core a37a039, OG-KOR
   commit 1b84b42 on `test/pr1189-initial-wealth`); C/Y paths from the saved
@@ -113,7 +113,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   the steady state's, giving about 4.17, near the capital-side data target of 4.43. The briefing's
   options table gives the default as 4.14 and its section 5 gives 4.17; 2.72 × 1.53 ≈ 4.16, so the
   two are the same figure with different rounding.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/OVERNIGHT_BRIEFING.md` sections 2 and
+- **Evidence:** local: `OG-KOR-demo/OVERNIGHT_BRIEFING.md` (local test repo, unpublished) sections 2 and
   5. The script that computed 2.72 was not found in the repo.
 - **When:** 2026-10, ogcore 0.21.2.
 
@@ -125,7 +125,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   private `K/Y` is 4.36. `delta` = (22.3% − 1.6%) / 4.36 = 4.75%, against 4.35% from total CFC over
   total capital. At `K/Y` 5.13 the model's return would have been about 3.1%, about 0.9pp below the
   4.0% world rate. This is also the skill's exemplar for the private/public split.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/docs/book/content/calibration/firms.md`;
+- **Evidence:** local: `OG-KOR-demo/docs/book/content/calibration/firms.md` (local test repo, unpublished);
   OG-KOR commit 069a4a2 ("private delta and K/Y"); `DEMO_LOG.md` step 5-9 ("K/Y and delta must be
   PRIVATE (skill contradicted itself)").
 - **When:** 2026-10.
@@ -155,9 +155,9 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   2036 against a plan near 52%. `examples/glide.py` then built `alpha_G(t)` from run B's revenue and
   pensions, with `pb_target(t)` from the 2026-2030 plan's debt path. In the final run debt was 52.5%
   in 2026 (actual 52.3%) and within 1.6pp of the plan in every plan year.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/docs/book/content/calibration/government.md`;
+- **Evidence:** local: `OG-KOR-demo/docs/book/content/calibration/government.md` (local test repo, unpublished);
   OG-KOR commits 0eac634 (glide script) and dbecd71 (glide v2); run B's
-  `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-10/OG-KOR/examples/OG-KOR-Example/OUTPUT_BASELINE/TPI/TPI_vars.pkl`
+  `OG-KOR-demo-runs/install-10/OG-KOR/examples/OG-KOR-Example/OUTPUT_BASELINE/TPI/TPI_vars.pkl` (local test repo, unpublished)
   (primary balance and debt recomputed from it); `DEMO_LOG.md` runs 10b and "Final run E results".
 - **When:** 2026-10, ogcore 0.21.2.
 
@@ -201,7 +201,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   to settle), so the one-period immigration re-solve is a real jump. Freezing earlier does not help
   (shape gap about 1e-3 for any freeze year 2050-2098) and a 2050 freeze puts long-run growth near
   −1.6%.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/OVERNIGHT_BRIEFING.md` section 3. Master
+- **Evidence:** local: `OG-KOR-demo/OVERNIGHT_BRIEFING.md` (local test repo, unpublished) section 3. Master
   as of 2026-10-19 still projects from `T0 - 1`:
   https://github.com/PSLmodels/OG-Core/blob/81f45496b9aec37bc82dc22aeebba31f055ca5e2/ogcore/demographics.py#L1781
 - **When:** 2026-10, OG-Core master 81f45496 (0.21.2 line).
@@ -222,7 +222,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
 - **Evidence:** local: `~/Projects/OG-Core.smooth-pop`, branch `fix/smooth-population-switch`,
   commits ce877c95 (data-boundary fix), ebdb7a3b (joint ramp solve), f8d51d1c (tests); run H's build
   `~/Projects/OG-Core.int-g`, branch `integrate/1247-plus-smooth-pop` at 858712b6;
-  `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-18/OG-KOR/logs/example_run_H.log` (max error
+  `OG-KOR-demo-runs/install-18/OG-KOR/logs/example_run_H.log` (local test repo, unpublished) (max error
   1.22e-4) and `install-14/OG-KOR/logs/example_run_F.log` (9.13e-3); per-period maxima recomputed
   from each run's `TPI_vars.pkl` `resource_constraint_error`; OG-KOR commit 3c121be on
   `test/h-pop-exact`; `OVERNIGHT_BRIEFING.md` section 4. No upstream PR found (`gh search prs
@@ -239,8 +239,8 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   2.2e-6 everywhere else and 3.6e-7 in the first ten years. So the loose tolerance was covering the
   two breaks, not the calibration. After run H, it could be tightened toward 1e-4 except for the
   last five periods.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/DEMO_LOG.md` runs 10 and 10b;
-  `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-10/OG-KOR/logs/example_run_B.log` (max 9.13e-3);
+- **Evidence:** local: `OG-KOR-demo/DEMO_LOG.md` (local test repo, unpublished) runs 10 and 10b;
+  `OG-KOR-demo-runs/install-10/OG-KOR/logs/example_run_B.log` (local test repo, unpublished) (max 9.13e-3);
   per-period values recomputed from run B's `TPI_vars.pkl`; OG-KOR commit f761a29 (docs: RC
   tolerance); `OVERNIGHT_BRIEFING.md` section 4.
 - **When:** 2026-10, ogcore 0.21.2.
@@ -264,7 +264,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   1.71% plus the special-occupation schemes 1.39%). The NPS's own projections put its benefits
   alone near 9% of GDP by 2080. At t=0 the model gave 2.65%, below today's 3.1%; why was not
   investigated.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/docs/book/content/calibration/households.md`
+- **Evidence:** local: `OG-KOR-demo/docs/book/content/calibration/households.md` (local test repo, unpublished)
   ("A young system"); 2.65% recomputed from run E's `TPI_vars.pkl` (install-13);
   `data_notes/households.md` (NPS benefits 1.71% of 2024 GDP); OG-KOR commit f761a29 (pension t=0
   wording).
@@ -281,8 +281,8 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   to 20 and 5 moved the 60+ ratio to 1.60 and 1.26, but also moved `K/Y` from 4.31 to 3.71 and 3.47,
   so `beta` and `tau_bq` must be re-tuned with it. Young Korean households' net worth is leveraged
   housing, which OG-Core does not model. KOR was not recalibrated to this moment.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/OVERNIGHT_BRIEFING.md` section 2;
-  `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-13/OG-KOR/logs/tune_chib_20.log` (`K/Y` 3.7072)
+- **Evidence:** local: `OG-KOR-demo/OVERNIGHT_BRIEFING.md` (local test repo, unpublished) section 2;
+  `OG-KOR-demo-runs/install-13/OG-KOR/logs/tune_chib_20.log` (local test repo, unpublished) (`K/Y` 3.7072)
   and `tune_chib_5.log` (3.4703); survey table in `data_notes/households.md` ("Wealth by age of
   household head").
 - **When:** 2026-10, OG-KOR commit dbecd71, ogcore 0.21.2.
@@ -296,7 +296,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   state has −3.1%. The `C/Y` gap (59.2% against 48.1%) is a residual: −8.6 from net exports, −4.5
   from government consumption, +2.5 from investment. The skill rounds this to "8.5 points of an
   11-point gap"; the repo's table says 8.6 of 11.1.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/docs/book/content/calibration/macro.md`
+- **Evidence:** local: `OG-KOR-demo/docs/book/content/calibration/macro.md` (local test repo, unpublished)
   (steady-state fit table and the paragraph under it); `data_notes/macro.md` (row 19: net IIP 47.1%
   of GDP).
 - **When:** 2026-10.
@@ -307,7 +307,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
 - **What happened:** the same split as `delta_annual` above: target 4.36, not 5.13. The final
   dashboard scored 4.31 against 4.36. Scoring against 5.13 would have sent `beta` after a gap that
   is not there.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/docs/book/content/calibration/macro.md`
+- **Evidence:** local: `OG-KOR-demo/docs/book/content/calibration/macro.md` (local test repo, unpublished)
   (row "Private K / Y") and `firms.md`; `DEMO_LOG.md` step 5-9.
 - **When:** 2026-10.
 
@@ -322,9 +322,9 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   warm-started (r05, the packaged JSON). OG-KOR shipped a warm-start seed ported from OG-JPN. The
   log also shows round r03 stalled on an inherited seed (see og-solver-diagnosis, class H) and was
   run without a log file.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-08/OG-KOR/logs/tune_r04.log`
+- **Evidence:** local: `OG-KOR-demo-runs/install-08/OG-KOR/logs/tune_r04.log` (local test repo, unpublished)
   ("393.77 seconds") and `install-09/OG-KOR/logs/tune_r05.log` ("32.02 seconds");
-  `/Users/mlafleur/Projects/OG-KOR-demo/CHANGELOG.md` ("steady state 394 s -> 32 s"); OG-KOR commit
+  `OG-KOR-demo/CHANGELOG.md` (local test repo, unpublished) ("steady state 394 s -> 32 s"); OG-KOR commit
   069a4a2.
 - **When:** 2026-10, ogcore 0.21.2.
 
@@ -337,7 +337,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
 - **What happened:** OG-KOR was a standalone repo run from official-installer copies, with no
   `muiogo-ai` involved. The skill's world rules did not fit, and the test logged it as a gap
   ("Which world" only through MUIOGO). The fix went into both skills in the test's skill PR.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/DEMO_LOG.md`, "How the skill
+- **Evidence:** local: `OG-KOR-demo/DEMO_LOG.md` (local test repo, unpublished), "How the skill
   performed" (gaps list). https://github.com/EAPD-DRB/MUIOGO-AI/pull/8 (merged 2026-10-19).
 - **When:** 2026-10.
 
@@ -351,7 +351,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   3.9, 4.4, 4.7 and 4.9e-5 against `mindist_TPI` 1e-5, at about 30 s an iteration. It was stopped.
   Run B, damped (`TPI_outer_method="picard"`, `nu` 0.2), went through the same level and converged at
   9.7e-6 at iteration 55, in about 28 minutes on a loaded 10-core machine.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo-runs/install-09/OG-KOR/logs/example_run_A.log`
+- **Evidence:** local: `OG-KOR-demo-runs/install-09/OG-KOR/logs/example_run_A.log` (local test repo, unpublished)
   and `install-10/OG-KOR/logs/example_run_B.log`; OG-KOR commit 469305a ("fall back to damped
   iteration ... Anderson stalled at 2.7e-5"); `DEMO_LOG.md` runs 10 and 10b.
 - **When:** 2026-10, ogcore 0.21.2.
@@ -365,8 +365,8 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   the solution and round r03 stalled; og-solver-diagnosis found the cause. Round r03b, with Korea's
   own TR seed, solved in 153 s. The skill quotes the stuck `Y` residual as −3.5; r03 ran without a
   log file, so that number could not be checked.
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/DEMO_LOG.md` step 5-9;
-  `/Users/mlafleur/Projects/OG-KOR-demo-runs/overrides/r03.json` (no `initial_guess_TR_SS`) and
+- **Evidence:** local: `OG-KOR-demo/DEMO_LOG.md` (local test repo, unpublished) step 5-9;
+  `OG-KOR-demo-runs/overrides/r03.json` (local test repo, unpublished) (no `initial_guess_TR_SS`) and
   `r03b.json` (0.0267); `install-08/OG-KOR/logs/tune_r03b.log`. The −3.5 residual: not found
   (searched the run logs, overrides, DEMO_LOG and commit messages).
 - **When:** 2026-10, ogcore 0.21.2.
@@ -415,7 +415,7 @@ skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/M
   installer run the checkout is the world.
 - **What happened:** the same gap as above. Every KOR run was preflighted against its installer
   copy directly (for example run H: install-18, `test/h-pop-exact` at 3c121be, preflight GO).
-- **Evidence:** local: `/Users/mlafleur/Projects/OG-KOR-demo/DEMO_LOG.md`, "How the skill performed";
+- **Evidence:** local: `OG-KOR-demo/DEMO_LOG.md` (local test repo, unpublished), "How the skill performed";
   `OVERNIGHT_BRIEFING.md` section 4. https://github.com/EAPD-DRB/MUIOGO-AI/pull/8 (merged
   2026-10-19).
 - **When:** 2026-10.

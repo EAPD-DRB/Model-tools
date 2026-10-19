@@ -11,9 +11,8 @@ Where the links point. Most of the single-industry work is on the fork branch `c
 multi-industry work is on `feature/multi-industry-calibration` (draft PR
 [EAPD-DRB/OG-PHL#63](https://github.com/EAPD-DRB/OG-PHL/pull/63), head `ec2ee98`). The
 open-economy fix is merged in [EAPD-DRB/OG-PHL#68](https://github.com/EAPD-DRB/OG-PHL/pull/68).
-A few numbers survive only in the author's local session notes
-(`~/.claude/projects/-Users-mlafleur-Projects-OG-PHL/memory/project_tax_recalibration.md`); those
-entries say so.
+A few numbers survive only in the author's working notes (project_tax_recalibration,
+unpublished); those entries say so.
 
 ## og-country-calibration/references/macro-open-economy.md
 
@@ -606,7 +605,7 @@ entries say so.
   compared as they stand. The gap was noted as open in the local practitioner guide on 2026-07-03.
 - **Evidence:** [examples/run_og_phl.py at ec2ee98, lines 79–80](https://github.com/marcelolafleur/OG-PHL/blob/ec2ee98dd11e877c3daea53231fbc9279e1256f7/examples/run_og_phl.py#L79);
   [examples/run_og_phl_multi_industry_calibrated.py at ec2ee98, line 318](https://github.com/marcelolafleur/OG-PHL/blob/ec2ee98dd11e877c3daea53231fbc9279e1256f7/examples/run_og_phl_multi_industry_calibrated.py#L318);
-  local guide `/Users/mlafleur/Projects/OG-PHL/docs/single_multi_calibration_guide.md` (untracked).
+  local guide `OG-PHL/docs/single_multi_calibration_guide.md` (untracked).
 - **When:** checked 2026-10-19 at ec2ee98; first noted 2026-07.
 
 ## og-solver-diagnosis/references/failure-taxonomy.md

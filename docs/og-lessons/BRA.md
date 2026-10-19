@@ -29,7 +29,7 @@ PR #10 (branch `multi-industry-data`, the M=9 calibration). `50144b5` is the hea
   (PR [#2](https://github.com/PSLmodels/OG-BRA/pull/2));
   [PR #11](https://github.com/PSLmodels/OG-BRA/pull/11),
   [its CHANGELOG line 81](https://github.com/PSLmodels/OG-BRA/blob/50144b53174cb03af88048cf973c386887ddc9db/CHANGELOG.md#L81);
-  local branch `single-calib-corrections` in `/Users/mlafleur/Projects/OG-BRA` (not pushed).
+  local branch `single-calib-corrections` in `OG-BRA` (not pushed).
 - **When:** 2026-06 (placeholder introduced), 2026-07 (PR #11), still on main at abd25de
   (2026-08, ogcore 0.20.0 in uv.lock).
 

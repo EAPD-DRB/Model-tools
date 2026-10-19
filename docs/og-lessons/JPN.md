@@ -7,7 +7,7 @@ written; check the country repo before relying on any of them. Do not copy them 
 country's calibration.
 
 The JPN work is one calibration of arihantlodha-cmd/OG-JPN, done on 2026-08-10 and 2026-08-11 on
-branch `calibration/japan-macro-fiscal` (local checkout `/Users/mlafleur/Projects/OG-JPN`). It is
+branch `calibration/japan-macro-fiscal` (local checkout `OG-JPN`). It is
 pushed to the fork marcelolafleur/OG-JPN up to e438fa2 and open as draft PR
 https://github.com/arihantlodha-cmd/OG-JPN/pull/2, with the findings in issue
 https://github.com/arihantlodha-cmd/OG-JPN/issues/1. Three later commits (aefac02, 48b662f,
@@ -403,7 +403,7 @@ branch went on to a separate calibration after 2026-08-18; nothing below comes f
   only confirms that `gamma` came from the same PWT series.
 - **Evidence:** https://github.com/marcelolafleur/OG-JPN/commit/1c869fd (row added, with the comment
   "Not forced when epsilon != 1"); `ogjpn/macro_params.py` at e438fa2 (no `epsilon`);
-  `ogcore/default_parameters.json` in `/Users/mlafleur/Projects/OG-Core` (`epsilon` 1.0).
+  `ogcore/default_parameters.json` in `OG-Core` (`epsilon` 1.0).
 - **When:** 2026-08 (2026-08-10).
 
 ### Two traps when adding rows: NX is the trade balance, not the current account
