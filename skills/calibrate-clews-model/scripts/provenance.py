@@ -934,12 +934,8 @@ class LedgerValidator:
                 )
             )
         if legacy_uncovered:
-            if self.required_inputs:
-                label = "inherited untouched model inputs"
-            else:
-                label = "populated model inputs"
-            message = "{0} have no MODEL_MAP row: {1}".format(
-                label, ", ".join(legacy_uncovered)
+            message = "inherited untouched model inputs have no MODEL_MAP row: {0}".format(
+                ", ".join(legacy_uncovered)
             )
             if self.allow_inherited_coverage_gaps and self.stage != "delivery":
                 self.warn(message)
