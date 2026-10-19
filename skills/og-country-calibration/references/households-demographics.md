@@ -90,6 +90,13 @@ On JPN, 318 of 320 periods satisfied `RC_TPI` with a median residual of 7.96e-08
 were exactly those periods. `fixper` is invariant to any country-side setting; report it upstream
 rather than tuning around it. **[net-new: JPN]**
 
+**What it does to the run's own check.** `RC_TPI` (ogcore default 1e-4) is the end-of-run tolerance
+on the resource constraint. The two breaks routinely exceed it, so a sibling's JSON may carry a
+loosened value (OG-PHL ships 0.01) that the audit should catch and either justify or tighten.
+Triage by period before accepting it: KOR's baseline had 0.009 at period 120 and 0.002 at period 74,
+1.9e-4 at the last period, and at most 2.2e-6 everywhere else (3.6e-7 in the first ten years). Keep
+the loosened tolerance only with that table in the docs. **[KOR]**
+
 ## Cache the processed arrays
 
 ogcore refetches the whole UN series on every call and never reads its own `download_path` back. At
