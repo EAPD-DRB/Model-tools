@@ -80,8 +80,11 @@ Examples: ZAF `[0.464, 1.39288, 1.43e-8]` → PIT 10.1% of GDP, top MTR 45%.
 Source: og-country-calibration/references/taxes-informality.md, section "Progressive-fit recipe (GS and HSV)"
 (ZAF's HSV fit had τ ≈ 0.14 tracking SARS, before the GS switch.)
 
-## Open question: GS top rate in the PIT example
+## Resolved: GS top rate in the PIT example
 
-Raised during the 2026-10-19 generalisation pass, not checked. The GS example
-`[0.464, 1.39288, 1.43e-8]` reports a top marginal rate of 45%, while the skill's recipe sets `φ0`
-to the statutory top rate. Either the example or the recipe is off; check OG-ZAF's packaged values.
+Raised in the 2026-10-19 generalisation pass and checked the same day. OG-ZAF's
+`feature/multi-industry-calibration` (571376e) sets `φ0 = 0.464` on purpose: its tax chapter says
+the 45% statutory top rate was "lifted slightly so PIT hits its revenue target". Its test pins
+`[0.464, 1.39288, 1.5314e-08]`, so the `φ2` quoted in the skill earlier (1.43e-8) was an older
+value. Upstream `main` still ships the linear tax functions. The skill now names the lift as a
+documented fallback.
