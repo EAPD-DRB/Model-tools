@@ -241,6 +241,21 @@ its construction), not the old parameter value, which was scaled differently. Tw
   first-year GDP is endogenous, the transition rescales the whole initial distribution by a common
   factor each iteration until `B_1/Y_1` hits the target.
 
+**What the open PRs actually did on an old population (KOR, 2026-10).** The names above had
+already changed: PSLmodels/OG-Core#1250 (draft) ships `initial_wealth_ratio` (B/Y in the first
+period, default 5.702 and always on) and `initial_hhwealth_dist` (the S×J shape), and is being split
+into smaller PRs starting with #1251. With KOR's capital-side target 4.43 and the default shape, its
+in-loop rescaling oscillated for ten damped iterations without decaying (1.47 … 0.64 … 1.55 … 1.10)
+where the same calibration without it converged steadily. PR #1189 (a static anchor on
+steady-state GDP, set before the solve; reforms inherit the baseline's B(0)) converged normally and
+delivered 4.39. Neither removed KOR's early consumption spike: it sits in the second year,
+concentrated in ages 60+ (2.3× steady-state consumption under #1189, 1.9× under the old default),
+and it *grew* when the level rose to the data. So for an old population the level anchor is not
+the fix; the age shape of initial wealth is the next suspect (Korean survey data give net worth by
+age of household head), and why the spike lands in year 2 rather than year 1 is not yet explained.
+Record which build each result came from, and do not adopt an unreleased initial-wealth build for a
+country unless it measurably fixes that country's symptom. **[KOR]**
+
 **Diagnose first.** Before setting anything, see what initial condition your ogcore imposes by
 default and what it does to the first years. Older ogcore rescaled the steady-state profile so
 aggregate B(0) = B_ss, which hands every initial household a uniform windfall when the initial
