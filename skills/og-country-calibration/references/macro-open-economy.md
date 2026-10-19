@@ -111,8 +111,8 @@ demand that `zeta_K` scales is zero or negative. Then no `zeta_K` produces a pos
 and `zeta_K` is not identified by the steady state. Do not invent a world rate to rescue the target,
 and do not distort `K/Y`. Keep the sourced world rate, set `zeta_K` from the openness prior with a
 written reason, judge it on the transition, and report the `K_f/K` miss with its cause. (KOR: private
-`K/Y` 4.31 gives `r` 3.97% against a 4.0% world rate; gross IIP target +7.1%, model −0.9% to −3.3%
-for `zeta_K` 0.17–0.5; a 7% share would need a world rate near 3.7% that no source supports.)
+`K/Y` 4.31 gives `r` 3.97% against a 4.0% world rate; gross IIP target +8.4%, model −0.9% to −3.3%
+for `zeta_K` 0.17–0.5; a positive share would need a world rate near 3.7% that no source supports.)
 **[KOR]**
 
 **Exemplar.** IDN (open); ETH (distressed).
@@ -379,7 +379,9 @@ Settle this before tuning `zeta_K`; for a net-creditor country the two readings 
 The identity is `K = K_d + K_f` with `K_d = B − D_d`, so `K_f` reads as the **gross** foreign-owned
 share of the domestic capital stock: households hold domestic capital and domestic government debt,
 and nothing else. On that reading the IIP target is inward direct-investment equity (including
-reinvested earnings) + inward portfolio equity, ÷ GDP ÷ `K/Y`. Japan end-2024:
+reinvested earnings) + inward portfolio equity, ÷ GDP ÷ `K/Y`, where `K/Y` is the model's *private*
+capital ratio (PWT less public capital; see `delta_annual`), or the share is understated (KOR: 7.1%
+on total PWT capital, 8.4% on private). Japan end-2024:
 (34.5 + 334.8) / 609 / 3.70 = +16.4%, against the 1.5% a placeholder `zeta_K = 0.10` produced.
 
 But `K_f = zeta_K·(K_demand_open − B + D_d)` is not clamped, and the outflow term
