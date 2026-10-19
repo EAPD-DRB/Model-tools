@@ -157,7 +157,8 @@ Copy this into the work log and tick it off. Mechanics throughout: run with
 - [ ] 9.  beta against K/Y, only after sourced parameters settle.
 - [ ] 10. Validate: SS dashboard, revenue by instrument, value-pinning test, AND a baseline TPI
           with the fiscal path panel.
-- [ ] 11. Save and ship a warm-start seed from the first converged solve.
+- [ ] 11. Ship a warm-start seed from the FIRST converged solve, before tuning (OG-JPN's
+          warm_start.py); regenerate it after large moves. Not an end-of-job step.
 - [ ] 12. Optional multi-industry: og-multi-industry-calibration.
 - [ ] 13. Final standalone solve of the packaged JSON, no overrides.
 - [ ] 14. Wrap up: make format; pytest -m 'not local'; CHANGELOG (before -> after + citation);
@@ -196,7 +197,11 @@ fail silently. **[KOR]** Before any solve:
 - **Audit every inherited JSON value** (mental model 1b): diff the JSON against the sibling's and
   list each key as sourced, tuned to a named moment, or defaulted with a reason. Include solver
   settings (`TPI_outer_method`, `nu`, `initial_guess_*`): a sibling can predate a run rule (KOR
-  inherited `nu` 0.4 with Anderson from PHL).
+  inherited `nu` 0.4 with Anderson from PHL). The seeds are the sibling's solution, not neutral
+  defaults: ogcore guesses GDP as `initial_guess_TR_SS / alpha_T`, so a sibling's TR seed against
+  the new `alpha_T` put KOR's GDP guess 4.6x too high and stalled the solve.
+- **Replace the sibling's example reform** with one that means something for the new country (KOR:
+  the enacted 2026 corporate-rate rise instead of PHL's CIT cut and debt change).
 
 Why the baseline TPI is not optional: the steady state consumes one number from each time-varying
 path (its terminal value), so a whole mis-specified path is invisible to it. On JPN a wrong

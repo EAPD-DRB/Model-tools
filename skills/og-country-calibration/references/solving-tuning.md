@@ -78,6 +78,13 @@ forbid. Two things it is not:
   overrides). It catches schema errors and seed problems the overrides path hides. If it fails, go
   back to the overrides you just folded in.
 
+Two habits make the loop debuggable. **Log every solve** to a named file with its settings echoed
+first (`logs/tune_r04.log`): a stalled solve read only through a filtered console cannot be
+diagnosed afterwards (og-solver-diagnosis, log discipline). And **seed every solve from the last
+converged one** (the warm start, SKILL.md step 11): on KOR the same calibration took 394 s from
+uniform seeds and 32 s warm. A dial move that breaks a warm-started solve is a calibration
+signal; one that breaks a cold-started solve is usually the seed. **[KOR]**
+
 ## Tuning-loop order: sourced parameters first
 
 **[net-new: JPN]** The loop converges in 3–5 rounds only once the sourced parameters are settled. Any

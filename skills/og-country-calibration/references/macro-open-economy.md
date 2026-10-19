@@ -48,6 +48,16 @@ jump is a valuation effect (an FX float revaluing external debt) rather than rea
 wrong `initial_debt_ratio` is invisible to the steady state; only the transition starts from it
 (see fiscal-consistency.md).
 
+**A government that owns large financial assets.** OG-Core's government has debt but no assets.
+Where it holds a large funded pension reserve or sovereign fund (KOR: general government net
+financial assets +51% of GDP, the pension fund alone 54%), choose the perimeter and say it: gross
+debt (D2-type) paired with the effective rate on gross debt (validation-dashboard.md, "Pair the debt
+concept with the interest concept"), with the asset side and its income left out. That income
+(KOR: ~2.4% of GDP of property income) is then missing from revenue, so the budget closure lands
+`G/Y` below the data by about that much: report it as that omission, not as a consolidation gap.
+Do not route it through `alpha_FA`: that parameter is foreign aid and also enters the resource
+constraint as an inflow from abroad. **[KOR]**
+
 **Exemplar.** IDN, ETH.
 
 ## zeta_D
@@ -94,6 +104,16 @@ undocumented.
 domestic return, foreign capital flows out and `K_f` turns negative whatever `zeta_K` is. After setting
 it, solve and confirm `K_f/K` has the sign the target needs. A sub-investment-grade but not distressed
 sovereign sits between the two cases above; say which rule you applied and why. **[ZAF]**
+
+**When the sign check fails at the data's own `K/Y`.** For a high-saving net creditor, the domestic
+return at the data-consistent private `K/Y` can sit at or below the world rate, so the excess capital
+demand that `zeta_K` scales is zero or negative. Then no `zeta_K` produces a positive gross `K_f/K`,
+and `zeta_K` is not identified by the steady state. Do not invent a world rate to rescue the target,
+and do not distort `K/Y`. Keep the sourced world rate, set `zeta_K` from the openness prior with a
+written reason, judge it on the transition, and report the `K_f/K` miss with its cause. (KOR: private
+`K/Y` 4.31 gives `r` 3.97% against a 4.0% world rate; gross IIP target +7.1%, model −0.9% to −3.3%
+for `zeta_K` 0.17–0.5; a 7% share would need a world rate near 3.7% that no source supports.)
+**[KOR]**
 
 **Exemplar.** IDN (open); ETH (distressed).
 
@@ -273,13 +293,22 @@ paid down to 50% against a 60% target. It surfaced only in level exercises.
 ## delta_annual
 
 **Method.** Source it; no repo does. `delta = (CFC/Y)/(K/Y)`: consumption of fixed capital from
-World Bank `NY.ADJ.DKAP.GN.ZS` (convert the GNI basis to GDP), `K/Y` from PWT. Decisive in a slow- or
-negative-growth economy: steady-state investment is `(g + delta)·K/Y`, so as `g → 0` depreciation is
-nearly the only thing generating investment demand.
+the national accounts (or World Bank `NY.ADJ.DKAP.GN.ZS`, converting the GNI basis to GDP), `K/Y`
+from PWT. Decisive in a slow- or negative-growth economy: steady-state investment is
+`(g + delta)·K/Y`, so as `g → 0` depreciation is nearly the only thing generating investment demand.
+
+**Both sides of the ratio are private.** OG-Core's `K` is private capital; public capital `K_g` is a
+separate stock with its own `delta_g`. PWT's capital stock and total CFC include the government's, so
+use `private K/Y = PWT K/Y − public K/Y` (the same subtraction the initial-wealth construction makes)
+both as the `K/Y` dashboard target and as the denominator here, and take government CFC out of the
+numerator. Set `delta_g` from government CFC over the public stock. Scoring the model's private
+`K/Y` against total PWT `K/Y` sends `beta` after a gap that is not there, and moves `r` across the
+world rate (KOR: 5.13 total vs 4.36 private; `delta` 4.35% → 4.75%; at 5.13 the implied `r` was
+3.1%, below the 4.0% world rate). **[KOR]**
 
 **Pitfall.** Leaving OG-Core's 0.05, a US value. JPN 0.05 → 0.062 moved investment 2.7pp of GDP.
 
-**Exemplar.** **[net-new: JPN]**
+**Exemplar.** **[net-new: JPN]**; private/public split **[KOR]**.
 
 ## beta_annual
 
