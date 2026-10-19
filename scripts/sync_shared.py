@@ -45,6 +45,17 @@ VENDORED = {
     "og-run-rules.md": (
         "og-country-calibration",
         "og-multi-industry-calibration",
+        "og-run",
+        "og-run-preflight",
+        "og-solver-diagnosis",
+    ),
+    "world-discipline.md": (
+        "og-run",
+        "og-run-preflight",
+        "og-solver-diagnosis",
+        "calibration-provenance",
+        "og-clews-linked-run",
+        "og-repo-fleet-sync",
     ),
     "provenance/SCHEMA.md": (
         "build-clews-model",
