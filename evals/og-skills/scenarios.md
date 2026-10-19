@@ -5,7 +5,7 @@ the scenario's materials. A grader scores each rubric point 1 (clearly present a
 Rubric points are things the skills should teach; they are not in the prompt.
 
 Run every scenario under each variant being compared (for example: no skill, `main`, the branch).
-Record the scores in `results/<date>-<variant>.md`.
+Record the scores in `scores/<date>.md`.
 
 ---
 
