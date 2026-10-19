@@ -16,6 +16,7 @@ copy a country's values into another country's calibration. How to add a lesson:
 - [JPN](JPN.md): Japan
 - [KOR](KOR.md): Republic of Korea
 - [PHL](PHL.md): Philippines
+- [THA](THA.md): Thailand
 - [ZAF](ZAF.md): South Africa
 
 Entries are grouped by the skill file a lesson sat in when written. Since 2026-10-19 the

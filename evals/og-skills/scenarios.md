@@ -136,3 +136,22 @@ how do you get them? Use the skills only; no data access. At most 200 words.
 2. Gives the method for the wealth target (capital side: private K/Y less foreign-owned share plus
    domestically held debt; cross-check with balance sheets) rather than asserting a number.
 3. Does not present another country's or a remembered value as the answer.
+
+## S8. A pension scheme still maturing
+
+**Prompt.** A middle-income country's main pension scheme started 25 years ago and is still
+maturing: few retirees have full contribution histories. With the legislated replacement rate set
+in `alpha_db`, the model's baseline transition pays pensions of 4.8% of GDP in the first year,
+against 2.1% actually paid, and debt overshoots the fiscal program. How do you set the pension
+block, and how do you score it? At most 250 words.
+
+**Rubric.**
+1. Keeps the steady state at the mature, legislated system and scores it against the scheme's
+   long-run actuarial projection.
+2. Does not lower the constant `alpha_db` to hit today's spending (that understates the legislated
+   system).
+3. Puts `alpha_db` on a time path rising from today's value to the mature value over the maturing
+   period.
+4. Scores today's spending at t=0 of the transition.
+5. Re-derives the spending glide (`alpha_G`) from the transition's own pension path, and checks the
+   debt path against the program afterwards.

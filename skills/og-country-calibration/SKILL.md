@@ -85,8 +85,8 @@ Copy this into the work log and tick it off.
           treasury's effective real rate (and r_gov_floor if real rates are negative), centered
           debt-elastic premium, initial_Kg_ratio if gamma_g > 0, initial wealth, alpha_T cash only.
           K/Y target and delta on PRIVATE capital: PWT less public capital, CFC less government's.
-- [ ] 6.  Capital share: 1 - labour share, Gollin-adjusted if agrarian/informal; take gamma out of
-          the live-API path.
+- [ ] 6.  Capital share: 1 - labour share, Gollin-adjusted if agrarian/informal, decided once when
+          sourcing it (never moved to close a K/Y gap); take gamma out of the live-API path.
 - [ ] 7.  Taxes: every rate effective = collections / the model's base, by instrument, from the
           OECD Revenue Statistics country note (never statutory): GS progressive PIT;
           effective VAT/CIT/payroll/bequest; non-tax revenue on nearest-margin instruments;
@@ -95,7 +95,9 @@ Copy this into the work log and tick it off.
 - [ ] 8.  Pensions in local currency (alpha_db if DB); chi_n borrowed-and-documented or re-tilted.
 - [ ] 9.  beta against private K/Y, only after sourced parameters settle.
 - [ ] 10. Validate: SS dashboard, revenue by instrument, value-pinning test, AND a baseline TPI
-          with the fiscal path panel.
+          with the fiscal path panel. Before reading the first years, check the start cohorts
+          were solved: the log's "cohorts alive at the start" Euler error, or recompute their
+          first-order conditions if your ogcore does not report it (og-solver-diagnosis, class M).
 - [ ] 11. Ship a warm-start seed from the FIRST converged solve, before tuning; regenerate it after
           large moves.
 - [ ] 12. Optional multi-industry: og-multi-industry-calibration.
