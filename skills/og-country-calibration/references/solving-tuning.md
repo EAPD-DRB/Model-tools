@@ -22,7 +22,7 @@ Contents
   thirty-four mattered. The packaged JSON is what makes the whole surface visible. **[net-new: JPN]**
 - **uv, not conda, through the official installer.** Install with OG-Core's `scripts/install.sh`
   (it runs `uv sync --extra dev` for you), then run the shipped example from that install
-  (`../OG_RUN_RULES.md`). `AGENTS.md` is the source of truth for anything the installer does not
+  (`og-run-rules.md`). `AGENTS.md` is the source of truth for anything the installer does not
   cover; `docs/book/content/contributing/contributor_guide.md` is stale (still conda) in most
   repos. **[family]**
 - **Never commit a `uv.lock` change from calibration work.** The lock is Dependabot-managed; if a
