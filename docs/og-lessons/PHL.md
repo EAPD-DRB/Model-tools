@@ -284,6 +284,21 @@ entries say so.
   and comments); session notes only.
 - **When:** 2026-07.
 
+### Standing check: the bequest tax at a statutory rate collected 17x actual estate revenue
+
+- **Lesson:** compute `tau_bq` from collections ÷ model bequest flows; a value equal to a statutory
+  rate, or copied from a sibling, is the error (taxes-informality.md, "Standing check: the bequest
+  tax").
+- **What happened:** OG-PHL shipped `tau_bq` 0.06, the statutory estate-tax rate, from its initial
+  files. In the model it collected 1.19% of GDP, against actual estate and donor collections of
+  about 0.07% (17 times too much). The fiscal recalibration set it to 0.0035, tuned so the model's
+  bequest revenue matches BIR estate and donor collections (0.0007 of GDP in the PR's fit table).
+- **Evidence:** commit a2a7376 (`tau_bq` 0.06 → 0.0035):
+  https://github.com/EAPD-DRB/OG-PHL/commit/a2a737605dfe379beec950898bd816dffa7d51d2 ;
+  PR EAPD-DRB/OG-PHL#85 (open), "Revenue" section and fit table:
+  https://github.com/EAPD-DRB/OG-PHL/pull/85 ; the 0.06 is on upstream `main`.
+- **When:** 2026-07 (branch calib/remittances).
+
 ## og-country-calibration/references/households-demographics.md
 
 ### Earnings: the single-scalar Gini tilt
