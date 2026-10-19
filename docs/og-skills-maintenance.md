@@ -30,7 +30,8 @@ Each lesson is short and has the same parts, in this order:
 3. **Check:** a command, test or number the agent can verify (a grep, a closed form, a dashboard
    row, a test to add).
 4. **Why:** one sentence, at most one size example ("on JPN this moved K/Y from 3.67 to 3.81").
-5. **History link:** `([KOR](../../../docs/og-lessons/KOR.md#anchor))` to the entry with the evidence.
+5. **History:** the country tag (`[KOR]`), plus a `(history: KOR)` marker where the lesson's own
+   numbers live in `docs/og-lessons/KOR.md` rather than in the skill.
 
 Not in the skill:
 - A country's own values (targets, data years, tuned parameters). They go in its history entry.
