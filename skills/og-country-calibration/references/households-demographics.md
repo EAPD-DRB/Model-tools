@@ -152,6 +152,12 @@ resolved `get_pop_objs` before relying on it.
   as `get_fert` returns it). Skipping (1 − p) flattens fertility gradients by 3–7% and infant by 2–3%;
   for mortality from age 1 it is about 1%. A converted fertility tilt is therefore a vector by age.
   State which route was taken and the survey or census year.
+- **Fertility goes in by age, not as one TFR tilt.** The rich-poor fertility gap is mostly timing:
+  poorer women have children earlier, so the teenage gradient is about twice the TFR tilt. Add the
+  library's pooled age offsets (`data/fertility_age_offsets.csv`) to the country's TFR tilt for each
+  age, then convert. Use the pooled offsets, not a country's own age tilts — its own age shape is
+  mostly survey noise. Passing one TFR tilt at every age keeps the number of children right but
+  erases the timing gap.
 
 ## Pensions
 
