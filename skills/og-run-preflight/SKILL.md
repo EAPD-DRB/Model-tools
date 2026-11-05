@@ -60,6 +60,12 @@ python3 scripts/preflight.py \
   --params-json <country-repo>/ogphl/ogphl_default_parameters.json
 ```
 
+`--installer-log` points at the OG-Core installer's `.install-*.log` when it is not in the
+checkout's parent folder or the current directory. The installer writes the log beside
+`install.sh`, so a downloaded installer usually leaves it in the download folder. Without a log
+naming this checkout as a clone destination, the verdict reads `GO (dev checkout ...)`: valid
+for in-task probes, not for a reported run.
+
 `--params-json` loads the packaged parameters into `Specifications` the way the example does.
 Pass it whenever the run loads a packaged JSON: a JSON that carries a parameter the resolved
 ogcore does not know (an unreleased one, or one from a newer release) fails here in seconds

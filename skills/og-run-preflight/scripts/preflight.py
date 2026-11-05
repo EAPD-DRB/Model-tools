@@ -110,24 +110,37 @@ def git_state(repo: str, rep: Report) -> None:
         rep.warn(f"{repo}: {n_dirty} uncommitted change(s) -- the run will use them")
 
 
-def check_installer_record(repo: str, rep: Report) -> None:
-    """OG-Core's installer leaves an .install-*.log beside each checkout it
-    makes. Its absence means a hand-built environment (a dev worktree,
-    `uv sync` by hand): fine for in-task probes, not valid for a reported
-    run (og-run). Downgrades the verdict line rather than failing."""
+def check_installer_record(repo: str, rep: Report,
+                           installer_log: str | None = None) -> None:
+    """OG-Core's installer writes an .install-*.log next to the installer
+    script (not next to the clone), naming each clone's path. A log that
+    names this checkout and reports success marks an installer-built copy.
+    No such log means a hand-built environment (a dev worktree, `uv sync` by
+    hand): fine for in-task probes, not valid for a reported run (og-run).
+    Downgrades the verdict line rather than failing."""
     import glob
-    parent = os.path.dirname(real(repo))
-    name = os.path.basename(real(repo))
-    for log in sorted(glob.glob(os.path.join(parent, ".install-*.log"))):
+    target = real(repo)
+    if installer_log:
+        candidates = [real(installer_log)]
+    else:
+        dirs = {os.path.dirname(target), os.getcwd()}
+        candidates = sorted(
+            f for d in dirs for f in glob.glob(os.path.join(d, ".install-*.log"))
+        )
+    for log in candidates:
         try:
-            if name in open(log, errors="replace").read():
-                rep.ok(f"installer record: {log}")
-                return
+            text = open(log, errors="replace").read()
         except OSError:
             continue
+        cloned_here = f"Cloning into '{target}'" in text
+        if cloned_here and "installed successfully" in text:
+            rep.ok(f"installer record: {log}")
+            return
+    hint = (" (pass --installer-log PATH: the installer writes its log beside "
+            "install.sh)") if not installer_log else ""
     rep.warn(
         f"{repo}: no installer record found -- hand-built checkout. "
-        "GO covers in-task probes only, NOT reported runs (see og-run)."
+        f"GO covers in-task probes only, NOT reported runs (see og-run){hint}."
     )
     rep.dev_checkouts.append(repo)
 
@@ -150,7 +163,7 @@ def probe(python: str, pkg: str, cwd: str, prepend: str | None = None) -> tuple[
 
 
 def check_repo(spec: str, run_cwd: str | None, entry_script: str | None, rep: Report,
-               params_json: str | None = None) -> None:
+               params_json: str | None = None, installer_log: str | None = None) -> None:
     parts = spec.split("::")
     if len(parts) not in (2, 3):
         rep.fail(f"bad --check spec (want REPO::PKG[,PKG..][::VENV_PY]): {spec}")
@@ -172,7 +185,7 @@ def check_repo(spec: str, run_cwd: str | None, entry_script: str | None, rep: Re
         rep.fail(f"repo path does not exist: {repo}")
         return
     git_state(repo, rep)
-    check_installer_record(repo, rep)
+    check_installer_record(repo, rep, installer_log)
 
     if not os.access(python, os.X_OK):
         rep.fail(f"venv python not found/executable: {python}")
@@ -333,12 +346,17 @@ def main() -> int:
     ap.add_argument("--entry-script", help="the script the run will execute")
     ap.add_argument("--params-json", help="the packaged parameters JSON the run loads; checked "
                     "to load on the resolved ogcore (applies to the first --check)")
+    ap.add_argument("--installer-log", help="the OG-Core installer's .install-*.log, when it "
+                    "is not in the checkout's parent or the current directory (the "
+                    "installer writes it beside install.sh; applies to the first --check)")
     args = ap.parse_args()
 
     rep = Report()
     for spec in args.check:
+        first = spec == args.check[0]
         check_repo(spec, args.run_cwd, args.entry_script, rep,
-                   args.params_json if spec == args.check[0] else None)
+                   args.params_json if first else None,
+                   args.installer_log if first else None)
 
     print()
     if rep.failures:
