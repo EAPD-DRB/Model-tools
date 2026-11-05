@@ -145,10 +145,13 @@ resolved `get_pop_objs` before relying on it.
   countries are out of scope, not missing. Extrapolating can reverse the sign: in high-income
   countries the fertility gradient often runs through marriage rates rather than family size. Leave
   them unset, say so, and pin the decision in a test so it is not later "fixed". **[net-new: JPN]**
-- Two rules that change results: **divide the library's tilt by 100** (it is per unit wealth rank;
-  ogcore wants per centered percentile point, so getting this wrong is a silent 100× error), and **a
-  country's own measurement beats the general gradient**. State which route was taken and the survey
-  or census year.
+- Two rules that change results: **pass `tilt / (100 × (1 − p))`**, and **a country's own measurement
+  beats the general gradient**. The ÷100 converts wealth rank to ogcore's centered percentile points
+  (missing it is a silent 100× error); the ÷(1 − p) converts the library's log-rate slope to the
+  log-odds slope ogcore reads, with p = ogcore's own rate at that age (fertility in births per person,
+  as `get_fert` returns it). Skipping (1 − p) flattens fertility gradients by 3–7% and infant by 2–3%;
+  for mortality from age 1 it is about 1%. A converted fertility tilt is therefore a vector by age.
+  State which route was taken and the survey or census year.
 
 ## Pensions
 
