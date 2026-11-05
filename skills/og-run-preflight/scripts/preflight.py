@@ -71,6 +71,7 @@ class Report:
     def __init__(self) -> None:
         self.failures = 0
         self.warnings = 0
+        self.dev_checkouts: list[str] = []
 
     def info(self, tag: str, msg: str) -> None:
         print(f"[{tag:5}] {msg}")
@@ -107,6 +108,28 @@ def git_state(repo: str, rep: Report) -> None:
     rep.info("GIT", f"{repo}  branch={branch}  HEAD={head}  dirty_files={n_dirty}")
     if n_dirty:
         rep.warn(f"{repo}: {n_dirty} uncommitted change(s) -- the run will use them")
+
+
+def check_installer_record(repo: str, rep: Report) -> None:
+    """OG-Core's installer leaves an .install-*.log beside each checkout it
+    makes. Its absence means a hand-built environment (a dev worktree,
+    `uv sync` by hand): fine for in-task probes, not valid for a reported
+    run (og-run). Downgrades the verdict line rather than failing."""
+    import glob
+    parent = os.path.dirname(real(repo))
+    name = os.path.basename(real(repo))
+    for log in sorted(glob.glob(os.path.join(parent, ".install-*.log"))):
+        try:
+            if name in open(log, errors="replace").read():
+                rep.ok(f"installer record: {log}")
+                return
+        except OSError:
+            continue
+    rep.warn(
+        f"{repo}: no installer record found -- hand-built checkout. "
+        "GO covers in-task probes only, NOT reported runs (see og-run)."
+    )
+    rep.dev_checkouts.append(repo)
 
 
 def probe(python: str, pkg: str, cwd: str, prepend: str | None = None) -> tuple[bool, str]:
@@ -149,6 +172,7 @@ def check_repo(spec: str, run_cwd: str | None, entry_script: str | None, rep: Re
         rep.fail(f"repo path does not exist: {repo}")
         return
     git_state(repo, rep)
+    check_installer_record(repo, rep)
 
     if not os.access(python, os.X_OK):
         rep.fail(f"venv python not found/executable: {python}")
@@ -321,8 +345,13 @@ def main() -> int:
         print(f"RESULT: {RED}NO-GO{RESET} -- {rep.failures} failure(s), "
               f"{rep.warnings} warning(s). Do not launch.")
         return 1
-    print(f"RESULT: {GREEN}GO{RESET} -- all checks passed "
-          f"({rep.warnings} warning(s)).")
+    if rep.dev_checkouts:
+        print(f"RESULT: {GREEN}GO{RESET} (dev checkout -- in-task probes only, "
+              f"NOT valid for reported runs; see og-run) "
+              f"({rep.warnings} warning(s)).")
+    else:
+        print(f"RESULT: {GREEN}GO{RESET} -- all checks passed "
+              f"({rep.warnings} warning(s)).")
     return 0
 
 

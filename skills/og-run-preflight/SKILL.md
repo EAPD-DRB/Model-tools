@@ -107,6 +107,10 @@ loud before launching: "running with N uncommitted changes in <repo>."
   assert catches a bad *re*-launch weeks later.
 - **Run as a user would**: the documented CLI from the checkout's own env. If the preflight only
   passes under some ad-hoc invocation, the environment is wrong, not the preflight.
+- **What counts as a reported run:** any full baseline or reform whose numbers you will
+  report or act on. Only a seconds-scale steady-state probe inside a calibration task the
+  user has already started may run from a dev checkout; everything else follows the rule
+  below.
 - **The checkout itself must come from OG-Core's official installer** (`scripts/install.sh`, see
   og-run). A GO on a hand-built environment (a worktree you made and `uv sync`ed, a conda env, a
   `PYTHONPATH` shadow) is not a GO for a reported run: install it properly and preflight that.
