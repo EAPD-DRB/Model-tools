@@ -37,7 +37,6 @@ Each folder has its own `README.md` with a bit more detail.
 | [calibration-provenance](skills/calibration-provenance/SKILL.md) | skill | Trace a calibrated OG-Core parameter back to its source and record the chain in the repo. |
 | [og-clews-linked-run](skills/og-clews-linked-run/SKILL.md) | skill | Run coupled OG-CLEWS analyses through ogclews-link and report the economy-wide results. |
 | [og-repo-fleet-sync](skills/og-repo-fleet-sync/SKILL.md) | skill | Apply one change across the OG country repos and track which repos have it. |
-| [fable-mode](skills/fable-mode/SKILL.md) | skill | Fable 5's working discipline as a reusable loop — scope, gather evidence, attack the answer, verify, report. Applies to any model on multi-step, debugging, model-run, or review tasks. |
 | [clews-model-review](skills/clews-model-review/SKILL.md) | skill | Review a MUIO/OSeMOSYS CLEWs model for structure and data consistency against the NamibiaCLEWs benchmark: referential integrity, orphaned IDs, dangling/stranded technologies, unit discipline, sector coverage, and solve status — via a bundled `audit.py` checker plus a rubric. |
 | [add-environmental-accounting](skills/add-environmental-accounting/SKILL.md) | skill | Add a JSON-first environmental accounting layer to any MUIO/OSeMOSYS CLEWS model: inventory physical flows, create separate water and land terminals, preserve existing services, regenerate every scenario through MUIO, and quantify regression differences. |
 
