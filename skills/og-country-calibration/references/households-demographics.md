@@ -155,8 +155,8 @@ resolved `get_pop_objs` before relying on it.
 - **Fertility goes in by age, not as one TFR tilt.** The rich-poor fertility gap is mostly timing:
   poorer women have children earlier, so the teenage gradient is about twice the TFR tilt. Add the
   library's pooled age offsets (`data/fertility_age_offsets.csv`) to the country's TFR tilt for each
-  age, then convert. Use the pooled offsets, not a country's own age tilts — its own age shape is
-  mostly survey noise. Passing one TFR tilt at every age keeps the number of children right but
+  age, then convert. Use the pooled offsets, not a country's own age tilts: they predict a
+  country's next survey about as well, and a single survey often cannot be fitted at the oldest ages. Passing one TFR tilt at every age keeps the number of children right but
   erases the timing gap.
 
 ## Pensions
