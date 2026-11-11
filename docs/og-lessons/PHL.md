@@ -146,6 +146,21 @@ unpublished); those entries say so.
   The "3–7×" figure is only in the session notes.
 - **When:** 2026-07 (ogcore 0.18.0; fix on the #1189 branch).
 
+### Initial wealth: the released parameters, a data shape, and beta tuned to the first year
+
+- **Lesson:** set the start with `initial_wealth_ratio` and `initial_hhwealth_dist`; where the
+  population is far from stationary, tune `beta` to first-year moments rather than the steady-state
+  `K/Y` (macro-open-economy.md, "Initial household wealth" and "beta_annual").
+- **What happened:** with `beta` tuned so the steady state held today's capital (3.59 times GDP),
+  households starting from measured wealth (3.35 times GDP) consumed 80.8% of GDP in 2025 against
+  76.1% in the data, and invested 20.2% against 23.6%. An age shape from NTA private asset income
+  (2015) did not remove it: every age still held about 1.6 times its steady-state wealth, because the
+  population is young (14% of adults over 60 in 2025, 31% in the steady state). Tuning `beta` to 2025
+  investment instead (0.9027) gave consumption 75.1% and investment 23.8% in 2025; the steady state
+  then holds 3.69 times GDP in private capital, more than today, as an ageing population should.
+- **Evidence:** [EAPD-DRB/OG-PHL#111](https://github.com/EAPD-DRB/OG-PHL/pull/111) (`ogphl/initial_wealth.py`, the households and macro chapters).
+- **When:** 2026-11, ogcore 0.24.4.
+
 ## og-country-calibration/references/fiscal-consistency.md
 
 ### The budget identity: alpha_I belongs in it
@@ -335,6 +350,22 @@ unpublished); those entries say so.
   [JSON at upstream main, line 2455](https://github.com/EAPD-DRB/OG-PHL/blob/774267ac516761c519fd8a4fc86d130250e6a84a/ogphl/ogphl_default_parameters.json#L2455).
 - **When:** 2026-01 (ogcore >= 0.14.5); still 0.01 on main in 2026-10.
 
+### Labour supply calibrated to hours per person by age
+
+- **Lesson:** compare the model's labour supply by age with hours per person by age, calibrate
+  `chi_n` to it with a warm start between solves, and make the earnings profile per hour
+  (households-demographics.md, "Labour supply").
+- **What happened:** with OG-USA's `chi_n`, the model worked about 45% of the time endowment at every
+  age up to 55 and a third at 75, against 29% and 5% in the 2024 Labor Force Survey (ILOSTAT), though
+  total hours per working-age person were 7% above the US. The OG-ETH loop, run from a cold start,
+  failed at its second solve; warm-starting each solve converged in about ten. Prime-age weights came
+  out at 240–510 against 20–25 in OG-USA; ages 20–21 and from about 77 reached OG-Core's bound of
+  10,000 and were left out of the fit. The NTA labour-income profile was divided by hours per person
+  before reshaping `e`.
+- **Evidence:** [EAPD-DRB/OG-PHL#111](https://github.com/EAPD-DRB/OG-PHL/pull/111) (`ogphl/labor.py`, `scripts/fetch_ilo_hours_by_age.py`, the households
+  chapter's hours table).
+- **When:** 2026-11, ogcore 0.24.4.
+
 ## og-country-calibration/references/validation-dashboard.md
 
 ### Sourcing hierarchy: the OECD Revenue Statistics country note
@@ -373,6 +404,22 @@ unpublished); those entries say so.
   PR (searched: OG-PHL CHANGELOG and docs, PR #85, PSLmodels/OG-Core#1188 and #1189 bodies and
   comments); session notes only.
 - **When:** 2026-07.
+
+### GDP price basis: ratios to market-price GDP
+
+- **Lesson:** compare model and data ratios on one price basis (validation-dashboard.md, "Mind the
+  price basis too").
+- **What happened:** OG-Core's `Y` is the sum of `p_m Y_m`, with the consumption tax paid on top, so
+  it excludes product taxes, while every Philippine target is a share of market-price GDP. With a
+  consumption tax near 7.9% of GDP, every model ratio over `Y` sat about 8% above the same quantity
+  over market-price GDP (a factor of 1.086). A 2018 SAM cross-check gave 1.089. Converting the
+  share parameters by that factor and re-tuning moved `beta` from 0.846 to 0.875 and the steady-state
+  `r` from 11.4% to 10.2%. The ILO labour share (denominator: market-price GDP) was converted the
+  same way, giving a total capital share of 0.515. The literature makes the same adjustment
+  (Prescott 2004; Mendoza, Razin and Tesar 1994).
+- **Evidence:** [EAPD-DRB/OG-PHL#111](https://github.com/EAPD-DRB/OG-PHL/pull/111) (`ogphl/targets.py`, the macro chapter's "GDP at market prices"
+  section).
+- **When:** 2026-11, ogcore 0.24.4.
 
 ## og-country-calibration/references/solving-tuning.md
 
