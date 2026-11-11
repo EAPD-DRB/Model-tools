@@ -155,3 +155,23 @@ block, and how do you score it? At most 250 words.
 4. Scores today's spending at t=0 of the transition.
 5. Re-derives the spending glide (`alpha_G`) from the transition's own pension path, and checks the
    debt path against the program afterwards.
+
+## S9. A transition that got slow
+
+**Prompt.** After a recalibration, a country model's baseline transition converges in about 60
+iterations, as before, but each iteration now takes about 20 seconds; the whole baseline takes 20
+minutes. Solved one at a time, each income group's household problem takes about 4 seconds.
+During each iteration one of the seven workers is at 100% CPU while the others are idle for most
+of it. Switching the pension system off to test it made the run slower, not faster. What is going
+on, and what do you check first? At most 250 words.
+
+**Rubric.**
+1. Reads it as one worker holding up each iteration (a straggler), not slower convergence.
+2. Does not start by blaming the hardware or the calibration, or by changing solver settings.
+3. Check: time each income group's task per iteration, with its residual evaluations or
+   Levenberg-Marquardt fallbacks, and see whether the slow task follows one worker.
+4. Names state cached on the worker (the household Jacobian's sparsity pattern) as the suspect, or
+   dask moving data to the workers, and checks the ogcore version for a fix.
+5. Explains why the pension-off test does not clear or convict the pension (it changes which
+   worker or pattern is slow, not only the cost).
+6. Confirms the cause with an official run (installer copy, shipped example) before reporting it.
