@@ -175,3 +175,34 @@ on, and what do you check first? At most 250 words.
 5. Explains why the pension-off test does not clear or convict the pension (it changes which
    worker or pattern is slow, not only the cost).
 6. Confirms the cause with an official run (installer copy, shipped example) before reporting it.
+
+## S10. Borrowed labour supply
+
+**Prompt.** A country port ships OG-USA's `chi_n`. Total hours per working-age person in the
+country are about 5% above the US. Is the borrowed `chi_n` acceptable? If not, how do you calibrate
+it, and what else has to change with it? At most 250 words.
+
+**Rubric.**
+1. Compares the model's labour supply by age with hours by age, not only the total.
+2. Targets hours per person (employment rate × hours of the employed), not per worker, because the
+   model has no extensive margin.
+3. Calibrates by re-solving the steady state after each `chi_n` step, warm-started.
+4. Handles ages where `chi_n` reaches its upper bound (leaves them out of the fit and reports them).
+5. Makes the earnings (`e`) age profile per hour, so hours are not counted twice.
+
+## S11. A first-year consumption windfall
+
+**Prompt.** A country with a young population sets `initial_wealth_ratio` from data. `beta` was
+tuned so the steady state matches today's capital-output ratio. The baseline transition solves, but
+household consumption is 81% of GDP in the first year against 76% in the data, and investment is 20%
+against 24%. The start cohorts were checked and are solved. What is going on, and what do you change?
+At most 250 words.
+
+**Rubric.**
+1. Explains that a steady state tuned to today's ratio is wrong for a young population: the same
+   patience implies more wealth once the population ages, so households start with a windfall.
+2. Does not expect the age shape of initial wealth alone to fix it.
+3. Tunes `beta` to first-year moments (the investment share), not the steady-state `K/Y`.
+4. Reports the steady-state `K/Y` as an outcome, expected above today's ratio.
+5. Uses the released parameters (`initial_wealth_ratio`, `initial_hhwealth_dist`) and checks the
+   solved first-year wealth ratio equals the target.
