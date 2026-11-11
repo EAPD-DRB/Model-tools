@@ -5,8 +5,9 @@ OG repos, including the AGENTS.md estimate that a full example run takes "~35 mi
 
 **A healthy baseline takes under ten minutes.** The steady state takes seconds to a minute or two;
 the transition path about 5–7 minutes. Much longer means something is wrong (the worker pool, the
-solver settings, a stale ogcore, a cold start, or the calibration), not that the model is slow.
-Stop and diagnose (og-solver-diagnosis); do not wait it out.
+solver settings, a stale ogcore, a cold start, one worker holding up every iteration, or the
+calibration), not that the model is slow. Stop and diagnose (og-solver-diagnosis); do not wait it
+out. Time runs with nothing else running on the machine.
 
 **Install with the official installer.** Every OG model a run will report on is installed with
 OG-Core's own installer, as `scripts/QUICK_INSTALL.md` in PSLmodels/OG-Core describes: download

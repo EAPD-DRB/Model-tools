@@ -626,6 +626,32 @@ unpublished); those entries say so.
   checkouts).
 - **When:** 2026-07 (ogcore 0.16.3).
 
+### N. Slow transition from a straggler worker
+
+- **Lesson:** a transition whose iterations are slow while one worker does the work points to state
+  kept on that worker (the cached Jacobian sparsity pattern, or parameter copies deleted by dask's
+  memory manager), not to the calibration or the hardware.
+- **What happened:** after the 2026-11 recalibration the baseline took 20.2 minutes (60
+  iterations, about 20 s each) on a 4-performance-core laptop with 7 workers, against 12.1 for the
+  previous calibration. Run alone, each income group's household solve took 3–4 s. In parallel,
+  the worker whose first problem belonged to the top income group detected a sparsity pattern
+  missing more than half its links (the threshold was relative to the largest entry of the whole
+  Jacobian), and the two lowest groups, which get no pension, left the pension links out of the
+  pattern the other groups reused. That worker needed hundreds of Levenberg-Marquardt fallbacks per
+  iteration. Turning the pension off made the run slower (37.7 minutes, a 55 s straggler task), so
+  a "switch it off" test pointed the wrong way. Separately, dask's memory manager deleted the
+  workers' copies of the 34 MB parameters between iterations, so tasks started 2–10 s apart. With
+  the pattern fixed, the duplicate tax work removed and the copies kept, the baseline took 11.3
+  minutes and the previous calibration 8.6, with results unchanged to about 1e-10. The run-id that
+  should reset the pattern cache between runs (PSLmodels/OG-Core#1249) had also stopped working in
+  0.24.2.
+- **Evidence:** [PSLmodels/OG-Core#1276](https://github.com/PSLmodels/OG-Core/pull/1276) (pattern
+  fixes); [PSLmodels/OG-Core#1277](https://github.com/PSLmodels/OG-Core/pull/1277) (net taxes once,
+  Defined Benefits cache). The memory-manager change was tested but not proposed. Runs were the
+  shipped example from installer copies with the OG-Core commits pinned; the probe logs are
+  unpublished.
+- **When:** 2026-11-10, ogcore 0.24.4.
+
 ## og-solver-diagnosis/references/solve-procedures.md
 
 ### Initial-guess fragility: nearness is not solvability
