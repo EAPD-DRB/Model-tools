@@ -133,8 +133,8 @@ resolved `get_pop_objs` before relying on it.
 
 - **The measured gradients live in
   [EAPD-DRB/Demographic-Gradients](https://github.com/EAPD-DRB/Demographic-Gradients):** DHS fertility
-  (TFR) and infant-mortality (IMR) tilts for ~78 countries, census household-deaths adult-mortality
-  tilts for 14, and a GNI-keyed general fallback for everyone else. It plays the role for demographic
+  (TFR) and infant-mortality (IMR) gradients for ~78 countries, census household-deaths adult-mortality
+  gradients for 13, and a GNI-keyed general fallback for everyone else. It plays the role for demographic
   differentials that Population-Data plays for levels; reference data by raw URL.
 - **Before using it, fetch and follow its AGENTS.md**
   (`https://raw.githubusercontent.com/EAPD-DRB/Demographic-Gradients/main/AGENTS.md`). It maps each
@@ -145,18 +145,18 @@ resolved `get_pop_objs` before relying on it.
   countries are out of scope, not missing. Extrapolating can reverse the sign: in high-income
   countries the fertility gradient often runs through marriage rates rather than family size. Leave
   them unset, say so, and pin the decision in a test so it is not later "fixed". **[net-new: JPN]**
-- Two rules that change results: **pass `tilt / (100 × (1 − p))`**, and **a country's own measurement
+- Two rules that change results: **pass `gradient / (100 × (1 − p))`**, and **a country's own measurement
   beats the general gradient**. The ÷100 converts wealth rank to ogcore's centered percentile points
   (missing it is a silent 100× error); the ÷(1 − p) converts the library's log-rate slope to the
   log-odds slope ogcore reads, with p = ogcore's own rate at that age (fertility in births per person,
-  as `get_fert` returns it). Skipping (1 − p) flattens fertility gradients by 3–7% and infant by 2–3%;
-  for mortality from age 1 it is about 1%. A converted fertility tilt is therefore a vector by age.
+  as `get_fert` returns it). Skipping (1 − p) flattens gradients by about 1–11% for fertility depending on
+  age, 5% for infant mortality and 1% for adult mortality. A converted fertility gradient is therefore a vector by age.
   State which route was taken and the survey or census year.
-- **Fertility goes in by age, not as one TFR tilt.** The rich-poor fertility gap is mostly timing:
-  poorer women have children earlier, so the teenage gradient is about twice the TFR tilt. Add the
-  library's pooled age offsets (`data/fertility_age_offsets.csv`) to the country's TFR tilt for each
-  age, then convert. Use the pooled offsets, not a country's own age tilts: they predict a
-  country's next survey about as well, and a single survey often cannot be fitted at the oldest ages. Passing one TFR tilt at every age keeps the number of children right but
+- **Fertility goes in by age, not as one TFR gradient.** The rich-poor fertility gap is mostly timing:
+  poorer women have children earlier, so the teenage gradient is about twice the TFR gradient. Add the
+  library's pooled age offsets (`data/fertility_age_offsets.csv`) to the country's TFR gradient for each
+  age, then convert. Use the pooled offsets, not a country's own age gradients: they predict a
+  country's next survey about as well, and a single survey often cannot be fitted at the oldest ages. Passing one TFR gradient at every age keeps the number of children right but
   erases the timing gap.
 
 ## Pensions
