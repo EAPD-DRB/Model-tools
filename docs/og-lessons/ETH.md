@@ -253,3 +253,16 @@ country's calibration.
   og-runs/eth-oda); the preflight run on that environment fails on four counts with the new
   checks.
 - **When:** 2026-11, ogcore 0.24.4 / 0.25.0 (local integration build).
+
+### One model job at a time
+
+- **Lesson:** run one model job at a time, and compare installed copies one after the other on an
+  idle machine (og-run-rules.md, "One model job at a time").
+- **What happened:** twice in two days an agent overlapped jobs to save time: two tuning arms
+  beside OG-Core's test suite, then a retune beside the test suite, each with seven workers on a
+  ten-core machine. Both ran at about half speed, the timings could not be quoted, and the owner
+  asked for one job at a time. In the evaluation that followed, an agent answering S12 with the
+  skills still planned to run its treatment and control copies in parallel and compare their
+  times.
+- **Evidence:** session logs of 2026-11-12/13; evals/og-skills/scores/2026-11-13.md.
+- **When:** 2026-11.
