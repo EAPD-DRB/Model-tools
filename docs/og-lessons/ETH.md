@@ -226,3 +226,30 @@ country's calibration.
   https://github.com/EAPD-DRB/OG-ETH/blob/49ec411ab7e6fe36938d402b5280aa2e84084516/pyproject.toml;
   https://github.com/EAPD-DRB/OG-ETH/pull/70.
 - **When:** 2026-09.
+
+## shared/og-run-rules.md
+
+### Leads come from installer copies too: hand-built probe paths produced invalid tuning rounds
+
+- **Lesson:** every run, probes and tuning included, comes from an installer copy through the
+  repo's own scripts; "it is only a lead" never licenses a hand-built environment, a wrapper, a
+  patch at run time, a merge script or a step launched by hand. The preflight now fails these
+  (og-run-rules.md, "Install with the official installer", "Calibration tuning runs through repo
+  code too", "Evidence about the model"; og-run-preflight).
+- **What happened:** testing concessional debt (PSLmodels/OG-Core#1125) in OG-ETH's rebased
+  recalibration, an agent built a plain clone and installed an OG-Core worktree into it with
+  `uv pip install -e`. That replaced the branch's own ogcore pin, so the first runs went without
+  the speed fixes #1276 and #1277 the pin carried. It wrapped `examples/tune.py` in a script that
+  monkeypatched OG-ETH's sovereign-rate rule, and drove rounds with its own shell loop whose merge
+  step existed because `tune.py --next` writes only the dials. Twice settings were lost: a round
+  that dropped the rebased capital stocks, and a round 4 launched after a step started by hand
+  skipped the merge, so it ran with neither the capital stocks nor the concessional debt
+  (K/Y 1.58 against 2.09, r 12.8 percent). All results from that environment were leads. The
+  earlier tuning copy had been installed properly but then moved five times with `git pull`, and
+  its installer log was written to a scratch folder, so no record ties it to the installer. The
+  preflight of the day passed hand-built checkouts as "GO (dev checkout -- in-task probes only)"
+  and only warned on an editable ogcore.
+- **Evidence:** session logs of 2026-11-12/13 (OG-ETH branch calib/rebased-fy2025, tuning folder
+  og-runs/eth-oda); the preflight run on that environment fails on four counts with the new
+  checks.
+- **When:** 2026-11, ogcore 0.24.4 / 0.25.0 (local integration build).
