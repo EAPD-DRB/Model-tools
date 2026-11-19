@@ -41,7 +41,7 @@ multi-industry branch, not only its docs; docs and code disagree in places in al
 | OG-BRA (the most developed) | Input-output tables with a published domestic Leontief | The mixed-income split; exact domestic tracing; per-good `tau_c` and per-industry CIT; funded public capital; the M=1 equivalence test; the concordance test |
 
 OG-IDN and OG-ETH carry only the upstream scaffold (naive `io_matrix`, one `gamma` copied to every
-industry, `Z` = 1). Do not treat their multisector files as worked examples.
+industry, `Z` = 1). Treat their multisector files as scaffolds, not worked examples.
 
 ## The ladder
 
@@ -69,9 +69,9 @@ the docs.
 - **Take `gamma`'s level from the single model** and the dispersion from the data.
 - **Convert `chi_n` and `chi_b` by `k^(σ−1)`** for OG-Core's unnormalised composite price. In PHL it
   closed half to four fifths of the gaps to the single model.
-- **Prove the plumbing with the equivalence test**: identical industries must reproduce M=1.
+- **Prove the plumbing with the equivalence test**: identical industries should reproduce M=1.
 - **`factor` is the best single number for a level misalignment.** Use the Z level to align
-  `factor`, never to close `r` or `K_f/K` gaps.
+  `factor`, not to close `r` or `K_f/K` gaps.
 - **Try a cold solve; fall back to continuation** when relative prices spread widely.
 - **Run the same reform through both models** and compare the percent-change tables.
 
@@ -111,7 +111,8 @@ Loop-backs:
 - **The single model is recalibrated** → rebuild the overlay and re-solve both models in the same
   change; update any numbers one model's docs quote about the other.
 - **One industry's Z is wildly out of line** → its employment number (step 5).
-- **The reform disagrees in sign between the models** → back to step 9; do not ship.
+- **The reform disagrees in sign between the models** → back to step 9; hold the change until
+  they agree.
 
 ## Reference files
 

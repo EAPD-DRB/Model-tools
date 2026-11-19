@@ -17,34 +17,35 @@ Contents
   a single-scalar exponential tilt `e_country = e_USA · exp(a·e_USA)`, solving the one scalar `a` by
   bisection so the model Gini matches the country's target Gini. One number per country, no bespoke
   data collection. It is solved in `income.py`'s `get_e_interp(gini_to_match=...)`.
-- **The method has two halves; check that your repo ships both.** EAPD-DRB/OG-ZAF#18 specifies (1) an
-  age-shape adjustment from NTA income by age and (2) the Gini tilt. Shipping only the tilt leaves the
-  US age profile in place, which is wrong wherever the country's age-earnings shape differs
-  structurally (seniority pay, mandatory retirement, informality). Japan's factor is 1.09 at 55 and
-  0.62 at 65; peak earnings age moves 61 → 57. **[net-new: JPN]**
+- **Check that your repo ships both halves.** EAPD-DRB/OG-ZAF#18 specifies (1) an age-shape
+  adjustment from NTA income by age and (2) the Gini tilt. The tilt alone leaves the US age profile
+  in place, which is wrong wherever the country's age-earnings shape differs structurally
+  (seniority pay, mandatory retirement, informality). Japan's factor is 1.09 at 55 and 0.62 at 65;
+  peak earnings age moves 61 → 57. [net-new: JPN]
   - NTA has no API. Establish a session, POST the query to `/web/nta/download-confirm`, then POST
     the session-scoped download form it returns with a `Referer` header (403 without one). The US is
     `"US"`, not `"United States"`.
-  - Both countries must come from NTA on the same variable and variable type; national wage surveys
-    are not comparable to NTA levels. Normalise each profile over prime working ages before taking
-    the ratio, and cap it at high ages where both approach zero.
-  - **Port the reference implementation rather than rewrite it:** OG-JPN's
+  - Take both countries from NTA on the same variable and variable type; national wage surveys are
+    not comparable to NTA levels. Normalise each profile over prime working ages before taking the
+    ratio, and cap it at high ages where both approach zero.
+  - **Reference implementation.** Port it rather than rewriting it: OG-JPN's
     `scripts/fetch_nta_age_profiles.py` (the session-and-Referer download, variable "Labor Income",
     type "Smooth Mean") and `ogjpn/income.py`'s `get_age_shape_factor` / `apply_age_shape`
     (normalise over ages 20–64, hold the factor flat above 72, latest target-country year against
     the nearest US year). It ports to another country by changing only the country name and year
-    windows. **[KOR]** (history: KOR)
-- **Do not use OG-ZAF's hard-coded-coefficient method** (`get_e_orig`, a WID-then-NTA two-step
-  with hand-tuned arctan extrapolation). It needs per-country re-derivation and is not a drop-in.
-- **Gini-concept trap [issue #33; family-wide risk].** The target-country Gini and the US reference
-  Gini (`gini_usa_data`) must be the same welfare concept. Mixing a World Bank PIP Gini
+    windows. [KOR] (history: KOR)
+- **OG-ZAF's coefficient method.** Leave OG-ZAF's hard-coded-coefficient method aside (`get_e_orig`,
+  a WID-then-NTA two-step with hand-tuned arctan extrapolation). It needs per-country re-derivation
+  and is not a drop-in.
+- **Gini-concept trap [issue #33; family-wide risk].** Use the same welfare concept for the
+  target-country Gini and the US reference Gini (`gini_usa_data`). Mixing a World Bank PIP Gini
   (consumption-based for many developing countries) with the World Bank income-concept US anchor
   (`gini_usa_data = 41.5`, WB SI.POV.GINI) systematically understates the target's inequality. Use a
   matching concept for both (e.g. WID income) and check the docstring default matches the code.
 - `lambdas` (lifetime-income groups, J=7) are byte-identical across the country ports
-  (PHL/ZAF/IDN/BRA/ETH) and never re-derived; only the tilt `a` changes. OG-USA is the J=10 source
-  the ports interpolate down from. `factor` is solved endogenously in the steady state, not a
-  calibration input.
+  (PHL/ZAF/IDN/BRA/ETH) and are not re-derived; only the tilt `a` changes. OG-USA is the J=10
+  source the ports interpolate down from. `factor` is solved endogenously in the steady state, not
+  a calibration input.
 
 ## Demographics: method and country_id
 
@@ -53,11 +54,10 @@ Contents
   and immigration solved as the residual that reconciles consecutive UN population distributions
   (appropriate when immigration data is weak).
 - The only per-country input is `country_id` (UN M49 code). Use a single named constant
-  (`UN_COUNTRY_CODE`) referenced at both call sites, not an inline literal. **[safer: PHL/IDN/BRA]**
-- **Pitfall [ETH, regressed twice].** `calibrate.py` gets refreshed by copying a sibling, and the
-  hard-coded `country_id` literal was wrong (the sibling's code instead of the country's own), twice,
-  because a wholesale file copy forgot to swap it. Add a regression test asserting `country_id`
-  matches the country being calibrated. (history: ETH)
+  (`UN_COUNTRY_CODE`) referenced at both call sites, not an inline literal. [safer: PHL/IDN/BRA]
+- **Pitfall [ETH, regressed twice].** `calibrate.py` is often refreshed by copying a sibling's file.
+  Twice the hard-coded `country_id` literal kept the sibling's code instead of the country's own.
+  Add a regression test asserting `country_id` matches the country being calibrated. (history: ETH)
 
 ## The data window sets the long-run growth rate
 
@@ -68,11 +68,11 @@ change is the point of the exercise, this decides the answer. On Japan, widening
 moved `g_n_ss` from −1.070%/yr to −0.463%, and a wider window turned `pb*` from a surplus to a
 deficit.
 
-**The check:** compare the model's `g_n_ss` with the UN projection's own implied CAGR. A value well
-outside it is a too-short window, not a demographic fact. Use the terminal UN rates: the steady
-state is a long-run object, so a mid-transition snapshot is a category error. UN WPP ends at 2100,
-and ogcore asserts against going beyond `start_year + 74` (and a 2099 cap).
-**[net-new: JPN; worth a fleet sweep]**
+**Check.** Compare the model's `g_n_ss` with the UN projection's own implied CAGR. A value well
+outside it points to a too-short window, not a demographic fact. Use the terminal UN rates: the
+steady state is a long-run object, so a mid-transition snapshot is the wrong input. UN WPP ends at
+2100, and ogcore asserts against going beyond `start_year + 74` (and a 2099 cap).
+[net-new: JPN; worth a fleet sweep]
 
 **The last usable year is one before the last year of data you actually have.** `get_pop` reads
 `final_data_year + 1` to infer immigration, and which data you have depends on the token: without a
@@ -80,7 +80,7 @@ UN API token ogcore falls back to the Population-Data archive, and the archive's
 earlier than the API's, so the limit can sit below what ogcore's assert allows. Check the archive's
 last year for your country and set the window to one less. Too late a year fails far from the
 cause, as an `UnboundLocalError` in `pop_rebin`. Put the year in a named constant with this reason
-next to it. **[KOR]** (history: KOR)
+next to it. [KOR] (history: KOR)
 
 ## Discontinuities: the frozen window and fixper
 
@@ -89,9 +89,9 @@ at `fixper = int(1.5 * S)` (period 120 for S=80), where ogcore replaces the popu
 with its fixed steady-state one in a single period, the transition's resource constraint breaches.
 On JPN, 318 of 320 periods satisfied `RC_TPI` with a median residual of 7.96e-08; the two that failed
 were exactly those periods. `fixper` is invariant to any country-side setting; report it upstream
-rather than tuning around it. **[net-new: JPN]**
+rather than tuning around it. [net-new: JPN]
 
-**Both breaks are OG-Core bookkeeping, not economics. [KOR]**
+**Both breaks are OG-Core bookkeeping, not economics.** [KOR]
 
 - *At the final data year:* the downloaded UN rates have one more year than `get_pop_objs` assumes
   (T0 + 1 rows; user-supplied rates have T0). So it builds the last data year's population with
@@ -101,29 +101,30 @@ rather than tuning around it. **[net-new: JPN]**
   periods to settle), so the one-period immigration re-solve is a real jump. Freezing the rates
   earlier does not help and distorts long-run growth.
 
-Check any population before blaming the model: the stored rates must reproduce the stored path,
+Check any population before blaming the model: the stored rates should reproduce the stored path,
 `omega[t+1, s+1](1 + g_n[t]) = omega[t, s](1 - rho[t, s]) + imm_rates[t, s+1] omega[t, s+1]`, to
 about 1e-15 in every period; where it fails, at exactly the two break periods, the breaks are in
 your ogcore. Check whether your ogcore projects the population from the last data year and offers
 an opt-in ramp into the stationary population (`fixper_phase_in`); on KOR the two together cut the
 largest resource-constraint error from 9.1e-3 to 1.2e-4, leaving only the last five periods. If it
-has neither, expect the breaks, report them upstream, and do not tune against them. (history: KOR)
+has neither, expect the breaks, report them upstream, and keep them out of the tuning.
+(history: KOR)
 
 **What it does to the run's own check.** `RC_TPI` (ogcore default 1e-4) is the end-of-run tolerance
 on the resource constraint. The two breaks routinely exceed it, so a sibling's JSON may carry a
 loosened value (one sibling ships 100 times the default) that the audit should catch and either
 justify or tighten. Triage by period before accepting it: tabulate the error at each break period,
 at the last period, and the largest everywhere else (and in the first ten years). Keep the loosened
-tolerance only with that table in the docs. **[KOR]** (history: PHL, KOR)
+tolerance only with that table in the docs. [KOR] (history: PHL, KOR)
 
 ## Cache the processed arrays
 
-ogcore refetches the whole UN series on every call and never reads its own `download_path` back. At
-a wide window that is ~100s per solve, and hammering the endpoint makes it fail intermittently.
-ogcore then falls back to the offline mirror and the run can die with `KeyError: '<country_id>'`,
-naming the wrong cause. **[net-new: JPN]** (Recent ogcore also reads a UN API token from
-`un_token`, `UN_API_TOKEN` or a per-user file, managed with `og-token`; a missing or expired token
-is another route to the archive fallback.)
+ogcore refetches the whole UN series on every call and does not read its own `download_path` back.
+At a wide window that is ~100s per solve, and the repeated calls make the endpoint fail
+intermittently. ogcore then falls back to the offline mirror and the run can die with
+`KeyError: '<country_id>'`, naming the wrong cause. [net-new: JPN] (Recent ogcore also reads a UN
+API token from `un_token`, `UN_API_TOKEN` or a per-user file, managed with `og-token`; a missing or
+expired token is another route to the archive fallback.)
 
 ## Income-differentiated demographics
 
@@ -132,44 +133,48 @@ not data) plus `fert_gradient`, `mort_gradient` and `infmort_gradient`: fertilit
 tilted across lifetime-income groups instead of identical across J. Check the signature of your
 resolved `get_pop_objs` before relying on it.
 
-- **The measured gradients live in
-  [EAPD-DRB/Demographic-Gradients](https://github.com/EAPD-DRB/Demographic-Gradients):** DHS fertility
-  (TFR) and infant-mortality (IMR) gradients for ~78 countries, census household-deaths adult-mortality
-  gradients for 13, and a GNI-keyed general fallback for everyone else. It plays the role for demographic
-  differentials that Population-Data plays for levels; reference data by raw URL.
-- **Before using it, fetch and follow its AGENTS.md**
+- **Source.** The measured gradients are in
+  [EAPD-DRB/Demographic-Gradients](https://github.com/EAPD-DRB/Demographic-Gradients): DHS fertility
+  (TFR) and infant-mortality (IMR) gradients for ~78 countries, census household-deaths
+  adult-mortality gradients for 13, and a GNI-keyed general fallback for everyone else. It plays the
+  role for demographic differentials that Population-Data plays for levels; reference data by raw
+  URL.
+- **Its AGENTS.md.** Fetch and follow it before using the library
   (`https://raw.githubusercontent.com/EAPD-DRB/Demographic-Gradients/main/AGENTS.md`). It maps each
-  ogcore input to a file, states precedence, and lists the traps. It is the source of truth; do not
-  work from a copy of its rules.
-- **Check the country is in the library first.** It covers 78 developing countries, and its AGENTS.md
-  says the income-based fallback is valid only between $200 and $10,000 GNI per head; high-income
-  countries are out of scope, not missing. Extrapolating can reverse the sign: in high-income
-  countries the fertility gradient often runs through marriage rates rather than family size. Leave
-  them unset, say so, and pin the decision in a test so it is not later "fixed". **[net-new: JPN]**
-- Two rules that change results: **pass `gradient / (100 × (1 − p))`**, and **a country's own measurement
-  beats the general gradient**. The ÷100 converts wealth rank to ogcore's centered percentile points
-  (missing it is a silent 100× error); the ÷(1 − p) converts the library's log-rate slope to the
-  log-odds slope ogcore reads, with p = ogcore's own rate at that age (fertility in births per person,
-  as `get_fert` returns it). Skipping (1 − p) flattens gradients by about 1–11% for fertility depending on
-  age, 5% for infant mortality and 1% for adult mortality. A converted fertility gradient is therefore a vector by age.
-  State which route was taken and the survey or census year.
-- **Fertility goes in by age, not as one TFR gradient.** The rich-poor fertility gap is mostly timing:
-  poorer women have children earlier, so the teenage gradient is about twice the TFR gradient. Add the
-  library's pooled age offsets (`data/fertility_age_offsets.csv`) to the country's TFR gradient for each
-  age, then convert. Use the pooled offsets, not a country's own age gradients: they predict a
-  country's next survey about as well, and a single survey often cannot be fitted at the oldest ages. Passing one TFR gradient at every age keeps the number of children right but
-  erases the timing gap.
+  ogcore input to a file, states precedence, and lists the traps. It is the source of truth, so work
+  from it directly rather than from a copy of its rules.
+- **Coverage.** Check first that the country is in the library. It covers 78 developing countries,
+  and its AGENTS.md says the income-based fallback is valid only between $200 and $10,000 GNI per
+  head; high-income countries are out of scope, not missing. Extrapolating can reverse the sign: in
+  high-income countries the fertility gradient often runs through marriage rates rather than family
+  size. Leave them unset, say so, and pin the decision in a test so it is not later "fixed".
+  [net-new: JPN]
+- **Two rules that change results.** Pass `gradient / (100 × (1 − p))`, and prefer a country's own
+  measurement over the general gradient. The ÷100 converts wealth rank to ogcore's centered
+  percentile points (missing it is a silent 100× error); the ÷(1 − p) converts the library's
+  log-rate slope to the log-odds slope ogcore reads, with p = ogcore's own rate at that age
+  (fertility in births per person, as `get_fert` returns it). Skipping (1 − p) flattens gradients by
+  about 1–11% for fertility depending on age, 5% for infant mortality and 1% for adult mortality. A
+  converted fertility gradient is therefore a vector by age. State which route was taken and the
+  survey or census year.
+- **Fertility by age.** Enter fertility by age, not as one TFR gradient. The rich-poor fertility gap
+  is mostly timing: poorer women have children earlier, so the teenage gradient is about twice the
+  TFR gradient. Add the library's pooled age offsets (`data/fertility_age_offsets.csv`) to the
+  country's TFR gradient for each age, then convert. Use the pooled offsets, not a country's own age
+  gradients: they predict a country's next survey about as well, and a single survey often cannot be
+  fitted at the oldest ages. Passing one TFR gradient at every age keeps the number of children
+  right but erases the timing gap.
 
 ## Pensions
 
 OG-Core supports `"US-Style Social Security"` (the default), `"Defined Benefits"`,
 `"Notional Defined Contribution"` and `"Points System"`.
 
-- **Leaving the default applies the US benefit formula in US dollars** (AIME bend points, PIA
+- **The default.** Leaving it applies the US benefit formula in US dollars (AIME bend points, PIA
   rates) to earnings scaled by `mean_income_data`, itself a US figure. A pension result from an
   uncalibrated port is arithmetic, not validation.
-- **`alpha_db` defaults to 0.0.** Switching to `"Defined Benefits"` without setting it pays zero
-  pensions.
+- **`alpha_db` default.** It is 0.0, so switching to `"Defined Benefits"` without setting it pays
+  zero pensions.
 - For a DB system `yr_contrib × alpha_db` is the gross replacement rate, so the parameter is directly
   observable. But OECD replacement rates are old-age only, while pension spending also funds
   survivors' and disability pensions that OG-Core's single block cannot separate. Expect to carry
@@ -178,14 +183,14 @@ OG-Core supports `"US-Style Social Security"` (the default), `"Defined Benefits"
   `avg_earn_num_years` of earnings. Check the growth the OECD's own pension modelling assumes
   (1.25%/yr) against yours.
 - Set `mean_income_data` in local currency, and `avg_earn_num_years` to the country's convention
-  (career average vs final salary). **For a high-denomination currency (won, yen, rupiah) express it
-  in millions** (or thousands): ogcore validates `initial_guess_factor_SS` to at most 500,000, while
+  (career average vs final salary). For a high-denomination currency (won, yen, rupiah), express it
+  in millions (or thousands): ogcore validates `initial_guess_factor_SS` to at most 500,000, while
   `factor` in such a currency runs to tens of millions, and `SS_fsolve` divides the factor residual
   by 1,000,000 on the assumption that `factor` is dollar-sized. The unit is otherwise arbitrary:
   rescale the GS scale parameter `φ2` by `unit^φ1` and nothing else (the wealth tax works in model
   units; DB benefits are rates). Check the factor seed sits in the validator range before the first
   solve; a seed of exactly 500,000 was probably clipped to the cap, so compare it with the solved
-  `factor`. **[KOR, after JPN]** (history: IDN)
+  `factor`. [KOR, after JPN] (history: IDN)
 - `replacement_rate_adjust` applied only to US-style Social Security in older ogcore; recent ogcore
   applies it to all four systems. Check before relying on it outside the US system. The pension
   code is newer and less tested than the core model, so look at OG-Core's open issues before leaning
@@ -193,57 +198,59 @@ OG-Core supports `"US-Style Social Security"` (the default), `"Defined Benefits"
 - Pension outlays belong in the fiscal identity (fiscal-consistency.md).
 
 Validate against public pension expenditure as a share of GDP, not against the replacement rate you
-fed in. **[net-new: JPN]**
+fed in. [net-new: JPN]
 
 **A young pension system needs two checks, not one.** OG-Core pays every retiree as if the system
 had always existed (`alpha_db` is constant and coverage is complete), so its steady state is a
 *mature* system in the long-run demography. Where the scheme is still maturing (late start, short
 contribution histories, rising coverage), today's spending is the wrong target for the steady
 state. Score steady-state pension outlays against the scheme's own long-run actuarial projection,
-and score today's spending at t=0 of the transition. Do not tune `alpha_db` down to hit today's
-spending, which understates the system the country has legislated. The t=0 figure can land on
-either side of today's: on KOR it landed below, and the reason was not investigated. **[KOR]**
-(history: KOR)
+and score today's spending at t=0 of the transition. Leave `alpha_db` at the mature value rather
+than tuning it down to hit today's spending, which would understate the system the country has
+legislated. The t=0 figure can land on either side of today's: on KOR it landed below, and the
+reason was not investigated. [KOR] (history: KOR)
 
-**If t=0 spending comes out well above today's, phase the scheme in rather than cutting it.**
-`alpha_db` can be a time path. Set it to rise from the value that reproduces today's spending to
+**Phase-in.** If t=0 spending comes out well above today's, phase the scheme in rather than cutting
+it. `alpha_db` can be a time path. Set it to rise from the value that reproduces today's spending to
 the mature, legislated value over the scheme's maturing period, and leave the steady state at the
 mature value. Then re-derive the `alpha_G` glide from the transition's own pension path
 (fiscal-consistency.md). On THA the mature rate from the start paid 4.8% of GDP in pensions against
-an actual 2.1%; a 25-year phase-in matched today's spending and removed a debt overshoot. **[THA]**
+an actual 2.1%; a 25-year phase-in matched today's spending and removed a debt overshoot. [THA]
 (history: THA)
 
 ## Labour supply (chi_n)
 
-- **Default state [family].** Most ports ship OG-USA's 80 `chi_n` values unchanged. Say so; never
-  present them as calibrated.
+- **Default state [family].** Most ports ship OG-USA's 80 `chi_n` values unchanged. Say so plainly
+  rather than presenting them as calibrated.
 - **Check the age profile, not only the total.** Compare the model's labour supply by age with hours
   per person by age from the labour force survey. A matching total can hide a wrong profile: Japan's
-  total labour input is within 1% of the US **[JPN]**, but on PHL a total 7% above the US hid a
-  model that worked as much at 75 as the data do at 50 (history: PHL).
-- **Calibrate to hours per person by age** **[ETH, PHL]**. The target is hours per person
-  (employment rate × hours of the employed; ILOSTAT has both by age), not per worker, because the
-  model has no extensive margin. Rescale each age's `chi_n` toward the ratio of marginal disutility
-  at the model's and the target's hours, re-solve the steady state, and repeat. Warm-start each
-  solve from the previous one (og-solver-diagnosis, solve-procedures.md): a cold start that fails
-  after a step is the seed, not the calibration. Ages where `chi_n` reaches OG-Core's upper bound
-  cannot hit the target; leave them out of the fit and report them. Reference implementation:
-  OG-PHL `ogphl/labor.py`.
-- **When hours are calibrated, make the earnings profile per hour.** The NTA labour-income profile
-  that shapes `e` is income per person, which already contains hours. Divide it by hours per person
-  by age before taking the country-to-US ratio, or hours count twice, in `e` and in `n`.
-- **If `chi_n` hits the bound at most ages, check the units first.** Where model consumption is very
-  small (a high `sigma` makes this worse), the `chi_n` that matches hours can exceed OG-Core's
-  10,000 bound everywhere. Scaling the earnings matrix by a constant is an exact normalization:
-  every income scales and only `chi_n` changes, by the scale to the power `1 − sigma`. Scaling
-  productivity `Z` instead is not neutral, because OG-Core's capital demand at the world rate
-  leaves out public capital, and `Z` is capped at 5. Check with one steady state that the ratios
-  are unchanged. [ETH] (history: ETH)
-- In a multi-industry model, `chi_n`/`chi_b` also take the units conversion (og-multi-industry-calibration).
+  total labour input is within 1% of the US [JPN], but on PHL a total 7% above the US hid a model
+  that worked as much at 75 as the data do at 50 (history: PHL).
+- **Calibrate to hours per person by age** [ETH, PHL]. The target is hours per person (employment
+  rate × hours of the employed; ILOSTAT has both by age), not per worker, because the model has no
+  extensive margin. Rescale each age's `chi_n` toward the ratio of marginal disutility at the
+  model's and the target's hours, re-solve the steady state, and repeat. Warm-start each solve from
+  the previous one (og-solver-diagnosis, solve-procedures.md): a cold start that fails after a step
+  is the seed, not the calibration. Ages where `chi_n` reaches OG-Core's upper bound cannot hit the
+  target; leave them out of the fit and report them. Reference implementation: OG-PHL
+  `ogphl/labor.py`.
+- **Earnings per hour.** When hours are calibrated, make the earnings profile per hour. The NTA
+  labour-income profile that shapes `e` is income per person, which already contains hours. Divide
+  it by hours per person by age before taking the country-to-US ratio, or hours count twice, in `e`
+  and in `n`.
+- **Units.** If `chi_n` hits the bound at most ages, check the units first. Where model consumption
+  is very small (a high `sigma` makes this worse), the `chi_n` that matches hours can exceed
+  OG-Core's 10,000 bound everywhere. Scaling the earnings matrix by a constant is an exact
+  normalization: every income scales and only `chi_n` changes, by the scale to the power
+  `1 − sigma`. Scaling productivity `Z` instead is not neutral, because OG-Core's capital demand at
+  the world rate leaves out public capital, and `Z` is capped at 5. Check with one steady state that
+  the ratios are unchanged. [ETH] (history: ETH)
+- In a multi-industry model, `chi_n`/`chi_b` also take the units conversion
+  (og-multi-industry-calibration).
 
 ## Preferences: sigma, the subsistence floor and Frisch
 
-- **`sigma`** is the curvature of utility; with no income risk in OG-Core it is the inverse of the
+- **`sigma`.** The curvature of utility; with no income risk in OG-Core it is the inverse of the
   elasticity of intertemporal substitution. OG-Core's default 1.5 (elasticity 0.67) sits inside
   the published range (Havranek 2015: reported mean about 0.5, bias-corrected 0.3–0.4 for asset
   holders, calibrations above 0.8 inconsistent with the evidence).
@@ -260,12 +267,12 @@ an actual 2.1%; a 25-year phase-in matched today's spending and removed a debt o
   its lowest-consumption age, and say how far below the source that puts it. `c_min` is in
   growth-adjusted units, so it rises with labour productivity. The consumption the model reports is
   the part above the floor.
-- **Check the saving motives against a household survey.** OG-Core's households save for
+- **Saving motives.** Check them against a household survey. OG-Core's households save for
   retirement and bequests only. An LSMS-type survey's credit and savings modules show who borrows,
   from whom and why, and why people save; where saving is mostly precautionary, patience is
   standing in for the missing motive, and the documentation should say so.
-- **Frisch elasticity:** OG-USA's 0.4 is at the top of the evidence. Bias-corrected micro estimates
+- **Frisch elasticity.** OG-USA's 0.4 is at the top of the evidence. Bias-corrected micro estimates
   put total hours near 0.25 (Elminejad, Havranek, Horvath and Irsova 2023), and randomly offered
   wages in a low-income setting give 0.15–0.16 (Goldberg 2016). [ETH]
-- **Checks:** patience off its bound; the poorest group's consumption above the floor at every age
+- **Checks.** Patience off its bound; the poorest group's consumption above the floor at every age
   and in the first years of the transition; the effective `sigma` by income group reported.

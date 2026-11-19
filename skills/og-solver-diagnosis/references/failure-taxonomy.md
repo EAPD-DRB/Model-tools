@@ -17,7 +17,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 
 - **Signature**: SS solves cleanly; baseline TPI Distance grows or debt overshoots wildly; with a
   debt-elastic premium (`r_gov_DY2 > 0`) the run diverges to infinity. Damping and Anderson do
-  NOT help — that is itself diagnostic.
+  not help, and that is itself diagnostic.
 - **Cause**: government budget does not balance at `debt_ratio_ss`: input `alpha_G + alpha_T`
   exceeds revenue − required primary balance. Over-collecting placeholder taxes (flat PIT set too
   high, spurious `tau_bq`) can *mask* it until a tax is fixed — then the "fix" seems to break the
@@ -59,16 +59,16 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   differ between ogcore releases).
   Then lower `nu` further (0.4 → 0.3 → 0.2 → lower); continuation solve for multi-industry cold
   starts. Watch the distance series on the first Anderson run and fall back to damped iteration
-  if it oscillates. These treat oscillation only — never class A. Recent ogcore can tell a
+  if it oscillates. These treat oscillation only, not class A. Recent ogcore can tell a
   cycling loop from a diverging economy for you (solve-procedures.md, "Stall detection").
-- **Variant: Anderson stalls just above `mindist_TPI`** **[KOR]**. Signature: the distance falls
+- **Variant: Anderson stalls just above `mindist_TPI`** [KOR]. Signature: the distance falls
   cleanly to a few times the tolerance, then rises for several iterations in a row (on KOR, from
   2.7e-5 to 4.9e-5 over five iterations, against 1e-5). With `maxiter` 250 it can run for
   hours, so stop it. Damped iteration (`TPI_outer_method="picard"`, `nu` 0.2) from the same
   calibration went through the same level and converged (history: KOR). The fallback is
   slower, so it can exceed the run rules' 5–7 minute guide without anything being wrong; record
   the iteration time.
-- **Variant: a stall with a drifting debt path** **[THA]**. Signature: Anderson stalls near the
+- **Variant: a stall with a drifting debt path** [THA]. Signature: Anderson stalls near the
   target while debt climbs well above the program on the way. Treat the fiscal setup as the cause
   (class A; often pensions paid at the mature rate from t=0): finish with damped iteration if
   needed, fix the cause, then retry Anderson before shipping damped iteration as the default
@@ -84,8 +84,9 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 - **Cause**: near-flat ridge in the residual surface (small singular value) — Newton's basin of
   attraction flips under microscopic Jacobian differences. Demonstrated in isolation by the
   `ridge_demo*.py` toy systems.
-- **Remedy**: identify the calibration block creating the ill-conditioning by substitution
-  (swap in the OG-Core default for the suspect block — `test_zaf_substitute_e.py` pattern); then
+- **Remedy**: identify the calibration block creating the ill-conditioning by substitution: swap
+  in the OG-Core default for the suspect block and solve through the repo's own scripts from an
+  installed copy (the `test_zaf_substitute_e.py` case); then
   either recalibrate the degenerate block or accept and pin one solution with tighter seeds.
   A drift check (0.1% threshold) between dense/sparse belongs in any engine-change validation.
 - **Provenance**: sparse-FOC-jac validation campaign; drift verdicts themselves were lost
@@ -97,23 +98,24 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   NaN.
 - **Cause**: usually an upstream bad value (degenerate `gamma_m` near 1 from an imputed-rent
   industry, broken e-matrix, wrong `country_id` demographics) reaching the household problem.
-- **Remedy**: instrument to find the *first* bad value, not the last (monkey-patch tracing of
-  `SS_solver`/`FOC_savings` — `diagnose_J1.py` pattern); then function-level bisection with fixed
-  micro inputs. Fix upstream; `ENFORCE_SOLUTION_CHECKS=False` is a probe tool, never a fix.
+- **Remedy**: find the *first* bad value, not the last: trace the saved output back through
+  `SS_solver`/`FOC_savings` with the installed package's functions (the `diagnose_J1.py` case);
+  then function-level bisection with fixed micro inputs. Fix upstream;
+  `ENFORCE_SOLUTION_CHECKS=False` hides the error and is not a fix.
 
 ## F. Stale expected-output fixture (test "failure", not model failure)
 
 - **Signature**: a unit test comparing against a stored pickle fails after an engine or default
   change (`run_TPI_outputs_J1.pkl` case); the model's own runs look fine.
 - **Remedy**: equivalent-config comparison (J=1 vs identical-types J=2 full paths within 1%) to
-  prove the code is right; then regenerate the fixture deliberately — never regenerate first.
+  prove the code is right; then regenerate the fixture deliberately, only after that proof.
 
 ## G. Infrastructure noise
 
 - **Signature**: Dask `Key lost during replication`, `solve_for_j ... cancelled ... Falling back
   to serial computation`; log ends mid-iteration with no completion line.
-- **Remedy**: re-run before diagnosing anything; if it recurs, reduce workers / run serial. Do not
-  read model meaning into a truncated log.
+- **Remedy**: re-run before diagnosing anything; if it recurs, reduce workers / run serial. A
+  truncated log says nothing about the model.
 - **Provenance**: `logs_idn_control.log` (only log with the warnings, only incomplete log; its
   clean re-run converged normally).
 
@@ -128,7 +130,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 - **Remedy**: warm-start from a solved state (solve-procedures.md, "Warm-starting the steady
   state"). A guess that is near in values is not necessarily one the
   solver can start from: nearness is not solvability.
-- **Variant: an inconsistent seed set, not a far one** **[KOR]**. ogcore derives the GDP guess as
+- **Variant: an inconsistent seed set, not a far one** [KOR]. ogcore derives the GDP guess as
   `initial_guess_TR_SS / alpha_T`. A repo bootstrapped from a sibling keeps the sibling's TR seed;
   against the new `alpha_T` the GDP guess lands several times too high. Signature: one GE-loop
   residual, the fifth (`Y`, after `r_p`, `r`, `w`, `p_m`), stuck large and negative (KOR −3.5,
@@ -153,12 +155,12 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 
 - **Signature**: a run takes far longer than the ten-minute baseline, with a normal-looking
   log.
-- **Cause**: no worker pool. The country examples always create one; ogclews-link's command line
-  defaults to 7 workers, but a driver that builds `runtime.RunnerConfig` itself defaults to 1 and
+- **Cause**: no worker pool. The country examples create one; ogclews-link's command line
+  defaults to 7 workers, but code that builds `runtime.RunnerConfig` directly defaults to 1 and
   creates no pool.
 - **Remedy**: check the worker count first: the country examples print "Number of workers"; an
-  ogclews-link log does not, so check the command's `--workers` or the driver's `RunnerConfig`.
-  Then re-run properly. Do not tune the solver.
+  ogclews-link log does not, so check the command's `--workers` or the `RunnerConfig`.
+  Then re-run with a worker pool, leaving the solver settings as they are.
 
 ## K. Government rate clipped at its floor
 
@@ -202,7 +204,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   (fixed by PSLmodels/OG-Core#1276); and dask's memory manager can delete the workers' copies of
   the broadcast parameters between iterations, so they fetch them again before starting.
 - **Check**: time each income group's task per iteration, with its count of residual evaluations
-  and fallbacks (dask's task stream, or a probe that records them). A slow task that follows one
+  and fallbacks (dask's task stream from the run). A slow task that follows one
   worker whatever group it is given points to the pattern; tasks that start apart after a
   "transfer" point to the memory manager. Then check whether your ogcore has the fix.
 - **Why**: a calibration change can move which worker gets the bad pattern, so switching a block
@@ -216,7 +218,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   single-period spikes of class I. Check the population law of motion (og-country-calibration,
   households-demographics, "Discontinuities") before accepting them.
 
-- TPI applies **year-0** compliance/filer values to the whole path's revenue accounting — a
+- TPI applies year-0 compliance/filer values to the whole path's revenue accounting — a
   time-varying compliance reform shows behavior responding while revenue tracks baseline.
 - `SS.py` tiles capital-noncompliance from the labor rate in the post-solve `mtry_ss` diagnostic —
   keep labor = capital noncompliance.

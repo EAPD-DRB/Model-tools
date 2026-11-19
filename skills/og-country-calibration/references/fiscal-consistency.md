@@ -13,21 +13,21 @@ Contents
 - A violent early-transition spike is a diagnosis
 - Deliverable: the path panel
 
-The single most destabilizing calibration error is a government budget that does not balance at the
-debt target. The spending ratios (`alpha_G`, `alpha_T`), the revenue the tax system actually raises,
-and `debt_ratio_ss` are independently set knobs that must satisfy one identity, or the transition
-blows up. **[net-new: ZAF, proven by TPI simulations]**
+The calibration error most likely to destabilize the model is a government budget that does not
+balance at the debt target. The spending ratios (`alpha_G`, `alpha_T`), the revenue the tax system
+actually raises, and `debt_ratio_ss` are set separately, but they have to satisfy one identity; if
+they do not, the transition diverges. [net-new: ZAF, proven by TPI simulations]
 
 ## The budget identity (with pensions and UBI)
 
-For debt to hold at `debt_ratio_ss` in the steady state, the government must run a primary balance
+For debt to hold at `debt_ratio_ss` in the steady state, the government needs a primary balance
 
 ```
 pb* = (r_gov − g)/(1 + g) · debt_ratio_ss,     g = e^{g_y}(1 + g_n_ss) − 1
 ```
 
 where `g` is the model's real, detrended growth and `r_gov` the steady-state real sovereign rate.
-Primary spending must equal revenue − `pb*`, and primary spending includes public investment,
+Primary spending equals revenue − `pb*`, and primary spending includes public investment,
 pensions and any UBI. `fiscal.get_G_ss` subtracts all of them:
 
 ```
@@ -35,29 +35,29 @@ alpha_G + alpha_T + alpha_I + agg_pension_outlays/Y + UBI_outlays/Y  =  revenue/
 ```
 
 - Forgetting `alpha_I` mis-sets `alpha_G` by the whole public-investment share (on PHL about 5pp
-  of GDP). **[PHL]** Check `alpha_I` itself is sourced: OG-ZAF's `main` ships 0.0003, a
-  placeholder. **[ZAF]**
+  of GDP). [PHL] Check that `alpha_I` itself is sourced: OG-ZAF's `main` ships 0.0003, a
+  placeholder. [ZAF]
 - Omitting pensions sets `alpha_G` too high by the whole pension bill.
-  **[net-new: JPN]** UBI is usually zero; include it when it is not.
+  [net-new: JPN] UBI is usually zero; include it when it is not.
 - **The steady state will not tell you.** The closure forces `G` to the consistent level, so the
   steady state solves and reports a `G/Y` below your `alpha_G` input. That silent gap between input
-  and solved `G/Y` is the diagnostic; read it every solve. The transition has no such closure for
-  the first `tG1` periods, so it over-spends the full error.
-- Set the spending side from the identity; do not inherit it. With `r_gov < g` (common for emerging
-  markets after an honest `r_gov` re-anchor), `pb*` is negative: the country stabilizes debt while
-  running primary deficits, which usually matches its fiscal history.
-- **Frame the residual honestly.** After capturing all recurring revenue, the remaining gap between
-  model `G/Y` and observed government consumption should be about (actual primary balance − `pb*`),
-  the country's real consolidation distance, plus measurement differences. Name it in the docs as
-  what the stable-debt steady state embeds. (On PHL the embedded consolidation was ~2pp of GDP; case
-  notes: PHL.) **[ZAF; the alpha_I identity and consolidation-gap framing: PHL]**
+  and solved `G/Y` is the diagnostic; read it after every solve. The transition has no such closure
+  for the first `tG1` periods, so it over-spends the full error.
+- Set the spending side from the identity rather than inheriting it. With `r_gov < g` (common for
+  emerging markets after a realistic `r_gov` re-anchor), `pb*` is negative: the country stabilizes
+  debt while running primary deficits, which usually matches its fiscal history.
+- **Framing the residual.** After capturing all recurring revenue, the remaining gap between model
+  `G/Y` and observed government consumption should be about (actual primary balance − `pb*`), the
+  country's real consolidation distance, plus measurement differences. Name it in the docs as what
+  the stable-debt steady state embeds. (On PHL the embedded consolidation was ~2pp of GDP; case
+  notes: PHL.) [ZAF; the alpha_I identity and consolidation-gap framing: PHL]
 
 ## Why it bites the transition, not the steady state
 
 OG-Core's steady-state closure forces spending to the consistent level to hit the debt target, so
 the steady state always solves and looks fine. The transition holds `alpha_G + alpha_T` at their
 input values for the first `tG1` periods before the closure adjusts. If input spending exceeds the
-consistent level, debt balloons before the closure corrects it violently. With a debt-elastic
+consistent level, debt rises fast until the closure corrects it abruptly. With a debt-elastic
 premium on, the overshoot feeds the convex premium and the TPI runs away (debt → ∞). Symptom: the
 steady state solves, the baseline transition diverges or overshoots wildly. Damping and better
 solvers, Anderson included, do not fix it: it is a real fiscal runaway, not a convergence artifact.
@@ -75,14 +75,14 @@ stable until you fix the tax. Two ZAF examples that hid a ~3%-of-GDP spending > 
 
 Check every revenue line against actual collections by instrument (PIT, CIT, VAT + fuel, excise and
 customs; `tau_c` should capture all consumption and indirect taxes, not VAT alone; payroll, bequest,
-wealth), and grep the JSON for nonzero taxes the docs claim are off.
+wealth), and grep the JSON for nonzero taxes the docs say are off.
 
 ## Progressive taxes expose what flat taxes hide
 
 A flat rate raises revenue in proportion to income and is robust along the transition; a progressive
 schedule's revenue is far more sensitive. A spending > revenue gap a flat tax papered over will
-destabilize the transition once you switch to a progressive (GS/HSV) form. Do not blame the
-progressive form; check the fiscal balance first.
+destabilize the transition once you switch to a progressive (GS/HSV) form. When that happens, check
+the fiscal balance before blaming the progressive form.
 
 ## Reconcile against the country's own fiscal plan
 
@@ -103,33 +103,32 @@ spending drops below real spending. Diagnose both legs:
   actual real effective borrowing rate (nominal debt service ÷ gross debt, minus inflation).
 - `g`: a `g_y` from a stagnant realized window understates a country whose debt path assumes
   medium-term potential growth. The steady state is long-run, so a forward-looking `g_y` can be the
-  honest choice.
+  right choice.
 
-Bringing `r_gov − g` in line lets spending sit at a realistic level. **[net-new: ZAF]**
+Bringing `r_gov − g` in line lets spending sit at a realistic level. [net-new: ZAF]
 
 ## Validation priority: the near-term fiscal path first
 
-This reverses how most of the family works. The steady state is a destination decades out that
-nobody will live in. The near-term fiscal path is the more believable test, and it should be built
-and scored with the steady-state dashboard, not after it:
+This reverses the order most of the family uses. The steady state is a destination decades away.
+The near-term fiscal path is the more believable test; build and score it alongside the
+steady-state dashboard, not after it:
 
-- **It is checkable against what happened.** Debt, primary balance and revenue for recent years are
-  published, and the next few are projected by the IMF/OECD and the country's medium-term fiscal
-  framework. A model that reproduces them is credible in a way a stylised long run never is.
-- **It is the only test that can see the debt level.** In the steady state `D/Y` is
+- **Checkable.** Debt, primary balance and revenue for recent years are published, and the next few
+  are projected by the IMF/OECD and the country's medium-term fiscal framework. A model that
+  reproduces them earns credibility that a stylised long run cannot.
+- **Sees the debt level.** It is the only test that can. In the steady state `D/Y` is
   `debt_ratio_ss`, a policy anchor you chose, so scoring it there compares a choice against a
   measurement. `initial_debt_ratio` is a measurement, and only the transition starts from it. On
-  JPN a shipped `initial_debt_ratio` was 28pp of GDP below the actual ratio, in a file whose own
-  `r_gov` derivation used the correct ratio. The steady-state dashboard could not catch it; a
-  debt-path panel would have shown it in period one. (history: JPN) **[net-new: JPN]**
-- **It is where a fiscal miscalibration bites.** The steady-state closure protects the steady state;
-  the transition holds `alpha_G`/`alpha_T` at their inputs for `tG1` periods.
+  JPN a shipped `initial_debt_ratio` 28pp of GDP below the actual ratio passed the steady-state
+  dashboard; a debt-path panel shows such an error in period one. (history: JPN) [net-new: JPN]
+- **Where a fiscal miscalibration bites.** The steady-state closure protects the steady state; the
+  transition holds `alpha_G`/`alpha_T` at their inputs for `tG1` periods.
 
-Both dashboards are required; the path is the one next year's data can falsify.
+Build both dashboards; the path is the one next year's data can falsify.
 
 ## Transition-path validation against the fiscal program
 
-**[PHL, net-new; JPN, promoted to first rank]** Compare the baseline TPI paths of the fiscal
+[PHL, net-new; JPN, promoted to first rank] Compare the baseline TPI paths of the fiscal
 variables with the country's published program and international projections, over the first
 ~10–15 years (model from `TPI_vars.pkl`):
 
@@ -141,10 +140,11 @@ variables with the country's published program and international projections, ov
   derive it from one overlap year of OECD-vs-treasury data and hold it constant);
 - `I_g/Y` vs the program's infrastructure path.
 
-**If the primary balance matches the program but debt does not,** the gap is in interest and growth.
-Compare the model's near-term real `r_gov` and real growth with the program years' own: the model
-uses long-run values, and a low-inflation or slow-growth country pays more in real terms in the
-near term. Report the gap with that cause, or set a near-term rate path. **[THA]** (history: THA)
+**Primary balance on, debt off.** If the primary balance matches the program but debt does not, the
+gap is in interest and growth. Compare the model's near-term real `r_gov` and real growth with the
+program years' own: the model uses long-run values, and a low-inflation or slow-growth country pays
+more in real terms in the near term. Report the gap with that cause, or set a near-term rate path.
+[THA] (history: THA)
 
 Sources: the medium-term fiscal framework (deficit, revenue, disbursement and infrastructure paths),
 the budget document (interest projections, to convert deficit to primary), treasury
@@ -162,20 +162,21 @@ alpha_G(t) = SS_revenue_share − pb_program(t) − alpha_T − alpha_I(t)
 ```
 
 for each program year, capped at the identity-consistent value from the year the program's primary
-balance crosses the model's `pb*`. Do not chase extended-projection years tighter than `pb*`; that
-re-introduces the undershoot. The steady state is untouched (the closure ignores `alpha_G`); only
-the transition's stance changes. If the program's own consolidation converges to `pb*` near the end
-of the program window, the steady state is literally where the government's plan is headed: say so
-in the docs. Re-tune the glide after fixing the initial-wealth condition.
+balance crosses the model's `pb*`. Stop at `pb*` rather than following extended-projection years
+that go tighter; those re-introduce the undershoot. The steady state is untouched (the closure
+ignores `alpha_G`); only the transition's stance changes. If the program's own consolidation
+converges to `pb*` near the end of the program window, the steady state is where the government's
+plan is headed: say so in the docs. Re-tune the glide after fixing the initial-wealth condition.
 
 **When pensions (or any outlay) move a lot over the transition, the identity value is a path, not a
 number.** `alpha_G` is held at its input for the first `tG1` periods, but pension outlays in the
 transition start at today's level and grow toward the steady state's. Holding `alpha_G` at the
 steady-state identity value then runs a surplus for years and pays debt down far below target
 before the closure starts. This bites in an ageing country with a maturing pension system. On KOR,
-pensions roughly doubled as a share of GDP over the transition, and the flat value ran primary
-surpluses of 1–1.7% of GDP a year for the first five years and left debt about 16pp of GDP below plan after a decade (case
-notes: KOR). Compute the glide from the transition's own paths, one baseline run back:
+pensions roughly doubled as a share of GDP over the transition; the flat value ran primary
+surpluses of 1–1.7% of GDP a year for the first five years and left debt about 16pp of GDP below
+plan after a decade (case notes: KOR). Compute the glide from the transition's own paths, one
+baseline run back:
 
 ```
 alpha_G(t) = revenue(t)/Y − pb_target(t) − alpha_T − alpha_I(t) − pensions(t)/Y,   t < tG1
@@ -183,23 +184,22 @@ alpha_G(t) = revenue(t)/Y − pb_target(t) − alpha_T − alpha_I(t) − pensio
 
 and when the program is stated as a debt path, derive `pb_target(t)` from it:
 `pb(t) ≈ −(d(t+1) − d(t)) + (r_gov − g)·d(t)`, debt shares of GDP, which avoids bridging revenue
-and primary-balance concepts the model does not share with the data. **[KOR]**
+and primary-balance concepts the model does not share with the data. [KOR]
 
 ## A violent early-transition spike is a diagnosis
 
 A one-to-two-year consumption or consumption-tax-revenue pulse at the start of the baseline is the
 fingerprint of the imposed initial-wealth condition (macro-open-economy.md, "Initial household
-wealth"). Check the B_ss/B0 scale factor and fix it before labelling anything benign. (An earlier
-version of this skill advised documenting the spike as "transition dynamics"; that normalized a
-fixable artifact.) What legitimately remains after the fix: convergence from a non-stationary
-initial age distribution and capital stock, and, under a fiscal glide, early growth above its
-long-run value, which erodes the debt ratio before the arithmetic tightens. Never tune fiscal
-parameters against whatever residual is left.
+wealth"). Check the B_ss/B0 scale factor and fix it before labelling anything benign. (Documenting
+the spike as "transition dynamics" hides a fixable artifact.) What legitimately remains after the
+fix: convergence from a non-stationary initial age distribution and capital stock, and, under a
+fiscal glide, early growth above its long-run value, which erodes the debt ratio before the
+arithmetic tightens. Do not tune fiscal parameters against whatever residual is left.
 
 ## Deliverable: the path panel
 
 A small multi-panel figure (debt ratio, primary balance, revenue, public investment; model line vs
 actual dots vs program markers) committed to the docs images, with a caption naming every source,
 referenced from the macro chapter's validation section. Set axis limits that show the model's full
-path; clipping the divergence you are testing for defeats the exercise. For every path claim report
-min and max with their years (validation-dashboard.md, "Verify both tails").
+path; clipped axes hide the divergence you are testing for. For every path claim report min and
+max with their years (validation-dashboard.md, "Verify both tails").

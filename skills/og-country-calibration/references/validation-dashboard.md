@@ -24,28 +24,29 @@ Contents
 
 ## Completeness: an unscored moment cannot pull its parameter
 
-The general form of the `zeta_K` failure (method.md, finding every lever): it sat at a placeholder because `K_f/K` was not a
-row on the dashboard, and the loop optimised what it could see. Four rules, all checkable:
+This is the general form of the `zeta_K` failure (method.md, finding every lever): it sat at a
+placeholder because `K_f/K` was not a row on the dashboard, and the loop optimised what it could
+see. Four rules, all checkable:
 
-1. **Every tuned parameter's identifying moment must be on the dashboard.** Grep the tuned dials,
+1. **Put every tuned parameter's identifying moment on the dashboard.** Grep the tuned dials,
    grep the dashboard rows, and require a one-to-one match. A dial with no scored moment drifts
    silently.
 2. **A dial moved to close a residual is a free parameter, not a calibration.** `p_wealth` and
    `tau_bq` nominally tuned to property and inheritance tax, but in practice scaled to close total
-   revenue, absorb every other line's error **[net-new]**. Tune each dial to its own moment; total
-   revenue is the check that the parts add up, never the thing you steer.
+   revenue, absorb every other line's error [net-new]. Tune each dial to its own moment; total
+   revenue is the check that the parts add up, not the target you steer.
 3. **Score every component of the resource constraint,** not just the residual. Put `I/Y`, `I_g/Y`,
    `G/Y` and `NX/Y` next to `C/Y`.
 4. **Score the first-tier moments early in the transition too,** not only at the steady state.
    Report each at t=0–10 as well: a steady state can land close while the first years miss badly
-   (for example the first-year consumption share, from a mis-set initial wealth). **[JPN]**
+   (for example the first-year consumption share, from a mis-set initial wealth). [JPN]
 
 The moments most often tuned for but never scored, and the traps when adding rows, follow.
-**[net-new: JPN]**
+[net-new: JPN]
 
 ## The steady-state dashboard
 
-**[emerging: IDN, ETH; adopt it]** A table in `macro.md` comparing the solved steady state with
+[emerging: IDN, ETH; adopt it] A table in `macro.md` comparing the solved steady state with
 country data targets, each with a source column. Recurring moments: `D/Y`, `D_f/D`, `K_f/K`,
 `K_f/Y`, `C/Y`, `(I+I_g)/Y`, `K/Y`, `I_g/Y`, `TR/Y`, `NX/Y`, `RM/Y`, `r`, PIT/Y, CIT/Y, `T/Y`. The
 governing sentence: "most parameters are only weakly identified on their own, so the real test is
@@ -67,12 +68,12 @@ a fiscal diagnostic too: it sets the currency income at which tax functions are 
 | `NX/Y` | `zeta_K`, `zeta_D` | the trade balance, not the current account (below) |
 | property / wealth tax / Y | `p_wealth`, `h_wealth` | revenue statistics |
 | bequest tax / Y | `tau_bq` | revenue statistics |
-| `w·L/Y` (solved labour share) | validates `gamma` and `epsilon` | PWT `labsh`. A free check only when `epsilon != 1`; at `epsilon = 1` it equals `1 − gamma` by construction **[JPN]** |
+| `w·L/Y` (solved labour share) | validates `gamma` and `epsilon` | PWT `labsh`. A free check only when `epsilon != 1`; at `epsilon = 1` it equals `1 − gamma` by construction [JPN] |
 | wealth Gini / top shares | the `e` matrix, `beta` | household wealth surveys. Distinct from the income Gini the tilt targets, and a much sharper test of an OG model |
 | `g_n_ss` | the demographic window | the UN projection's own implied CAGR |
 | wealth by age (mean net worth of 60+ and of under-40s, relative to 50-59) | `chi_b` (old end); the shape of initial wealth | household wealth surveys by age of head. The steady-state profile is what initial wealth is built from |
 
-**[net-new: JPN]** Wealth by age **[KOR]**: score the solved wealth-by-age profile against the
+[net-new: JPN] Wealth by age [KOR]: score the solved wealth-by-age profile against the
 survey ratios. `chi_b` moves the old end, but it also moves `K/Y` and bequest revenue, so re-tune
 `beta` and `tau_bq` with it. On KOR, the `chi_b` cut that moved the 60+ ratio from 1.86 to 1.26
 also moved `K/Y` from 4.31 to 3.47. Where the young end falls short because young households hold
@@ -81,7 +82,7 @@ KOR)
 
 ## Two traps when adding rows
 
-- **Check whether the SS key is an aggregate or a per-household array.** `wealth_tax` and
+- **Aggregate or per-household array.** Check which one the SS key is. `wealth_tax` and
   `bequest_tax` come back shaped `(S, J)`. Summing them gives a number with no units (OG-JPN got
   16.7 "of GDP"), which looks so wrong it gets discarded rather than debugged. Weight by `omega_SS`
   and `lambdas`, and sanity-check every new row against a plausible magnitude before believing a gap.
@@ -89,27 +90,28 @@ KOR)
   large net international investment position, most of the current account is primary income, not
   trade, so a model `NX/Y` near zero can be right while the current account shows a large surplus,
   and scoring `NX/Y` against the current account would be a concept error. On JPN the current
-  account ran about 3.8 points of GDP above the trade balance. **[JPN]**
+  account ran about 3.8 points of GDP above the trade balance. [JPN]
 - **A steady state cannot run a trade surplus and own net foreign assets at once.** In a steady
   state a net creditor (`K_f < 0`) spends its foreign income, so `NX` is negative; a country
   observed with both a trade surplus and a positive NIIP is still accumulating, which only the
   transition can show. Score `NX/Y` in the early transition, and in the steady state compare only its
   sign with the sign of `K_f`. Then decompose the consumption gap (below): most of it will be this
-  `NX` term. On KOR the `NX` term accounted for 8.5 points of an 11-point `C/Y` gap. **[KOR]**
+  `NX` term. On KOR the `NX` term accounted for 8.5 points of an 11-point `C/Y` gap. [KOR]
 - **Use the model's own `K` concept.** `K/Y` targets private capital: subtract public capital from
-  the PWT ratio (macro-open-economy.md, `delta_annual`). **[KOR]**
+  the PWT ratio (macro-open-economy.md, `delta_annual`). [KOR]
 
 ## Revenue by instrument
 
-Do not just check total tax/GDP. Check PIT, CIT, VAT and payroll each against collections.
-Offsetting errors can make the total look right while the composition is wrong.
+Check PIT, CIT, VAT and payroll each against collections, not only total tax/GDP. Offsetting
+errors can make the total look right while the composition is wrong.
 
 ## Sourcing hierarchy for the data side
 
-Actively search for the most authoritative source that exists. Never fill the dashboard from memory,
-and never treat any source list, including this one, as closed. A wrong data anchor silently fails
-an otherwise correct calibration, so treat the data column as carefully as the model column. For each
-moment, search in descending order of authority and stop at the highest rung that has the number:
+Search for the most authoritative source that exists. Fill the dashboard from sources you have
+found rather than from memory, and treat every source list, this one included, as open. A wrong
+data anchor silently fails an otherwise correct calibration, so treat the data column as carefully
+as the model column. For each moment, search in descending order of authority and stop at the
+highest rung that has the number:
 
 1. **The official national institution that owns the number**, the agency that administers it:
    revenue service for collections; treasury or finance ministry (budget review, fiscal framework,
@@ -122,7 +124,7 @@ moment, search in descending order of authority and stop at the highest rung tha
    GFS, WEO), World Bank, UN, ILO, PWT. Often the same national numbers, re-published with a lag on
    standardized definitions (useful for cross-checks, weaker on vintage). For the whole revenue side,
    the **OECD Revenue Statistics country note** (Asia-Pacific / LAC / Africa editions, free 4-page
-   PDFs) is the single best table in the family's experience **[PHL]**: every instrument as % of GDP
+   PDFs) is the single best table in the family's experience [PHL]: every instrument as % of GDP
    on one accrual basis and one GDP vintage (PIT, CIT, SSC, VAT, excises, customs, an "other taxes"
    residual). Pair it with the treasury's cash-operations report for non-tax revenue, interest
    payments and the actual primary balance.
@@ -159,11 +161,12 @@ consumption tax near 8% of GDP, every fiscal ratio sat about 8% off (history: PH
 
 ## Read the model side from the solved pickles
 
-Use `ogcore.utils.safe_read_pickle` on `SS_vars.pkl`; do not eyeball it. Fiscal ratios are revenue
-lines over `Y` (or over the basis chosen above): PIT `iit_revenue/Y`, CIT `business_tax_revenue/Y`, indirect `cons_tax_revenue/Y`,
-total `total_tax_revenue/Y`. `D/Y`, `D_f/D`, `K/Y` from the aggregates over `Y`; `r`, `r_gov`,
-`factor` directly; consumption share as `p_tilde·C/Y` (never raw `C/Y` when `I > 1`). Transition
-paths come from `TPI_vars.pkl`, parameters from `model_params.pkl`.
+Use `ogcore.utils.safe_read_pickle` on `SS_vars.pkl` rather than eyeballing it. Fiscal ratios are
+revenue lines over `Y` (or over the basis chosen above): PIT `iit_revenue/Y`, CIT
+`business_tax_revenue/Y`, indirect `cons_tax_revenue/Y`, total `total_tax_revenue/Y`. `D/Y`,
+`D_f/D`, `K/Y` from the aggregates over `Y`; `r`, `r_gov`, `factor` directly; consumption share as
+`p_tilde·C/Y` (not raw `C/Y` when `I > 1`). Transition paths come from `TPI_vars.pkl`, parameters
+from `model_params.pkl`.
 
 ## Structural validation (multi-industry)
 
@@ -172,7 +175,7 @@ og-multi-industry-calibration skill.
 
 ## Consumption is a residual
 
-**[net-new: JPN]** There is no consumption parameter: `C = Y − I − I_g − G − NX`, so a consumption
+[net-new: JPN] There is no consumption parameter: `C = Y − I − I_g − G − NX`, so a consumption
 gap is identically the sum of the other gaps. Decompose it; each piece has its own cause. Related
 trap: `I_total` in the SS output is private investment, while national-accounts GFCF is private plus
 public. Compare `I_total + I_g`, or the gap is overstated by all of public investment.
@@ -180,25 +183,25 @@ public. Compare `I_total + I_g`, or the gap is overstated by all of public inves
 **Score consumption at producer prices.** The model's `C` excludes the consumption tax, while
 national accounts report household consumption at purchaser prices. Compare like with like, or
 the residual moves into `NX`: on THA a tax-inclusive comparison showed net exports at −11% of GDP
-against about 0% on a consistent basis. **[THA]** (history: THA)
+against about 0% on a consistent basis. [THA] (history: THA)
 
 ## g_n is a path; the steady state uses its terminal value
 
-**[net-new: JPN]** For a country mid-demographic-transition these differ a lot (JPN: −0.33% today,
+[net-new: JPN] For a country mid-demographic-transition these differ a lot (JPN: −0.33% today,
 −0.46% terminal), so a steady-state moment that depends on `g` (investment above all) will look wrong
-against today's data even when the calibration is right. The honest comparison for "does this look
+against today's data even when the calibration is right. The right comparison for "does this look
 like the country now" is the early transition. Say which one each dashboard row scores.
 
 ## Pair the debt concept with the interest concept
 
-**[net-new: JPN]** Where a government holds large financial assets, net and gross debt differ
+[net-new: JPN] Where a government holds large financial assets, net and gross debt differ
 enormously. Net debt pairs with net interest; gross debt with the effective rate on gross. The test
 is whether `r_gov × D` reproduces the actual interest bill. Either pairing is defensible; mixing them
 is not.
 
 ## Audit each instrument's base, not just its yield
 
-**[net-new: JPN]** A right total can sit on a wrong rate applied to a wrong base, and only the base
+[net-new: JPN] A right total can sit on a wrong rate applied to a wrong base, and only the base
 test separates them. A rate tuned in-model to a revenue target on a base the model gets wrong gives
 the right level and the wrong reform response. So size reforms by the revenue they must raise, not by
 the rate change; that cancels the base error, because the same base appears in numerator and
@@ -208,9 +211,10 @@ denominator.
 
 The model's endogenous `K/Y` runs high against the PWT across the family (on ZAF, model 4.5 against
 PWT 3.7), a structural feature of the saving and return block, not a country calibration error.
-Report it with a written reason in the ballpark tier; do not distort a country parameter to chase it.
-But before calling any gap a trait, run the four lever rules in method.md: one apparent "family
-trait" `K/Y` miss was an untuned `zeta_K` **[JPN]**. (history: PHL)
+Report it with a written reason in the ballpark tier, and leave country parameters where the data
+put them rather than distorting one to chase it. Before calling any gap a trait, run the four lever
+rules in method.md: one apparent "family trait" `K/Y` miss was an untuned `zeta_K` [JPN].
+(history: PHL)
 
 ## Note derived quantities honestly
 
@@ -219,19 +223,19 @@ sector), not a modelled export or import.
 
 ## Verify both tails of every path
 
-**[PHL, a caught error]** A min-only check on the debt path ("trough on target") passed while the
+[PHL, a caught error] A min-only check on the debt path ("trough on target") passed while the
 path climbed 14 points of GDP above target; the check tested only the direction the previous failure
 pointed. For every path claim, report min and max with their years, and look at the plotted line
 before writing the sentence about it. (history: PHL)
 
 ## Fast value-pinning test
 
-**[emerging: ETH; adopt it]** A `test_default_parameters.py` that loads the shipped JSON and pins
-specific calibrated values with inline source citations, explicitly not asserting anything that needs
-a solve. Keep it separate from the slow example smoke test. Pin documented decisions too (a gradient
+[emerging: ETH; adopt it] A `test_default_parameters.py` that loads the shipped JSON and pins
+specific calibrated values with inline source citations, and asserts nothing that needs a solve.
+Keep it separate from the slow example smoke test. Pin documented decisions too (a gradient
 deliberately left unset, a GS sub-threshold ETR bound, no `NEEDS TUNING` markers).
 
 ## Prevent doc/JSON drift with glue
 
-**[emerging: ETH; adopt it]** A hidden code cell in the docs loads the packaged JSON and `glue()`s the
+[emerging: ETH; adopt it] A hidden code cell in the docs loads the packaged JSON and `glue()`s the
 numbers (`{glue:text}`), so prose cannot drift from the shipped values.

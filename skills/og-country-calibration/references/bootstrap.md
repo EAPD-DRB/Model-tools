@@ -3,17 +3,17 @@
 ## De-siblinging a bootstrap copy
 
 A copied repo carries its sibling's country in the code as well as the JSON, and the code copies
-fail silently. **[KOR]** Before any solve:
+fail silently. [KOR] Before any solve:
 
 - **Search, do not trust the rename.** After renaming the package, grep code, tests and docs for the
   sibling's ISO code, UN code, country name and demonym, and currency symbol; list every hit in the
   work log and resolve each. Known carriers: the UN `country_id`; ISO codes defaulted inside
   live-download functions (`macro_params`); survey-derived constants (a Gini default in
   `get_e_interp`, remittance-allocation shares in the demographics tool); currency labels; SAM/IO
-  data; sibling-specific tests, which either fail or, worse, pass on the sibling's numbers.
+  data; sibling-specific tests, which either fail or, the worse case, pass on the sibling's numbers.
 - **Make the new example offline.** If the sibling's example calls `Calibration(p,
   update_from_api=True)` when online, the copy downloads data with the sibling's codes and writes it
-  over the new country's values. The new country's example reads the packaged JSON only.
+  over the new country's values. Have the new country's example read the packaged JSON only.
 - **Audit every inherited JSON value** (mental model 1b): diff the JSON against the sibling's and
   list each key as sourced, tuned to a named moment, or defaulted with a reason. Include solver
   settings (`TPI_outer_method`, `nu`, `initial_guess_*`): a sibling can predate a run rule (KOR
@@ -35,4 +35,4 @@ fail silently. **[KOR]** Before any solve:
 
 - **Replace the sibling's example reform** with one that means something for the new country (for
   example, a reform the new country has enacted, not the sibling's). A reform that sets a rate to
-  the new country's current value changes nothing. **[KOR, THA]** (history: KOR, THA)
+  the new country's current value changes nothing. [KOR, THA] (history: KOR, THA)

@@ -18,9 +18,9 @@ Contents
 Apply it to PIT, `tau_c` (VAT and all other indirect taxes), CIT (through
 `adjustment_factor_for_cit_receipts` × `c_corp_share_of_assets`), and `tau_payroll` (statutory rate
 × covered share of the wage bill, not headcount; or directly, SSC collections ÷ the model's labour
-share of income). Apply it consistently. OG-BRA is the cautionary tale: it discounts PIT for
-informality but leaves payroll at the full statutory rate. The anchor for every instrument is the
-OECD Revenue Statistics country note (validation-dashboard.md, sourcing hierarchy).
+share of income). Apply it consistently: OG-BRA, for example, discounts PIT for informality but
+leaves payroll at the full statutory rate. The anchor for every instrument is the OECD Revenue
+Statistics country note (validation-dashboard.md, sourcing hierarchy).
 
 ## Payroll is additive on top of the ETR function
 
@@ -30,7 +30,7 @@ line shows zero, so a statutory payroll rate silently collects on the whole wage
 the income-tax function. PHL: `tau_payroll = 0.14` was collecting a hidden 5.8% of GDP on top of a
 flat 20% ETR. Audit the combined household take, decompose it yourself
 (`true payroll = tau_payroll × wL/Y`), and set `frac_tax_payroll = SSC/(SSC+PIT)` so the reported
-split matches the data. **[PHL]**
+split matches the data. [PHL]
 
 Recent ogcore lets `tau_payroll` vary by lifetime-income group as well as time (a `T × J` array
 entered in nested form, `[[0.124]]`; check the parameter's `number_dims` in your resolved
@@ -39,12 +39,12 @@ flat-list value from an older JSON will not load once the repo moves to that ogc
 
 ## Standing check: the bequest tax
 
-The bequest tax is a recurring statutory-for-effective error in this family: ZAF `tau_bq = 0.2` collecting 3.9% of GDP; PHL `tau_bq = 0.06` collecting 1.19% vs actual
-estate and donor collections of ~0.07%.
-Deductions, exemptions and non-filing put effective estate taxation one to two orders of magnitude
-below statutory nearly everywhere. Always compute `tau_bq` from collections ÷ model bequest flows,
-and grep every port, new or old, for this parameter: a value equal to a statutory rate, or copied
-from a sibling, is the error. **[ZAF, PHL]** (history: ZAF, PHL, BRA)
+The bequest tax is a recurring statutory-for-effective error in this family: ZAF `tau_bq = 0.2`
+collecting 3.9% of GDP; PHL `tau_bq = 0.06` collecting 1.19% vs actual estate and donor collections
+of ~0.07%. Deductions, exemptions and non-filing put effective estate taxation one to two orders of
+magnitude below statutory nearly everywhere. Compute `tau_bq` from collections ÷ model bequest
+flows, and grep every port, new or old, for this parameter: a value equal to a statutory rate, or
+copied from a sibling, is the error. [ZAF, PHL] (history: ZAF, PHL, BRA)
 
 ## PIT functional form: three paths
 
@@ -52,8 +52,8 @@ In increasing fidelity:
 
 1. **Flat `linear`** ("given limited data"): one ETR and one MTR. Cheapest, no progressivity.
    PHL/IDN/BRA pick the number; only ETH derives it (revenue identity). Fine as a first pass.
-2. **Progressive parametric form fit to the statutory schedule** **[ZAF; the best data-poor
-   option]**: real progressivity with no microdata. You need only the statutory PIT schedule and a
+2. **Progressive parametric form fit to the statutory schedule** [ZAF; the best data-poor
+   option]: real progressivity with no microdata. You need only the statutory PIT schedule and a
    collections target. Prefer it over flat-linear whenever a schedule exists (almost always).
    **Default to GS (Gouveia-Strauss), not HSV.** GS floors the ETR at exactly zero, which is faithful
    wherever a threshold and rebates exempt the bottom, and is numerically robust. HSV's ETR goes
@@ -73,18 +73,18 @@ the shape, the collections target pins the level. Both use the same parameters f
 total income. ETR = 0 at the bottom and tends to `φ0` at the top.
 
 - Set `φ0` = the statutory top marginal rate (an anchor, not a fit). If tuning `φ2` cannot reach
-  collections, a small, documented lift of `φ0` above the statutory rate is the fallback **[ZAF]**;
+  collections, a small, documented lift of `φ0` above the statutory rate is the fallback [ZAF];
   say so in the docs, because the top rate then no longer equals the law's.
 - Fit `φ1` (curvature) to the schedule's shape.
 - Tune `φ2` (scale) in-model to the PIT/GDP collections target. The effective-rate and informality
   wedge enters here, pulling the level down to actual collections. (history: ZAF, PHL)
-- Tuning mechanics **[PHL]**: revenue's response to `φ2` is concave. Top incomes sit where
+- Tuning mechanics [PHL]: revenue's response to `φ2` is concave. Top incomes sit where
   ETR ≈ φ0 regardless of φ2, so halving φ2 cuts revenue by less than half; expect two or three
   in-model iterations, not one proportional step. Lowering φ2 for informality acts like shifting the
   schedule toward higher incomes, the right shape for "most earners effectively untaxed".
 - GS smoothing makes the sub-threshold ETR near zero, not zero (PHL: ~1.2% at 80% of the exempt
-  threshold). Accept it; it is the price of never going negative. Pin it in a test as a bound, not
-  an equality.
+  threshold). Accept it as the cost of an ETR that never goes negative. Pin it in a test as a bound,
+  not an equality.
 - Incomes are evaluated in currency units via `factor` (`mean_income_data`), so φ2 has units
   `income^(−φ1)`.
 
@@ -98,20 +98,20 @@ the budget has no slack, use GS.
 
 Choose the rung the data supports:
 
-1. **Narrative only** **[BRA]**: name informality as the reason effective ≪ statutory, pick a
+1. **Narrative only** [BRA]: name informality as the reason effective ≪ statutory, pick a
    stylized flat rate, flag it as provisional. No mechanism.
-2. **Structural two-sector demo** **[IDN, "Option B"]**: OG-Core's multi-industry `M`/`I`
+2. **Structural two-sector demo** [IDN, "Option B"]: OG-Core's multi-industry `M`/`I`
    machinery with an informal industry (`cit_rate = 0`, `tau_c = 0`, lower capital intensity, its own
    `alpha_c` share). Illustrative, not revenue-anchored.
-3. **Household graded non-compliance** **[ETH, "Option A", fullest]**:
+3. **Household graded non-compliance** [ETH, "Option A", fullest]:
    `labor_income_tax_noncompliance_rate[t,j]`, `capital_income_tax_noncompliance_rate[t,j]` and
    `income_tax_filer[t,j]` grade compliance by lifetime-income group (a proxy for formality: the
    informal employment share sets how many bottom groups get noncompliance = 1). Bring the compliant
    groups' tax to collections in one of two ways: solve their ETR from a revenue identity (MTR at
    the statutory top rate), or scale the statutory GS schedule by a compliance factor tuned to
-   collections. Informality is
-   non-remittance, not non-filing (filer stays 1). If you later add an informal industry (Option B),
-   move the firm-side informality out of the CIT factor to avoid double counting.
+   collections. Informality is non-remittance, not non-filing (filer stays 1). If you later add an
+   informal industry (Option B), move the firm-side informality out of the CIT factor to avoid
+   double counting.
 
 ## OG-Core structural facts
 
@@ -136,7 +136,7 @@ From the ETH informality work; check whether your ogcore still has them.
 
 ## Capturing non-tax and residual-tax revenue
 
-**[PHL, net-new; replicate everywhere]** OG-Core has no "other revenue" parameter, but leaving
+[PHL, net-new; replicate everywhere] OG-Core has no "other revenue" parameter, but leaving
 recurring non-tax revenue and residual taxes out (often ~4% of GDP) understates government resources
 and, through the budget identity, forces model spending too low. Map each stream to the instrument
 that prices the same economic margin, then tune in-model to collections:
@@ -147,7 +147,7 @@ that prices the same economic margin, then tune in-model to collections:
   wealth, MTR → `p_wealth`. A recurrent property tax is a flat tax on a form of wealth, so the
   distortion lands on the right margin (saving). (history: PHL)
 - **Government capital income** (SOE and central-bank dividends, state gaming shares, guarantee
-  fees, treasury interest income) and **unallocable income taxes** (final withholding on deposits
+  fees, treasury interest income) and unallocable income taxes (final withholding on deposits
   etc.) → the CIT adjustment factor; both are government takes from capital income.
 - **Fees and charges** (user payments for services) → `tau_c`.
 
@@ -159,7 +159,7 @@ withholding, real revenue that belongs on the capital side.
 
 ## Statutory-for-effective errors bias reforms
 
-**[PHL]** A CIT cut's simulated effect doubled once the adjustment factor carried true collections:
+[PHL] A CIT cut's simulated effect doubled once the adjustment factor carried true collections:
 the statutory rate change maps to a larger effective-rate change on a properly scaled base. A
 calibration that misstates an instrument's effective rate mis-sizes every reform that runs through
 it. Size reforms by the revenue they must raise where the base is uncertain (validation-dashboard.md,
