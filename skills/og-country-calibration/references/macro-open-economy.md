@@ -366,8 +366,9 @@ the steady-state `K/Y` can be wrong for today: the same patience implies more we
 once the population has aged, so a steady state tuned to today's ratio makes households too
 impatient, and starting from measured wealth they consume a windfall in the first years. Check the
 first transition year: `C/Y` and `(I+I_g)/Y` against the data. If they miss, tune `beta` to the
-first-year investment share instead, and report the steady-state `K/Y` as an outcome. [PHL]
-(history: PHL)
+first-year investment share instead, and report the steady-state `K/Y` as an outcome; if the state
+or foreign lenders finance a large share of that investment, the next paragraph applies instead.
+[PHL] (history: PHL)
 
 **When the state finances much of investment.** Applies when state enterprises, state banks or
 foreign lenders finance a large share of measured investment. Tuning patience to first-year

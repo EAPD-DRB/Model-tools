@@ -27,7 +27,7 @@ fail silently. [KOR] Before any solve:
   | `start_year` | the latest year with observed data |
   | demographic window | the archive's last year minus one; check `g_n_ss` against the UN growth |
   | every tax rate, `tau_bq` included | effective = collections / the model's base, by instrument |
-  | `alpha_G`, `alpha_T`, `alpha_I`, pensions | the budget identity at `debt_ratio_ss` (step 7) |
+  | `alpha_G`, `alpha_T`, `alpha_I`, pensions | the budget identity at `debt_ratio_ss` (fiscal-consistency.md) |
   | `K/Y` target, `delta` | private capital: PWT less public capital; CFC less government's |
   | `zeta_K`, world rate, `r_gov_shift` | IIP gross `K_f/K`; a sourced world rate; the treasury's effective rate |
   | `nu`, `TPI_outer_method`, `initial_guess_*` | the run rules; seeds from the new country's own first solve |
