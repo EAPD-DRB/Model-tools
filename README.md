@@ -33,7 +33,6 @@ Each folder has its own `README.md` with a bit more detail.
 | [og-run](skills/og-run/SKILL.md) | skill | Install and run an OG-Core model the way its users do: install, check the environment, run the example, monitor, collect output with provenance, test a code change. |
 | [og-solver-diagnosis](skills/og-solver-diagnosis/SKILL.md) | skill | Find the root cause of an OG-Core solve that fails, stalls, diverges or looks wrong, before changing any solver setting. |
 | [og-clews-linked-run](skills/og-clews-linked-run/SKILL.md) | skill | Run coupled OG-CLEWS analyses through ogclews-link and report the economy-wide results. |
-| [og-repo-fleet-sync](skills/og-repo-fleet-sync/SKILL.md) | skill | Apply one change across the OG country repos and track which repos have it. |
 | [clews-model-review](skills/clews-model-review/SKILL.md) | skill | Review a MUIO/OSeMOSYS CLEWs model for structure and data consistency against the NamibiaCLEWs benchmark: referential integrity, orphaned IDs, dangling/stranded technologies, unit discipline, sector coverage, and solve status — via a bundled `audit.py` checker plus a rubric. |
 | [add-environmental-accounting](skills/add-environmental-accounting/SKILL.md) | skill | Add a JSON-first environmental accounting layer to any MUIO/OSeMOSYS CLEWS model: inventory physical flows, create separate water and land terminals, preserve existing services, regenerate every scenario through MUIO, and quantify regression differences. |
 

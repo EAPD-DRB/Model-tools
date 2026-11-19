@@ -145,28 +145,10 @@ the repo's open PRs. A fix that already landed, or is waiting in a PR, changes t
 Report the diagnosis with the evidence chain: log lines → class → hypothesis → probe result →
 fix → verification run. Separate what you verified from what you assume.
 
-## Validating an OG-Core change against the country models
+## Validating an OG-Core change
 
-A common request: "check my OG-Core change doesn't break the countries". The control/treatment
-pattern above applies, with four checks first:
-
-1. **Can each country load on both sides?** Run og-run's check with `--params-json` for each
-   country against the control ogcore and the treatment ogcore. A country whose packaged
-   parameters do not load on one side cannot be compared; report it rather than patching it.
-2. **Which control?** The merge base of the change, not today's master, unless the user asks
-   for master: otherwise unrelated upstream changes land in the comparison.
-3. **Same inputs on both sides.** Run offline (`update_from_api=False`) so a live data refresh
-   cannot differ between the two.
-4. **Does the run reach the changed code?** A baseline may never touch it; add the reform that
-   does.
-
-Each variant gets its own install from OG-Core's official installer (`--repo-url <URL> --branch
-<branch>` for the change, a plain install for the control), in its own folder; never switch a
-branch under a running battery. Test suites for each variant run inside that same install, with
-the repo's own pytest command, never in a development worktree. How to install an unreleased ogcore without the environment silently using another
-build: `references/solve-procedures.md`, "Running against an unreleased ogcore". Report per country: the expected value, master, and the change, with the
-resource-constraint error at t=0 and beyond. Present the battery as one list of runs with the time
-it will take.
+Checking that an OG-Core change keeps every country solving is og-run's "Testing a code change";
+this skill takes over when one of those runs fails or differs.
 
 ## What costs time
 

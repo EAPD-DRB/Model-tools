@@ -128,11 +128,29 @@ steady state by continuation, and baseline plus reform take tens of minutes.
 
 ## Testing a code change
 
-Commit the change on a branch, install that branch into its own folder, and run the example there;
-install the base (`master`, or the commit the change starts from) the same way and compare the saved
-outputs. Tests run in the same installed copies with the repo's own command (CI's
-`-m "not local"`, or `-m local` for the slow ones). Run one solve at a time when you compare
-timings.
+For a change to a country repo or to OG-Core itself: commit it on a branch, install that branch into
+its own folder, and run the example there; install the base the same way and compare the saved
+outputs. Tests run in the same installed copies with the repo's own command (CI's `-m "not local"`,
+or `-m local` for the slow ones). Run one solve at a time when you compare timings.
+
+To test an unreleased OG-Core under a country model, pin it on a branch of the country repo
+(`[tool.uv.sources]` with the commit, `uv lock`, commit) and install that branch; installing it into
+an existing copy runs something nobody else can reproduce (og-solver-diagnosis, "Running against an
+unreleased ogcore").
+
+To check that an OG-Core change keeps the country models working:
+
+1. **Can each country load on both sides?** Check each country's packaged parameters against the
+   base and the changed ogcore (`--params-json` above). A country that does not load on one side
+   cannot be compared; report it.
+2. **Which base?** The commit the change starts from, not today's master, so that unrelated upstream
+   changes stay out of the comparison.
+3. **Same inputs on both sides:** run offline (`update_from_api=False`).
+4. **Does the run reach the changed code?** A baseline may never touch it; add a reform that does.
+
+Report per country the expected value, the base and the change, with the resource-constraint
+error in the first period and after. A run that fails or differs goes to og-solver-diagnosis.
+Writing the PR follows the repo's own contribution conventions.
 
 ## Collecting the results
 

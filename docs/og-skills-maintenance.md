@@ -1,15 +1,16 @@
 # Maintaining the OG skills
 
 How the OG skills (og-country-calibration, og-multi-industry-calibration, og-run,
-og-solver-diagnosis, og-scenario-report, og-repo-fleet-sync) are written, tested and extended.
+og-solver-diagnosis, og-scenario-report) are written and extended.
 
 ## How the skills are divided
 
 By the job a person brings, not by the steps inside it: calibrating or updating a country model
 (og-country-calibration, with og-multi-industry-calibration for the overlay), just running a model
 (og-run), a solve that fails or looks wrong (og-solver-diagnosis), designing scenarios and
-presenting results (og-scenario-report), and carrying a change across the country repos
-(og-repo-fleet-sync). Guidance every job needs (how to run the model) lives in one shared file,
+presenting results (og-scenario-report). Tools for maintaining the EAPD-DRB repos themselves
+(carrying a change across the country repos, PR conventions) are kept privately by their
+maintainers and are not part of this set. Guidance every job needs (how to run the model) lives in one shared file,
 copied into each skill that needs it and stated briefly on its front page, so a job never depends on
 a second skill being loaded. The skills are written for anyone doing OG work with an AI assistant:
 approval habits and writing style belong to each user's or project's own rules, not to the skills.
@@ -67,14 +68,16 @@ Not in the skill:
 2. Ask: does an existing lesson in the skill already cover it? If yes, add the history link to that
    lesson and stop.
 3. If it is a new method, add a lesson in the shape above, in the reference file for its block.
-4. Run the evaluations (`evals/og-skills/`) before and after. Keep the change only if it does not
-   make any scenario worse.
+4. Re-read the skill as someone new to the country would: does the lesson sit where that person
+   will look, and does it say what to do in plain words?
 
-## Evaluations
+## Learning from use
 
-`evals/og-skills/` holds scenarios that a fresh agent answers with only the skill. Each has a
-rubric of the points a correct answer contains. Run each scenario without the change and with
-it; a change ships when it improves a scenario or keeps them all equal.
+The skills improve through real calibrations: each country, update or multi-industry build is the
+test. When a session shows the skill missing something, misleading, or being worked around, record
+it as a history entry and adjust the skill. `evals/og-skills/` keeps written scenarios with rubrics
+from earlier rounds; they check what an agent knows, not what it does under pressure, so treat
+them as a quick check of knowledge, not as the gate for a change.
 
 ## Mirrors
 
