@@ -132,8 +132,8 @@ Read the one for the block you are working on.
 | [og-run-rules.md](references/og-run-rules.md) | How to run the model |
 | [lessons/INDEX.md](references/lessons/INDEX.md) | Your country has a feature another country has dealt with: the lessons by situation, with each country's case |
 
-Related skills: og-run, og-run-preflight, og-solver-diagnosis, og-multi-industry-calibration,
-calibration-provenance (where an existing value came from), og-scenario-report (presenting runs).
+Related skills: og-run, og-solver-diagnosis, og-multi-industry-calibration, og-scenario-report
+(presenting runs). Where an existing value came from: [provenance.md](references/provenance.md).
 
 ## Lessons and tags
 

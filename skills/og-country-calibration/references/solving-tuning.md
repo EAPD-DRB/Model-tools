@@ -30,8 +30,8 @@ Contents
   `r_gov_floor`, the `initial_guess_b_SS` family, `alpha_D_ext`) may be missing from an older
   ogcore: check with `hasattr(Specifications(), ...)` in that environment, and treat an ogcore bump
   as its own change. A bump can rename a parameter or change its shape, so load the packaged JSON
-  against the new version (og-run-preflight `--params-json`) and fix what it rejects first.
-- **Preflight** (og-run-preflight) prints the branch and commit of every repo involved and the
+  against the new version (og-run's check, `--params-json`) and fix what it rejects first.
+- **Check before a run** (og-run) prints the branch and commit of every repo involved and the
   interpreter, and checks that imports resolve inside the intended copy. Editable installs and
   shadowing on `sys.path` silently run another checkout's code; this has caught real
   contamination.

@@ -1,7 +1,7 @@
 # OG lessons: the history behind the OG skills
 
-The OG skills (og-country-calibration, og-multi-industry-calibration, og-solver-diagnosis, og-run,
-og-run-preflight) state methods that apply to any country. This folder holds what happened: one
+The OG skills (og-country-calibration, og-multi-industry-calibration, og-solver-diagnosis, og-run)
+state methods that apply to any country. This folder holds what happened: one
 file per country, one entry per lesson, with the case's numbers and the evidence (PRs, issues,
 commits, logs). A skill's country tag (`[KOR]`) or `(history: KOR)` marker points to the matching
 file; entries name the skill file and section they back.
@@ -22,7 +22,8 @@ og-country-calibration skill (`references/lessons/`) by `scripts/sync_shared.py`
 - [THA](THA.md): Thailand
 - [ZAF](ZAF.md): South Africa
 
-Entries are grouped by the skill file a lesson sat in when written. Since 2026-10-19 the
+Entries are grouped by the skill file a lesson sat in when written (og-run-preflight has since been
+folded into og-run, and calibration-provenance into og-country-calibration). Since 2026-10-19 the
 og-country-calibration sections "Step zero", "Finding every lever on a moment" and "Dashboard
 completeness" are in `references/method.md`, and "De-siblinging a bootstrap copy" is in
 `references/bootstrap.md`; their entries are still filed under `SKILL.md`.

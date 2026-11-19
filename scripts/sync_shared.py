@@ -46,16 +46,12 @@ VENDORED = {
         "og-country-calibration",
         "og-multi-industry-calibration",
         "og-run",
-        "og-run-preflight",
         "og-solver-diagnosis",
     ),
+    # MUIOGO's two installations ("worlds") matter only inside MUIOGO; the OG
+    # skills are for standalone repos and point to muiogo-workspace instead.
     "world-discipline.md": (
-        "og-run",
-        "og-run-preflight",
-        "og-solver-diagnosis",
-        "calibration-provenance",
         "og-clews-linked-run",
-        "og-repo-fleet-sync",
     ),
     "provenance/SCHEMA.md": (
         "build-clews-model",

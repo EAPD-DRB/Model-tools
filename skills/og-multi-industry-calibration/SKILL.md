@@ -24,9 +24,10 @@ record of what happened, with its numbers and evidence, is in [`docs/og-lessons/
 in Model-tools; a `(history: XXX)` marker flags where a lesson's numbers moved there. Derive your
 own values.
 
-**Run rules:** follow [og-run-rules.md](references/og-run-rules.md): under ten minutes for a
-healthy single-industry baseline, the example-script pattern, always parallel, Anderson with
-`nu` ≤ 0.2, preflight, and the user's explicit go before any solve beyond a quick check.
+**Running the model:** install with OG-Core's installer and run the repo's example script unchanged
+from that copy's environment; a run outside this path cannot be reproduced or compared
+([og-run-rules.md](references/og-run-rules.md)). A multi-industry baseline takes longer than the
+single-industry one's ten minutes, mostly in the steady state.
 
 ## Where the worked code is
 
@@ -124,15 +125,9 @@ Loop-backs:
 
 - `og-country-calibration`: the single-industry calibration this builds on, the fiscal dashboard,
   and the calibration PR format.
-- `og-run`, `og-run-preflight`: launching solves.
+- `og-run`: installing, checking and launching solves.
 - `og-solver-diagnosis`: a solve that will not converge.
 - `og-clews-linked-run`: coupled OG-CLEWS work needs a multi-industry model with an electricity
   industry.
 
 If one is not available to you, do the job directly and say which skill would have covered it.
-
-## Approval gates
-
-Build, derive, test and commit locally freely. Solves beyond a quick steady-state check, pushing,
-opening PRs and anything across several repos are proposed and wait for the user. Ask before push
-and before the PR, never in the same step. Never merge.

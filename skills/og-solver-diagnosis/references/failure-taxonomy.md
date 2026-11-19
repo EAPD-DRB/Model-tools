@@ -54,7 +54,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   tighter final Distance).
 - **Cause**: outer-loop damping too aggressive for the stiffness of the problem (multi-industry
   especially).
-- **Remedy**: the model owner's standing rule is Anderson (`TPI_outer_method="anderson"`) with
+- **Remedy**: the standard setting is Anderson (`TPI_outer_method="anderson"`) with
   `nu` 0.2 or lower on every run, so check those are set before anything else (field names can
   differ between ogcore releases).
   Then lower `nu` further (0.4 → 0.3 → 0.2 → lower); continuation solve for multi-industry cold
@@ -151,7 +151,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 
 ## J. Single-threaded run mistaken for slow convergence
 
-- **Signature**: a run takes far longer than the owner's ten-minute baseline, with a normal-looking
+- **Signature**: a run takes far longer than the ten-minute baseline, with a normal-looking
   log.
 - **Cause**: no worker pool. The country examples always create one; ogclews-link's command line
   defaults to 7 workers, but a driver that builds `runtime.RunnerConfig` itself defaults to 1 and

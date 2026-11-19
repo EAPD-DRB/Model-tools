@@ -15,9 +15,8 @@ asks. Two absolutes hold in every mode:
    a two-line README) next to the run it uses, so any figure can be regenerated and audited.
 2. **This skill never launches a solve.** Designing, reading, plotting and writing are free. The
    moment a question needs a new run (a redesigned reform, a missing or stale baseline, a
-   sensitivity sweep), stop: specify the run, estimate its duration, and ask (og-run, and the
-   owner's run rules). Never quietly re-run a solve to fill a gap. Pushing or publishing any product
-   also waits for the user.
+   sensitivity sweep), stop: specify the run, estimate its duration, and ask (og-run). Never
+   quietly re-run a solve to fill a gap.
 
 ## Reading outputs safely
 
@@ -97,7 +96,7 @@ Interrogate runs, inputs and outputs beyond the standard set:
 - Derive freely: ratios to Y, per-capita and per-cohort cuts, incidence by ability group, growth
   contributions, differences across several runs. Nothing limits you to one baseline and one reform.
 - If a result looks wrong, do not explain it away: check the run first (og-solver-diagnosis, and
-  the contamination check in og-run-preflight).
+  og-run's check before a run).
 - **Pick the best tool for the figure.** The country venvs have matplotlib, pandas and scipy, enough
   for publication-quality statics (use a clean explicit style). For interactivity or heavier data
   handling, make a scratch analysis env (`uv venv`) and feed it data exported from the repo venv as

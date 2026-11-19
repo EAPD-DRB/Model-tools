@@ -9,15 +9,10 @@ Generalized from the pandas-3 import-fix rollout (its worked playbook, if one ex
 machine, shows the level of detail a playbook should reach). The problem this solves: ~20 sibling repos drift apart because changes land in one
 repo and propagate by hand, or never (the conda→uv drift is the standing cost of not doing this).
 
-## Which world
+## Name the checkouts
 
-This skill deliberately works across the user's **own** checkouts — the adopted setup —
-because carrying one change across all of them is the whole point. That makes it the one
-place where crossing is intended, so be explicit: name the checkouts you looked at
-and the world they belong to, and never touch the runtime installation's copies
-under a world's `og-models` directory unless the user asked. Never present a live
-checkout's state as if it were the installation's. Full rules:
-`references/world-discipline.md`.
+This skill works across several checkouts on purpose. Name each one you look at or change (path,
+branch, commit), and leave installed copies that other work depends on alone unless asked.
 
 ## The shape of the work
 
@@ -94,22 +89,13 @@ Copy this per repo and work through it:
 - [ ] Single-line commit; table row set to branch-ready.
 ```
 
-### 4. Report and ask — never push, never PR, on your own
+### 4. Report
 
-When the sweep is done (or blocked), present: the tracking table, a per-repo diffstat, and any
-`needs-decision` rows. Everything up to here — local branches and local commits — is preparation;
-nothing has left the machine. Then the gates, in order and each with its own explicit approval:
-
-1. **Ask which repos to push.** Never push all branches on one blanket "go ahead"; the user names
-   the repos (or explicitly approves the batch as a batch).
-2. **After pushes succeed, ask again before opening any PR** — pushing and PR-opening are never
-   one step. Show each PR's draft text first. A PR for a PSLmodels repo may warrant different
-   framing than an EAPD-DRB one.
-3. **Never merge anything**, ever — merges are the user's alone.
-
-Opening N PRs across a fleet is exactly the "expensive and expansive" action the family's
-approval gates exist for (long computations, pushes and PRs each need the user's explicit go): the skill's deliverable is the prepared
-branches, drafted PR texts, and the tracking table — not the outbound actions. If PRs are
+When the sweep is done (or blocked), present the tracking table, a per-repo diffstat, and any
+`needs-decision` rows. Everything up to here, local branches and commits, is preparation that has
+not left the machine. Pushing, opening PRs and merging follow the project's and the user's rules;
+show each PR's draft text first, since a PSLmodels repo may want different framing than an
+EAPD-DRB one. If PRs are
 approved: per-repo PR text follows the playbook (what/why/tested), with Phase-2 items filed as
 follow-up issues, not folded in.
 

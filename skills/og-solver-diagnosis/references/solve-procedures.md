@@ -48,7 +48,7 @@ validator cap. Measured on JPN, identical parameters, same 7-worker client:
 demographic window and modest parameter moves. Ship the seed with the repo (~9 KB) and regenerate it
 after any large recalibration; without it a fresh checkout may not solve. Reference implementation:
 OG-JPN's `ogjpn/warm_start.py` + `examples/save_warm_start.py`. Code shipped in the country repo,
-like this, is part of how that repo runs, so it does not break the owner's "nothing bespoke" rule;
+like this, is part of how that repo runs, so it does not break the run rules' "nothing bespoke";
 an ad-hoc driver or patch outside the repo would. When an ogcore release ships the same fix, retire the
 repo's patch: grep the repo for patched ogcore
 functions after each ogcore bump and compare with its changelog.
@@ -102,7 +102,7 @@ main already pins this way]**. On a throwaway branch of the country repo, add
 `[tool.uv.sources] ogcore = { git = "<URL>", rev = "<full sha>" }` (a fork URL, or
 `file:///<path to an OG-Core clone>` for a local integration commit that is not pushed), run
 `uv lock`, commit, and install that branch with OG-Core's installer like any other. The run is then
-the shipped example from an installer copy; og-run-preflight reports the ogcore source and commit,
+the shipped example from an installer copy; og-run's check reports the ogcore source and commit,
 and `--params-json` proves the JSON loads on it. Keep the pin off the calibration branch.
 
 Before installing an integration build (master plus a PR), **check it carries the PR**: grep the
@@ -117,7 +117,7 @@ the one PR's diff (not a branch carrying unrelated upstream merges, which once b
 state through an unrelated payroll change). Give the country repo its own worktree and venv,
 install that ogcore into it editable, invoke `.venv/bin/python` (never `uv run`, which re-syncs to
 the lock), and `assert <ogcore worktree> in ogcore.__file__` before anything else; the assert has
-caught real contamination. og-run-preflight's ogcore line should then report that local build. This is a development pattern for
+caught real contamination. og-run's check should then report that local build. This is a development pattern for
 testing an upstream change, not a way to make official runs. Keep the packaged JSON loadable on
 released ogcore too: tests that build a `Specifications` strip not-yet-released parameters when absent
 (`hasattr` guard), so the suite stays green on both.

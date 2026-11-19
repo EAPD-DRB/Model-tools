@@ -1,7 +1,18 @@
 # Maintaining the OG skills
 
-How the OG skills (og-country-calibration, og-multi-industry-calibration, og-solver-diagnosis,
-og-run, og-run-preflight) are written, tested and extended.
+How the OG skills (og-country-calibration, og-multi-industry-calibration, og-run,
+og-solver-diagnosis, og-scenario-report, og-repo-fleet-sync) are written, tested and extended.
+
+## How the skills are divided
+
+By the job a person brings, not by the steps inside it: calibrating or updating a country model
+(og-country-calibration, with og-multi-industry-calibration for the overlay), just running a model
+(og-run), a solve that fails or looks wrong (og-solver-diagnosis), designing scenarios and
+presenting results (og-scenario-report), and carrying a change across the country repos
+(og-repo-fleet-sync). Guidance every job needs (how to run the model) lives in one shared file,
+copied into each skill that needs it and stated briefly on its front page, so a job never depends on
+a second skill being loaded. The skills are written for anyone doing OG work with an AI assistant:
+approval habits and writing style belong to each user's or project's own rules, not to the skills.
 
 ## Objective
 
@@ -67,7 +78,6 @@ it; a change ships when it improves a scenario or keeps them all equal.
 
 ## Mirrors
 
-Model-tools is canonical for og-country-calibration and og-multi-industry-calibration; MUIOGO-AI
-is canonical for og-solver-diagnosis, og-run and og-run-preflight. Each repo carries a copy of the
-other's skills. Copy whole files, never edit a copy; the front pages differ only by MUIOGO-AI's
-"Which world" section.
+Model-tools is canonical for the OG skills. MUIOGO-AI carries copies; copy whole files, never edit a
+copy. The MUIOGO-specific rules (its two installations, or "worlds") live in the MUIOGO skills and
+og-clews-linked-run, not in the OG skills.

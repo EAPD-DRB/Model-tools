@@ -1,27 +1,12 @@
----
-name: calibration-provenance
-description: "Traces a calibrated parameter in an OG-Core country repo back to its source (notebooks, intermediate files, R/Stata pipelines, live APIs or cited papers) and records the chain in the repo. Use when asked where a number comes from, whether a value is still right, or what the source of gamma, zeta_K, r_gov_shift or the e-matrix is, and before recalibrating a parameter of unclear origin. og-country-calibration sets values; this skill documents where existing ones came from."
----
+# Tracing where a calibrated value came from
 
-# Calibration provenance
+Use this when someone asks where a number comes from, whether a value is still right, or before
+re-calibrating a parameter of unclear origin. The rest of this skill sets values; this file
+documents where existing ones came from.
 
-24+ loose notebooks in the user's notebooks directory (`~/Projects/notebooks` on the machine
-the map was surveyed on) derive parameters that get hard-coded into country
-repos with no trace back — and the notebooks dir has no README. This skill is the tracing
-protocol plus the map of what's already known (`references/notebook-map.md` — read it before
-searching blind; it lists which notebook derives which parameter, the intermediate-file
-producer/consumer graph, and two fully-worked chains).
-
-## Which world
-
-This skill acts on **one** world: the runtime installation reached by `muiogo-ai`,
-unless the user explicitly asked for their own live one (`muiogo-live`). Never use
-bare `muiogo`, and never fall back to it. Every command prints a `world:` line to
-stderr — read it, and name that world when you report a result or a number. Worlds
-hold different OG checkouts and different model registries, so the same country
-model can exist in both at different commits. Locate the checkout you mean with
-`muiogo-ai status` rather than assuming a path. Full rules:
-`references/world-discipline.md`.
+In the EAPD-DRB repos many values were derived in standalone notebooks and hard-coded with no trace
+back. `notebook-map.md` maps which notebook derives which parameter, the intermediate files between
+them, and two fully worked chains; read it before searching blind.
 
 ## The three provenance patterns (classify first)
 
@@ -108,8 +93,6 @@ family practice (see og-country-calibration → Validation). If the trace ends a
 found", the honest record is `PLACEHOLDER — undocumented, needs recalibration`, which is exactly
 the state og-country-calibration exists to fix.
 
-Scope of action: drafting the provenance record and committing it locally is this skill's job
-(if an open branch or PR already rewrites the same doc section, ask which branch first);
-pushing it or opening a PR against a country repo is the user's call, asked separately
-(long computations, pushes and PRs each need the user's explicit go). Never re-run a calibration or launch a solve to
-"re-verify" a chain — propose it.
+Scope: draft the provenance record and commit it locally on a branch; pushing or opening a PR
+against a country repo follows the project's own rules. To re-verify a chain by solving, propose
+the run rather than launching it unasked.
