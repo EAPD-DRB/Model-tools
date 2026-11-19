@@ -1,7 +1,8 @@
 # Preparing the calibration PR
 
-What maintainers actually ask for **[PHL #63 review, jdebacker]**. The house rule stands apart from
-the review: ask before push and before opening the PR, never in the same step; the user merges.
+What maintainers actually ask for [PHL #63 review]. Pushing, opening the PR and merging follow the
+project's and the user's own rules. Keep the single-industry default working: a multi-industry
+calibration ships as its own builder-generated file.
 
 ## Register: the PR reports what was done; the docs carry the discussion
 

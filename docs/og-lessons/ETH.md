@@ -76,6 +76,60 @@ country's calibration.
   https://github.com/EAPD-DRB/OG-ETH/pull/63; https://github.com/EAPD-DRB/OG-IDN/pull/55.
 - **When:** 2026-07 (PR #63 merged 2026-07-03); still true at upstream/main 49ec411 (2026-10-19).
 
+### Capital stock on one GDP basis after a rebasing
+
+- **Lesson:** keep capital stocks and investment in one GDP basis; after a rebasing, measure the
+  investment the old accounts missed against old-base GDP and convert the stock at the end.
+- **What happened:** the first rebased build subtracted two investment shares with different
+  denominators (35.3% of rebased GDP less 20.1% of old-base GDP) and left the stock over old-base
+  GDP, giving total K/Y 2.51. A reviewer's audit found it; in one basis the gap is 36.1 points of
+  old-base GDP and total K/Y 2.00. Initial wealth, depreciation and the foreign capital share all
+  moved with it, and the whole retune was redone.
+- **Evidence:** the review on https://github.com/EAPD-DRB/OG-ETH/pull/111; fix in OG-ETH commit 6119f1d.
+- **When:** 2026-11.
+
+### Patience: one discount factor to the long-run return when the state finances investment
+
+- **Lesson:** where the state, state enterprises or foreign lenders finance much of investment, do
+  not tune patience to first-year investment; set one discount factor to the long-run return at
+  the world rate and score investment as a check. Use wealth shares by income group as a check if
+  matching them forces patience above one or to its lower bound.
+- **What happened:** tuning patience to first-year investment (35.3% of rebased GDP) made
+  households finance all of it, including state-enterprise investment financed through state banks,
+  and needed a long-run return near 2% with foreign capital leaving. The measurable state channels
+  (state-enterprise retained earnings about 0.7% of GDP, financial repression beyond the
+  below-market government rate about 0.2%) closed less than a point. Matching the WID wealth shares
+  by group pushed the top group's patience above one and the bottom's to 0.5. One discount factor
+  set to the 4% world rate gave 0.903 (after the preference change below), with first-year
+  investment 27.5% against 35.3% reported as a measured miss.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commits c257c41, 814a1d7, 93ce1f3; validation chapter of OG-ETH.
+- **When:** 2026-11.
+
+### External debt at its own interest rate
+
+- **Lesson:** where external debt is large and mostly concessional, check whether your ogcore models
+  debt contracted abroad (`alpha_D_ext`, `r_D_ext_annual`); without it that debt earns the
+  household return and interest paid abroad is overstated. Held at a share of GDP with a rate below
+  growth, it gives the long-run budget a net inflow from abroad; phase it out where that is wrong.
+- **What happened:** with Ethiopia's external debt (15.5% of rebased GDP) held as market debt
+  abroad, interest on it was 1.6% of GDP against about 0 in the data. Modelled at the DSA's average
+  rate (about −1% real), it was −0.2%. OG-ETH follows the IMF DSA path to 2045 and then phases the
+  stock to zero. A reform now starts from the baseline's stock.
+- **Evidence:** https://github.com/PSLmodels/OG-Core/pull/1279 (Issue #1125) and its review; https://github.com/EAPD-DRB/OG-ETH/pull/111.
+- **When:** 2026-11.
+
+### Initial wealth distribution by a damped burn-in
+
+- **Lesson:** with no wealth-by-age data, impute `initial_hhwealth_dist` from the model: feed the
+  savings households choose in the first period back as the starting shape, part of the way each
+  round and only at life-cycle ages, until start and first period agree; report the gap.
+- **What happened:** the steady-state shape handed first-year households a windfall. A full
+  feedback step stalled the transition (74 iterations) because the oldest cohorts' first-period
+  savings are mostly bequests; 30% per round at ages below 80 converged. The gap that remained
+  (4.6% weighted by wealth) sat at ages 21–24, which hold about 2% of wealth.
+- **Evidence:** OG-ETH `ogeth/initial_wealth.py`; commits 814a1d7, 4e90baa, 2480d1e.
+- **When:** 2026-11.
+
 ## og-country-calibration/references/taxes-informality.md
 
 ### Standing check: the bequest tax: ETH ships 0
@@ -168,6 +222,36 @@ country's calibration.
 - **When:** 2026-09 (seed set); checked at upstream/main 49ec411 on 2026-10-19; cap checked on
   OG-Core master 81f4549 (v0.21.2).
 
+### Preferences: a subsistence floor instead of a high sigma
+
+- **Lesson:** where subsistence consumption is common and growth is fast, keep sigma near OG-Core's
+  default and set the subsistence floor `c_min` (Stone-Geary) to a sourced cost; a high sigma for
+  every household makes richer households consume against future income and pins patience at its
+  bound. Cap the floor at what the poorest group can afford at its lowest-consumption age.
+- **What happened:** the low elasticity of substitution measured near subsistence (Havranek 2015;
+  Ogaki, Ostry and Reinhart 1996) first led to sigma 3 for everyone. With labour productivity
+  growing 4.7% a year, patience then sat at its 0.995 bound and the long-run return stayed at 4.75%
+  against 4%. With sigma 1.5 and `c_min` at 80% of the cost of an energy-sufficient diet
+  (World Bank/FAO Food Prices for Nutrition; the full cost would have put the poorest group below
+  the floor), patience fell to 0.903, first-year investment rose from 23.2% to 27.5% of GDP and
+  private consumption fell from 79.7% to 68.2% (data 35.3 and 64.4). The effective sigma is 2.2 for
+  the poorest group and 1.63 at mean consumption. The Ethiopia Socioeconomic Panel Survey 2021/22
+  supports the floor: three-quarters of loans come from relatives and neighbours, 0.1% from banks,
+  and 80% of savers save for emergencies, 0.9% for old age. `c_min` is in growth-adjusted units and
+  the model's reported consumption is the part above the floor.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commit 93ce1f3; `examples/ess_credit_saving.py`.
+- **When:** 2026-11.
+
+### Labour units: scale the earnings matrix, not productivity
+
+- **Lesson:** when `chi_n` runs into OG-Core's 10,000 bound because model consumption is small,
+  rescale the earnings matrix (exact); rescaling productivity `Z` is not neutral, because OG-Core's
+  capital demand at the world rate leaves out public capital, and `Z` is capped at 5.
+- **What happened:** at sigma 3, `chi_n` exceeded the bound at every age. `Z` = 5 moved the foreign
+  capital share; `e` × 10 reproduced every ratio of the original solution in a probe.
+- **Evidence:** OG-ETH commit 04d4701; `ogeth.macro_params.EARNINGS_SCALE`.
+- **When:** 2026-11.
+
 ## og-country-calibration/references/validation-dashboard.md
 
 ### The steady-state dashboard: a data-comparison table in macro.md
@@ -209,6 +293,16 @@ country's calibration.
   https://github.com/EAPD-DRB/OG-ETH/pull/42;
   https://github.com/EAPD-DRB/OG-ETH/commit/159315fba05a8b7c364a96ca8f315c54b22cbe7f
 - **When:** 2026-05.
+
+### Government consumption: score against the measured series
+
+- **Lesson:** score `G/Y` against measured government final consumption, adding the depreciation
+  of public capital as the national accounts do, not against the expenditure-side residual.
+- **What happened:** the rebased residual (4.7% of GDP) holds non-profit institutions and the
+  statistical discrepancy; the central bank's series is 3.67%, and the model came within 0.3 point
+  of it.
+- **Evidence:** OG-ETH commit 8b8a2fa.
+- **When:** 2026-11.
 
 ## og-solver-diagnosis/references/solve-procedures.md
 

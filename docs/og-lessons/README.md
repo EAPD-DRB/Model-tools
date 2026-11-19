@@ -10,6 +10,9 @@ Entries record what was true when written. Check the country repo before relying
 copy a country's values into another country's calibration. How to add a lesson:
 [`../og-skills-maintenance.md`](../og-skills-maintenance.md).
 
+Start from [INDEX.md](INDEX.md), the lessons by situation. These files are copied into the
+og-country-calibration skill (`references/lessons/`) by `scripts/sync_shared.py`.
+
 - [BRA](BRA.md): Brazil
 - [ETH](ETH.md): Ethiopia
 - [IDN](IDN.md): Indonesia

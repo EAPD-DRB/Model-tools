@@ -9,6 +9,7 @@ Contents
 - Income-differentiated demographics
 - Pensions
 - Labour supply (chi_n)
+- Preferences: sigma, the subsistence floor and Frisch
 
 ## Earnings (the e ability matrix)
 
@@ -231,4 +232,40 @@ an actual 2.1%; a 25-year phase-in matched today's spending and removed a debt o
 - **When hours are calibrated, make the earnings profile per hour.** The NTA labour-income profile
   that shapes `e` is income per person, which already contains hours. Divide it by hours per person
   by age before taking the country-to-US ratio, or hours count twice, in `e` and in `n`.
+- **If `chi_n` hits the bound at most ages, check the units first.** Where model consumption is very
+  small (a high `sigma` makes this worse), the `chi_n` that matches hours can exceed OG-Core's
+  10,000 bound everywhere. Scaling the earnings matrix by a constant is an exact normalization:
+  every income scales and only `chi_n` changes, by the scale to the power `1 − sigma`. Scaling
+  productivity `Z` instead is not neutral, because OG-Core's capital demand at the world rate
+  leaves out public capital, and `Z` is capped at 5. Check with one steady state that the ratios
+  are unchanged. [ETH] (history: ETH)
 - In a multi-industry model, `chi_n`/`chi_b` also take the units conversion (og-multi-industry-calibration).
+
+## Preferences: sigma, the subsistence floor and Frisch
+
+- **`sigma`** is the curvature of utility; with no income risk in OG-Core it is the inverse of the
+  elasticity of intertemporal substitution. OG-Core's default 1.5 (elasticity 0.67) sits inside
+  the published range (Havranek 2015: reported mean about 0.5, bias-corrected 0.3–0.4 for asset
+  holders, calibrations above 0.8 inconsistent with the evidence).
+- **Applies when** subsistence consumption is common: the elasticity measured near subsistence is
+  low (Ogaki, Ostry and Reinhart 1996), but raising `sigma` for everyone puts that curvature on the
+  households that hold the capital too. With fast labour-productivity growth they then want to
+  consume against future income, and patience runs into its bound. Represent subsistence with
+  OG-Core's floor `c_min` instead: households buy it first and only consumption above it enters
+  utility, so the elasticity is (1/`sigma`)(1 − `c_min`/c), low for the poor and close to 1/`sigma`
+  for the rich. [ETH] (history: ETH)
+- **Setting `c_min`.** Source it (for example the cost of an energy-sufficient diet, World Bank/FAO
+  Food Prices for Nutrition) as a share of consumption per person, and convert it to model units.
+  It is one value for every age and income group, so cap it at what the poorest group can afford at
+  its lowest-consumption age, and say how far below the source that puts it. `c_min` is in
+  growth-adjusted units, so it rises with labour productivity. The consumption the model reports is
+  the part above the floor.
+- **Check the saving motives against a household survey.** OG-Core's households save for
+  retirement and bequests only. An LSMS-type survey's credit and savings modules show who borrows,
+  from whom and why, and why people save; where saving is mostly precautionary, patience is
+  standing in for the missing motive, and the documentation should say so.
+- **Frisch elasticity:** OG-USA's 0.4 is at the top of the evidence. Bias-corrected micro estimates
+  put total hours near 0.25 (Elminejad, Havranek, Horvath and Irsova 2023), and randomly offered
+  wages in a low-income setting give 0.15–0.16 (Goldberg 2016). [ETH]
+- **Checks:** patience off its bound; the poorest group's consumption above the floor at every age
+  and in the first years of the transition; the effective `sigma` by income group reported.

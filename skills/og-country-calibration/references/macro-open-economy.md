@@ -7,6 +7,7 @@ Contents
 - start_year
 - Debt (initial_debt_ratio, debt_ratio_ss)
 - zeta_D
+- Debt contracted abroad (alpha_D_ext, r_D_ext_annual)
 - zeta_K
 - world_int_rate_annual
 - g_y_annual
@@ -71,6 +72,26 @@ equals the foreign share of the stock).
 standstill). Use the DSA's projected medium-term flow instead.
 
 **Exemplar.** USA measures the flow directly; ETH uses the DSA projection.
+
+## Debt contracted abroad (alpha_D_ext, r_D_ext_annual)
+
+**Applies when** a large part of public debt is owed to foreign official lenders on concessional
+terms, or to foreign creditors at rates far from the domestic market's.
+
+**Method.** If your ogcore has `alpha_D_ext` (check with `hasattr`), model that debt as its own
+stock: a share of GDP held only by foreigners, paying `r_D_ext_annual` (the foreign-currency rate
+less foreign inflation, plus any expected real depreciation). Market debt `D`, `debt_ratio_ss` and
+`zeta_D` then refer to the rest. Take the path from the debt sustainability analysis, and decide
+what happens after its last year. Held at a share of GDP with a rate below growth, the stock gives
+the long-run budget a net inflow from abroad every year; phase `alpha_D_ext` to zero if that is
+not the economy you mean.
+
+**Check.** Interest paid abroad on public debt against the balance of payments; first-year debt
+against the data; a reform starts from the baseline's stock.
+
+**Pitfall.** Without it, concessional debt held by foreigners earns the household portfolio return
+and the interest paid abroad is overstated (on ETH, 1.6% of GDP against about 0 in the data;
+−0.2% at its own rate). [ETH] (history: ETH)
 
 ## zeta_K
 
@@ -231,8 +252,8 @@ only matters when `gamma_g > 0`.
 
 ## Initial household wealth
 
-Released ogcore (0.24.1 and later) sets the initial condition with two parameters; check that your
-build has them:
+Current ogcore sets the initial condition with two parameters; check that your build has them
+(`hasattr(Specifications(), "initial_wealth_ratio")`):
 
 - **Level: `initial_wealth_ratio`**, aggregate household wealth over GDP in the start year (valid
   0.8–7.0). Because first-year GDP is endogenous, the transition rescales the initial distribution
@@ -283,6 +304,13 @@ National Transfer Accounts' private asset income by age (the same download as th
 profile) works where wealth surveys are thin: multiply each age's weight by the steady-state split
 across income groups, and normalise. A shape far from the steady-state profile is a finding about
 the steady state, not only about the start (see `beta_annual`). **[PHL]** (history: PHL)
+
+Where there is no wealth-by-age data, impute the shape from the model itself: solve the transition,
+take the savings households choose in the first period as shares, move the starting shape part of
+the way toward them (about 30% a round), and repeat until the two agree. Apply it at life-cycle ages
+only: the oldest cohorts' first-period savings are mostly bequests, and feeding them back stalls the
+transition. Report the remaining gap between the starting shape and the first-period choice.
+[ETH] (history: ETH)
 
 **Check the solve, not just the target.**
 - Confirm the solved `B_1/Y_1` equals the target.
@@ -342,10 +370,23 @@ first transition year: `C/Y` and `(I+I_g)/Y` against the data. If they miss, tun
 first-year investment share instead, and report the steady-state `K/Y` as an outcome. **[PHL]**
 (history: PHL)
 
+**When the state finances much of investment.** Applies when state enterprises, state banks or
+foreign lenders finance a large share of measured investment. Tuning patience to first-year
+investment then makes households finance all of it: patience rises, the long-run return falls
+below the world rate, and foreign capital turns negative. Set one discount factor so that the
+long-run return equals the world rate, score first-year investment as a check, and report the gap
+with the state channels you measured. [ETH] (history: ETH)
+
+**Patience at its bound.** Read it economically before widening the bound. Two causes seen so far:
+a high `sigma` with fast labour-productivity growth, where households want to consume against their
+future income (households-demographics.md, preferences), and households financing investment the
+state finances (above). If matching wealth shares by income group pushes patience above one or to
+its lower bound, use one discount factor and keep the shares as a check. [ETH] (history: ETH)
+
 **Pitfall.** Leaving OG-USA's 0.96 unexamined, or moving `beta` while `K/Y` is already on target.
 Re-ask after any change to `gamma`, `delta` or `g_y`; on JPN the answer flipped twice.
 
-**Exemplar.** **[net-new: JPN]**
+**Exemplar.** JPN (the K/Y route); PHL (first-year investment); ETH (the long-run return).
 
 ## alpha_T
 

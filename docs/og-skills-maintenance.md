@@ -14,7 +14,7 @@ anyone who needs to look deeper.
 | Layer | Holds | Lives in | Installed with the skill |
 |---|---|---|---|
 | Skill | Methods and checks that apply to a country you have never seen | `skills/<skill>/` | Yes |
-| History | What happened, where, with the evidence: one entry per lesson | `docs/og-lessons/` | No; linked |
+| History | What happened, where, with the evidence: one entry per lesson, and `INDEX.md` by situation | `docs/og-lessons/` | Yes: copied into og-country-calibration `references/lessons/` by `scripts/sync_shared.py` |
 | Repo state | What a repo ships today and its open defects | That repo's issues and docs | No |
 
 The skill grows only when a country teaches a new method. Most countries add a history entry and
@@ -52,7 +52,7 @@ Not in the skill:
 
 ## Adding a lesson
 
-1. Write the history entry first.
+1. Write the history entry first, and list it under its situation in `docs/og-lessons/INDEX.md`.
 2. Ask: does an existing lesson in the skill already cover it? If yes, add the history link to that
    lesson and stop.
 3. If it is a new method, add a lesson in the shape above, in the reference file for its block.

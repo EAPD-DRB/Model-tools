@@ -89,6 +89,17 @@ SKILL_VENDORED = {
     ),
 }
 
+# The country lessons (history) ship with the calibration skill, so an agent on
+# a new country can read how others handled the same situation. One editable
+# source in docs/og-lessons/, copied into the skill's references/lessons/.
+LESSONS = REPO / "docs" / "og-lessons"
+LESSONS_VENDORED = {"og-country-calibration": "references/lessons"}
+LESSONS_BANNER = (
+    "<!-- GENERATED FILE - do not edit here.\n"
+    "     Source: docs/og-lessons/{source}\n"
+    "     Regenerate: python scripts/sync_shared.py -->\n\n"
+)
+
 BANNER = (
     "<!-- GENERATED FILE - do not edit here.\n"
     "     Source: skills/shared/{source}\n"
@@ -179,6 +190,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"no skill dir for {skill}", file=sys.stderr)
                 return 2
             target = skill_root / relative_target
+            written += sync_target(target, payload, args.check, stale)
+
+    for skill, relative_dir in LESSONS_VENDORED.items():
+        for source in sorted(LESSONS.glob("*.md")):
+            if source.name == "README.md":
+                continue
+            text = source.read_text(encoding="utf-8")
+            payload = LESSONS_BANNER.format(source=source.name) + text
+            target = REPO / "skills" / skill / relative_dir / source.name
             written += sync_target(target, payload, args.check, stale)
 
     for (owner, owner_relative), targets in SKILL_VENDORED.items():

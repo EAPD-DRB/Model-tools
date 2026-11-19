@@ -63,7 +63,7 @@ a fiscal diagnostic too: it sets the currency income at which tax functions are 
 |---|---|---|
 | `K_f/K` | `zeta_K` | IIP: inward DI equity + portfolio equity, ÷ GDP ÷ `K/Y` (gross reading; see macro-open-economy.md) |
 | `(I + I_g)/Y` | `delta`, `alpha_I` | national accounts GFCF, private + public; `I_total` alone is private |
-| `G/Y` | `alpha_G` | government final consumption. Score the solved value: the steady state forces spending to the budget-consistent level, so it will differ from your `alpha_G` input, and the difference is information |
+| `G/Y` | `alpha_G` | government final consumption, from the measured series (not the expenditure-side residual, which also holds non-profit institutions and the statistical discrepancy), plus depreciation of public capital as the national accounts count it [ETH]. Score the solved value: the steady state forces spending to the budget-consistent level, so it will differ from your `alpha_G` input, and the difference is information |
 | `NX/Y` | `zeta_K`, `zeta_D` | the trade balance, not the current account (below) |
 | property / wealth tax / Y | `p_wealth`, `h_wealth` | revenue statistics |
 | bequest tax / Y | `tau_bq` | revenue statistics |
@@ -144,6 +144,9 @@ When the statistics office rebases GDP, every `x/GDP` ratio moves without anythi
 (South Africa's 2021 rebasing shifted tax-to-GDP ~2.6pp: 23.7% on the rebased base vs 26.3% on the
 old, same year). Compare model and data ratios on one consistent GDP vintage, and say which. A
 calibration tuned to an old-vintage ratio looks ~2–3pp off against current data for no real reason.
+Keep stocks and flows on one basis too: after a rebasing, measure investment the old accounts
+missed against old-base GDP, build the stock there, and convert it at the end (on ETH, mixing the
+two bases put total `K/Y` at 2.51 instead of 2.00). [ETH] (history: ETH)
 
 **Mind the price basis too.** OG-Core's `Y` is output at producer prices: the consumption tax is
 paid on top of it, so `Y` excludes it, while the data's ratios are to GDP at market prices. Check
