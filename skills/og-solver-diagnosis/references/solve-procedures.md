@@ -61,7 +61,7 @@ is computed from. Warm-start the matrices; leave the scalar parameters alone.
 **Worth automating.** Every country repo will hit this. Writing the seed on every successful solve
 and reusing it by default makes reruns cheap; a shared helper saves each repo re-deriving it. The
 proper fix is upstream: seeds derived from parameters ogcore already has (`b ≈ (K/Y + D_d/Y)·Y`).
-[net-new: JPN]
+[JPN]
 
 ## Initial-guess fragility: nearness is not solvability
 
@@ -74,8 +74,8 @@ floors a negative `K_d` at `0.05·B`, and a floored value in the final solution 
 
 ## Triage an RC_error by where in time it happens
 
-[net-new: JPN] ogcore pickles TPI output before it raises, so read
-`TPI_vars.pkl["resource_constraint_error"]` even from a failed run (recent ogcore also prints the
+[JPN] ogcore pickles TPI output before it raises, so read
+`TPI_vars.pkl["resource_constraint_error"]` even from a failed run (some versions also print the
 maximum error, its period and the tolerance). The location is the diagnosis:
 
 - **smooth and decaying over the first several periods** → the initial condition, i.e. initial

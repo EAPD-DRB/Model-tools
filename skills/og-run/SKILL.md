@@ -96,9 +96,10 @@ example as shipped and say so.
 
 Things that bite in a session with no one at the keyboard:
 
-- **The UN population token.** Recent ogcore reads `UN_API_TOKEN` from the environment or a
-  per-user file and otherwise falls back to the EAPD-DRB Population-Data archive; older ogcore reads
-  a `un_api_token.txt` in the working folder and can prompt. A run that hangs early with no output:
+- **The UN population token.** Depending on the version, ogcore reads `UN_API_TOKEN` from the
+  environment or a per-user file (managed with `og-token`) and otherwise falls back to the EAPD-DRB
+  Population-Data archive, or reads a `un_api_token.txt` in the working folder and can prompt; check
+  `ogcore/demographics.py` in your build. A run that hangs early with no output:
   check this first.
 - **Live data.** When online, some examples call `Calibration(p, update_from_api=True)`, which can
   overwrite curated values. Say whether the run was online.

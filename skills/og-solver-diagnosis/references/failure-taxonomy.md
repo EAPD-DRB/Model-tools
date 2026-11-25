@@ -4,7 +4,7 @@
 - A. Fiscal runaway · B. Binding constraint from a calibration placeholder · C. Oscillation
 - D. Basin flip · E. NaN propagation · F. Stale expected-output fixture · G. Infrastructure noise
 - H. Cold-start seed failure · I. Resource-constraint error by timing · J. Single-threaded run
-- K. Government rate at its floor · L. Slow steady state on older ogcore
+- K. Government rate at its floor · L. Slow steady state from parameters re-sent to workers
 - M. Unsolved start cohorts · N. Slow transition from a straggler worker · Known engine bugs
 
 Observed classes from the family's real debugging history (its test scripts and solve logs, the
@@ -126,8 +126,8 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   from new initial guesses rather than converging slowly.
 - **Cause**: the starting guess is too far from the solution. OG-Core walks down its list of
   `DEV_FACTOR_LIST` scalings and restarts each time, which reads as slow convergence. The
-  savings seed is one constant across ages and types (hard-coded in older ogcore, a parameter
-  in newer).
+  savings seed is one constant across ages and types (a parameter, `initial_guess_b_SS`, where your
+  ogcore has it; hard-coded otherwise).
 - **Remedy**: warm-start from a solved state (solve-procedures.md, "Warm-starting the steady
   state"). A guess that is near in values is not necessarily one the
   solver can start from: nearness is not solvability.
@@ -167,15 +167,16 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 
 - **Signature**: `r_gov` sits exactly at a floor for some periods; fiscal paths look kinked.
 - **Cause**: `fiscal.get_r_gov` floors the government rate (0.0 by default; settable as
-  `r_gov_floor` in newer ogcore). A sovereign that pays negative real rates hits it.
+  `r_gov_floor` where your ogcore has it; check with `hasattr`). A sovereign that pays negative real rates hits it.
 - **Remedy**: set `r_gov_floor` below zero when the country's data supports it; record why.
 
-## L. Slow steady state on an old ogcore
+## L. Slow steady state from parameters re-sent to workers
 
 - **Signature**: the steady state takes many minutes with the workers mostly idle and the main
   process busy; the transition path then runs at normal speed.
-- **Cause**: older ogcore re-sent the whole parameters object to the workers on every
-  steady-state evaluation; newer versions send it once per solve.
+- **Cause**: some ogcore versions re-send the whole parameters object to the workers on every
+  steady-state evaluation instead of once per solve; check the installed `SS.py` and the
+  changelog.
 - **Remedy**: check the ogcore version and its changelog first. On an old lock, say that the fix
   is an ogcore bump (its own change), not a solver setting.
 
@@ -199,8 +200,8 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   takes far longer than the household solves explain. For most of an iteration one worker is busy
   while the others wait, or the workers start their tasks seconds apart.
 - **Cause**: state kept on one worker, not the economics. Two seen so far: each worker caches the
-  sparsity pattern of the household Jacobian from the first problem it solves, and older ogcore
-  could build a pattern that misses real links (for a high-productivity income group, or groups
+  sparsity pattern of the household Jacobian from the first problem it solves, and an ogcore without
+  PSLmodels/OG-Core#1276 could build a pattern that misses real links (for a high-productivity income group, or groups
   with and without a pension), so every solve on that worker falls back to Levenberg-Marquardt
   (fixed by PSLmodels/OG-Core#1276); and dask's memory manager can delete the workers' copies of
   the broadcast parameters between iterations, so they fetch them again before starting.
