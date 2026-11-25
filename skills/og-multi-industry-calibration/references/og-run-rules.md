@@ -6,7 +6,10 @@
 
 # Running an OG model
 
-Run the model the way its users do, so that every result can be reproduced and compared.
+Run the model the way its users do, so that every result can be reproduced and compared. If the
+environment you work in has its own instructions on where models are installed and how to run
+them (a project `AGENTS.md`, or a workspace skill such as MUIOGO-AI's muiogo-workspace), follow
+them first; these rules still hold inside them.
 
 - **Install** each model with OG-Core's installer, as `scripts/QUICK_INSTALL.md` in OG-Core
   describes, one fresh copy per commit. A branch, fork or local clone installs the same way
