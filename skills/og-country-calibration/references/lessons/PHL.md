@@ -148,7 +148,8 @@ Contents (by the skill file each entry backs; search a file for its `###` headin
 
 ### Initial household wealth: the old default scale was a windfall
 
-- **Lesson:** older ogcore rescales initial wealth so aggregate `B(0) = B_ss`; for a young
+- **Lesson:** with the initial-wealth parameters unset, ogcore rescales initial wealth so aggregate
+  `B(0) = B_ss` (still true in 0.25.2); for a young
   population that is a windfall that shows up only in level exercises.
 - **What happened:** for PHL the rescale factor was 1.625, a 63% windfall for every household.
   Retirees consumed at 3–7× steady state for years. Aggregate consumption jumped 41% for one year,
