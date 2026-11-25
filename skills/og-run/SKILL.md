@@ -40,6 +40,12 @@ The installer clones the repo, runs `uv sync --extra dev` and checks the import.
 folder first and run the installer from it, so its log sits beside the copy. Use a new folder for
 every commit; never install over a checkout that holds someone's work.
 
+The installer names the package from the last part of the URL (lowercased, hyphens dropped) and
+checks that it imports, so install from a clone whose folder is named like the repo (`OG-<XXX>`),
+not from a worktree or a folder such as `OG-<XXX>-demo`, which installs but fails the import check.
+A copy is tied to the commit it cloned: when the branch moves, install the new commit into a new
+folder rather than pulling inside the copy.
+
 ## Check before a run
 
 Confirm the run will use the code you mean:

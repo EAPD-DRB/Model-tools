@@ -14,7 +14,8 @@ fail silently. [KOR] Before any solve:
 - **Make the new example offline.** If the sibling's example calls `Calibration(p,
   update_from_api=True)` when online, the copy downloads data with the sibling's codes and writes it
   over the new country's values. Have the new country's example read the packaged JSON only.
-- **Audit every inherited JSON value** (mental model 1b): diff the JSON against the sibling's and
+- **Audit every inherited JSON value:** diff the JSON against the sibling's and against your
+  ogcore's `default_parameters.json`, and
   list each key as sourced, tuned to a named moment, or defaulted with a reason. Include solver
   settings (`TPI_outer_method`, `nu`, `initial_guess_*`): a sibling can predate a run rule (KOR
   inherited `nu` 0.4 with Anderson from PHL). The seeds are the sibling's solution, not neutral
@@ -28,11 +29,12 @@ fail silently. [KOR] Before any solve:
   | demographic window | the archive's last year minus one; check `g_n_ss` against the UN growth |
   | every tax rate, `tau_bq` included | effective = collections / the model's base, by instrument |
   | `alpha_G`, `alpha_T`, `alpha_I`, pensions | the budget identity at `debt_ratio_ss` (fiscal-consistency.md) |
-  | `K/Y` target, `delta` | private capital: PWT less public capital; CFC less government's |
+  | `K/Y` target, `delta` | private capital at current national prices; CFC less government's (macro-open-economy.md) |
+  | `eta`, `eta_RM`, `chi_b`, `chi_n` | the country's evidence, or OG-Core's default kept with a stated reason |
   | `zeta_K`, world rate, `r_gov_shift` | IIP gross `K_f/K`; a sourced world rate; the treasury's effective rate |
   | `nu`, `TPI_outer_method`, `initial_guess_*` | the run rules; seeds from the new country's own first solve |
   | the example reform | a change that is real for the new country; check it moves a parameter from its baseline value |
 
 - **Replace the sibling's example reform** with one that means something for the new country (for
   example, a reform the new country has enacted, not the sibling's). A reform that sets a rate to
-  the new country's current value changes nothing. [KOR, THA] (history: KOR, THA)
+  the new country's current value changes nothing. [KOR, THA]

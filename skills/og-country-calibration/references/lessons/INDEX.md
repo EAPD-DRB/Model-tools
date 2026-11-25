@@ -23,11 +23,14 @@ Contents
 - IDN: Informality: the maturity ladder: a structural two-sector demo ("Option B")
 - BRA: Capital share (gamma): split mixed income per industry first
 - BRA: Informality: the maturity ladder: BRA is at "narrative only"
+- ETH: Capital share: inefficiency counted once, side implications checked, published sources
 
 **Subsistence consumption, fast growth, thin credit markets**
 - ETH: Preferences: a subsistence floor instead of a high sigma
 - ETH: Patience: one discount factor to the long-run return when the state finances investment
 - ETH: Patience: as much saving as the return evidence allows, judged on the first years
+- ETH: A cross-country table value was a formula applied out of sample
+- ETH: The poorest group's bequest weight broke a reform
 
 **Investment financed by the state or state enterprises**
 - ETH: An investment gap: decompose it with the financing identity before choosing a lever
@@ -37,6 +40,8 @@ Contents
 **National accounts rebased, or ratios on a mixed GDP basis**
 - PHL: GDP price basis: ratios to market-price GDP
 - ETH: Capital stock on one GDP basis after a rebasing
+- ETH: Capital stock at current national prices; public capital in nominal terms
+- ZAF: Capital stock: a PPP stock with national-price depreciation
 
 **Data newer than the model's start year, or fiscal years that differ from calendar years**
 - PHL: start_year: a start one year past the latest data
@@ -106,6 +111,7 @@ Contents
 - KOR: Discontinuities: both breaks are OG-Core bookkeeping, not economics
 - KOR: Initial household wealth: test an initial-wealth build on your country before adopting it
 - KOR: Pensions: a young pension system needs two checks
+- ETH: Transfer shares fixed over time overpaid the oldest
 
 **Family support between generations; consumption by age**
 - ETH: Consumption by age: the consumption adults carry, and the model's age convention
@@ -115,6 +121,7 @@ Contents
 - PHL: Initial household wealth: the old default scale was a windfall
 - ETH: Initial wealth distribution by a damped burn-in
 - KOR: Initial household wealth: the default level matched the data by luck
+- ETH: Starting wealth smooth across an age cutoff
 
 **No wealth survey, or thin household balance sheets**
 - PHL: Initial household wealth: balance-sheet ratios run low (also ZAF, ETH)
@@ -132,6 +139,8 @@ Contents
 - PHL: Labour supply calibrated to hours per person by age
 - JPN: Labour supply (chi_n): check total labour input against the US before borrowing
 - ETH: Labour units: scale the earnings matrix, not productivity
+- ETH: Hours by age: an extrapolated target double-counted the fall in pay
+- ETH: A sourced value is not a tuning lever
 
 **Pensions**
 - JPN: Pensions: validate against pension spending as a share of GDP
@@ -163,6 +172,7 @@ Contents
 - PHL: The in-model tuning loop: real solves are cheap
 - ETH: zeta_K raises investment only through foreign ownership
 - ETH: Compare return evidence with the return on capital to owners, not the portfolio return
+- ETH: Exploring: one probe per idea, watch the run, one finished calibration
 
 **Validation and tests**
 - ETH: The steady-state dashboard: a data-comparison table in macro.md
@@ -174,9 +184,26 @@ Contents
 - PHL: Verify both tails of every path: the min-only debt check
 - KOR: Two traps when adding rows: use the model's own K concept
 - ETH: Consumption with a subsistence floor: score `C_i`, not `C`
+- ETH: Docs numbers typed by hand went through six audits
+- ETH: The calibration PR as a fit report
 
 ## Multi-industry
 
 BRA, PHL and ZAF built multi-industry overlays from social accounting matrices; their entries are
 filed under og-multi-industry-calibration (finding the data, concordances, defining industries and
 goods, `gamma_m`, `io_matrix`, `Z_m`, reaching the steady state).
+
+## Repos worth reading as worked examples
+
+Read for how the work is organised, not for values to copy; check each against the repo's current
+default branch, and against the skill where the economics differ.
+
+- OG-ZAF (main, October 2026): `docs/CALIBRATION_PLAN.md` (moment × lever table with each lever's
+  status, and the tuning order), `ogzaf/targets.py` (every target with its source),
+  `examples/tune_ss.py`, `examples/validate_fiscal_path.py`, `examples/calibration_scorecard.py`
+  (docs tables regenerated from the run between markers), tests pinning values with sources. Its
+  capital block mixes price bases and its patience is tuned to the steady state (ZAF: Capital stock:
+  a PPP stock with national-price depreciation).
+- OG-ETH (PR 111, November 2026): `ogeth/targets.py` (market-price basis, `C_i`, the owners' return),
+  `examples/tune.py`, `docs/create_doc_figures.py` (every docs table and figure from the run), a
+  test that the packaged JSON equals what the code regenerates, and the fit-report PR.

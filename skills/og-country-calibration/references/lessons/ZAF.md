@@ -91,6 +91,13 @@ still ships the old calibration.
   ([70eeb8f](https://github.com/PSLmodels/OG-Core/commit/70eeb8f06d9fbd6a36411d9f5fde1a667923aa1c)).
 - **When:** 2026-09 (table first written); 2026-10 (PR #1250 open).
 
+### Capital stock: a PPP stock with national-price depreciation
+
+- **Lesson:** keep the capital stock, depreciation and investment on one price basis (current national prices); judge an implausible return by checking the capital share (resource rents, product taxes), depreciation's basis and pre- versus after-tax returns before changing the basis.
+- **What happened:** OG-ZAF main targets private K/Y 2.80 from PWT 11.0 at current PPPs (3.82 total, less the government's 26.7 percent) and sets `delta_annual` to private CFC at domestic prices over that stock (0.0405). On one consistent basis the national-price ratio is 2.42 (1.77 private) and depreciation 0.064. The docs reject the national-price ratio because it implies a 15–20 percent return while the PPP ratio's 11 percent matches PWT's `irr` (12 percent); but `irr` is pre-tax, excludes resource rents and is computed on stocks at national prices, and with PWT's labour share and the SARB's CFC the national-price stock gives about 13 percent. The PPP match rested on offsetting errors.
+- **Evidence:** OG-ZAF upstream/main 9259d22, `docs/book/content/calibration/firms.md` (capital stock section), `ogzaf/targets.py`; PWT 11.0; review notes 2026-11-25 (og-analysis/skill-review/zaf_exemplar.md, local).
+- **When:** 2026-11-25 (review of the October 2026 calibration).
+
 ## og-country-calibration/references/fiscal-consistency.md
 
 ### Fiscal consistency: the budget must balance at the debt target (proven by TPI simulations)

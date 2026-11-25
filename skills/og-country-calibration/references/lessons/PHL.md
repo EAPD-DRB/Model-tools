@@ -154,7 +154,7 @@ unpublished); those entries say so.
 
 - **Lesson:** set the start with `initial_wealth_ratio` and `initial_hhwealth_dist`; where the
   population is far from stationary, tune `beta` to first-year moments rather than the steady-state
-  `K/Y` (macro-open-economy.md, "Initial household wealth" and "beta_annual").
+  `K/Y` (macro-open-economy.md, "Initial household wealth" and "Patience (beta_annual)").
 - **What happened:** with `beta` tuned so the steady state held today's capital (3.59 times GDP),
   households starting from measured wealth (3.35 times GDP) consumed 80.8% of GDP in 2025 against
   76.1% in the data, and invested 20.2% against 23.6%. An age shape from NTA private asset income
@@ -358,7 +358,7 @@ unpublished); those entries say so.
 
 - **Lesson:** compare the model's labour supply by age with hours per person by age, calibrate
   `chi_n` to it with a warm start between solves, and make the earnings profile per hour
-  (households-demographics.md, "Labour supply").
+  (households-demographics.md, "Hours of work by age (chi_n)").
 - **What happened:** with OG-USA's `chi_n`, the model worked about 45% of the time endowment at every
   age up to 55 and a third at 75, against 29% and 5% in the 2024 Labor Force Survey (ILOSTAT), though
   total hours per working-age person were 7% above the US. The OG-ETH loop, run from a cold start,
@@ -411,8 +411,8 @@ unpublished); those entries say so.
 
 ### GDP price basis: ratios to market-price GDP
 
-- **Lesson:** compare model and data ratios on one price basis (validation-dashboard.md, "Mind the
-  price basis too").
+- **Lesson:** compare model and data ratios on one price basis (validation-dashboard.md, "One price
+  basis and one GDP basis").
 - **What happened:** OG-Core's `Y` is the sum of `p_m Y_m`, with the consumption tax paid on top, so
   it excludes product taxes, while every Philippine target is a share of market-price GDP. With a
   consumption tax near 7.9% of GDP, every model ratio over `Y` sat about 8% above the same quantity

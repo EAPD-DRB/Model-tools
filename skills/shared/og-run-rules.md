@@ -18,6 +18,9 @@ Run the model the way its users do, so that every result can be reproduced and c
 - **Solver settings live in the packaged parameters:** Anderson (`TPI_outer_method = "anderson"`)
   with `nu` 0.2 or lower. Validation runs are offline (`update_from_api=False`); check whether the
   example goes online and say so.
+- **One model job on the machine at a time,** tests included: before launching, check that no other
+  solve, test suite or heavy job is running (`uptime`, `ps`). Shared cores slow every job, make
+  timings meaningless and can look like a stall.
 - **Record with every result** the repo, branch and commit, the ogcore version, the script, any
   parameter changed and whether it ran online.
 
@@ -31,5 +34,4 @@ When it is tempting to step off this path:
 | The environment has drifted from the lockfile | Re-run the installer into a new folder |
 | The task seems to need a different setting or script | Ask the person you are working with, and report exactly what differed |
 
-Background, troubleshooting and the evidence behind these rules: the solving-and-tuning reference
-of og-country-calibration.
+Installing and troubleshooting: og-run. A solve that fails or looks wrong: og-solver-diagnosis.

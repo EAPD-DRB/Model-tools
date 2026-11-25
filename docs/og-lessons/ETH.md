@@ -167,6 +167,27 @@ country's calibration.
 - **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH exploration and financing-history notes, 2026-11-25 (local).
 - **When:** 2026-11.
 
+### Capital stock at current national prices; public capital in nominal terms
+
+- **Lesson:** keep the capital stock, investment and depreciation on one price basis, current national prices, nominal over nominal; take public capital from a nominal series.
+- **What happened:** the capital-output ratio was first taken from PWT at current PPPs (2.167 in 2023). The PWT stock at current national prices over GDP at current prices was 2.366, 9 percent higher; the two differ by up to a third in other years (2010: 2.52 at PPP, 1.85 at national prices). The public stock first used IMF ICSD's real ratio (0.667) where the nominal one is 0.840. An estimate of the relative price of investment (3.8) was dropped for the direct stock.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `ogeth/macro_params.py` (PWT_CAPITAL_OUTPUT_RATIO, PUBLIC_CAPITAL_OUTPUT_RATIO), `scripts/derive_sourced_values.py`, `ogeth/data/pwt110_eth_capital*.csv`.
+- **When:** 2026-11-16.
+
+### Capital share: inefficiency counted once, side implications checked, published sources
+
+- **Lesson:** put the inefficiency of public investment in one place (leakage and the measured stock), check the labour share and return a chosen capital share imply, and cite the published version of an estimate.
+- **What happened:** the inefficiency was applied both to the output elasticity of public capital and through leakage; the elasticity was the Bom-Ligthart working-paper figure (0.08) where the published article gives 0.083 short run and 0.122 long run; a lower capital share then implied a labour share near 0.76, double the measured one. Half a day of revisions.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; session record 2026-11-16.
+- **When:** 2026-11-16.
+
+### Starting wealth smooth across an age cutoff
+
+- **Lesson:** keep starting wealth smooth across any age boundary used in its construction.
+- **What happened:** the burn-in of the starting wealth shape stopped at 80 and the oldest ages kept another shape; the step at 80 made the household solve fail for the poorest cohorts crossing it, in three runs. Continuing ages 80 and over from age 79 per person fixed it.
+- **Evidence:** OG-ETH commit 460109e.
+- **When:** 2026-11.
+
 ## og-country-calibration/references/taxes-informality.md
 
 ### Standing check: the bequest tax: ETH ships 0
@@ -296,6 +317,41 @@ country's calibration.
 - **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `ogeth/data/consumption_by_age.csv`, `examples/fit_family_transfers.py`.
 - **When:** 2026-11.
 
+### Hours by age: an extrapolated target double-counted the fall in pay
+
+- **Lesson:** fit `chi_n` on the ages the survey covers, with old-age targets from survey bands; an old-age target built from labour income per person counts the fall in pay twice. Judge `chi_n` by its rise from prime to old age; stop after two workarounds that do not converge and look for the missing mechanism.
+- **What happened:** with sigma 1.5 and the subsistence floor, `chi_n` hit OG-Core's 10,000 bound from age 64 and the fit asked for 1 to 3 million at 80 and over. The hours target beyond the survey had been tapered with NTA labour income per person, which already contains the wage fall that `e` applies again (fixed in commit 78748d5). A chain of workarounds followed over about three working days (an end to working life at 80, direct support for the poorest elderly, a raised cap, ten-fold steps), each breaking the steady state or the transition. It was resolved by a target from survey bands (commit 2aa75b1), transfer shares by year (OG-Core PR 1297) and family transfers fitted to consumption by age (OG-Core PR 1298), with `chi_n` free through 69.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commits 78748d5, c7550b6, 2aa75b1; PSLmodels/OG-Core#1297, #1298.
+- **When:** 2026-11-19 to 11-24.
+
+### Transfer shares fixed over time overpaid the oldest
+
+- **Lesson:** check transfers per person by age and group along the transition; a fixed `(S, J)` share of transfers with an ageing population pays the oldest more each year. Use transfer shares by year where your ogcore has them, built from each year's population.
+- **What happened:** OG-Core's `eta` and `eta_RM` are held at one `(S, J)` matrix over the whole path. As the population aged, transfers per person to the oldest rose to between 5 and about 160 times the intended amount in the early decades (the poorest group at 95: 80 times). The overpayment masked the old-age labour problem; with shares by year, people over 80 consumed a third less and worked more in the early years.
+- **Evidence:** PSLmodels/OG-Core#1297 (open); OG-ETH test branch runs of 2026-11-23.
+- **When:** 2026-11-19 to 11-23.
+
+### A cross-country table value was a formula applied out of sample
+
+- **Lesson:** before using a country's value from a cross-country table, check whether it is an estimate for that country or a formula applied to it, and whether the country is inside the sample; and use the model's existing levers before drafting an OG-Core change.
+- **What happened:** a table in Ogaki, Ostry and Reinhart (1996) gave Ethiopia an elasticity implying sigma 19.2, next to 1.8 for the Philippines; the values came from one fitted formula applied at an assumed subsistence level. An OG-Core change to raise the sigma ceiling was drafted and a second session started before the case was dropped for sigma 1.5 with a subsistence floor. About a day and a half.
+- **Evidence:** session record 2026-11-17/18; OG-ETH commit 93ce1f3.
+- **When:** 2026-11-17.
+
+### The poorest group's bequest weight broke a reform
+
+- **Lesson:** when a transition fails for old households of one group, read that group's wealth and transfers by age; a bequest weight inherited from other groups can make the poorest hoard.
+- **What happened:** the reform transition failed at age 90 in the poorest group (Euler error 109), the same on the released ogcore. That group, at the subsistence floor, held wealth to 3.15 with transfers several times its consumption; a `chi_b` of its own (8.73) fixed it.
+- **Evidence:** session record 2026-11-11; OG-ETH JSON `chi_b`.
+- **When:** 2026-11-11.
+
+### A sourced value is not a tuning lever
+
+- **Lesson:** a parameter settled from evidence (Frisch, sigma) is not moved to hit a target; a target it would need flags a missing piece.
+- **What happened:** moving Frisch to its maximum was proposed to close old-age hours; it had been settled at 0.25 from bias-corrected evidence, and the gap was a missing mechanism (family support).
+- **Evidence:** session record 2026-11-23.
+- **When:** 2026-11-23.
+
 ## og-country-calibration/references/validation-dashboard.md
 
 ### The steady-state dashboard: a data-comparison table in macro.md
@@ -355,6 +411,20 @@ country's calibration.
 - **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commit fdd3b2b (`targets.py`).
 - **When:** 2026-11.
 
+### Docs numbers typed by hand went through six audits
+
+- **Lesson:** write the docs once the calibration settles, take every number from the final run through generated tables and glue, and audit once.
+- **What happened:** calibration chapters written while tuning carried hand-typed numbers that each retune made stale; six audit rounds followed before the generator produced every table from the official run.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `docs/create_doc_figures.py`.
+- **When:** 2026-11.
+
+### The calibration PR as a fit report
+
+- **Lesson:** the PR shows the fit to data in tables and figures from the run, with no history, comparisons with earlier runs, tested alternatives or reform results; an independent review checks every number before the push.
+- **What happened:** the PR text was rewritten more than five times; a reform table and a tested block were removed ("we are building a calibration, not assessing policy"); a fresh reviewer found twelve problems, two serious, in a draft its author had checked.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111 (description).
+- **When:** 2026-11-25.
+
 ## og-solver-diagnosis/references/solve-procedures.md
 
 ### Running against an unreleased ogcore: ETH's main pins ogcore by commit
@@ -410,4 +480,11 @@ country's calibration.
   skills still planned to run its treatment and control copies in parallel and compare their
   times.
 - **Evidence:** session logs of 2026-11-12/13; evals/og-skills/scores/2026-11-13.md.
+- **When:** 2026-11.
+
+### Exploring: one probe per idea, watch the run, one finished calibration
+
+- **Lesson:** while exploring, one probe per idea, read for what it buys and costs; tune static dials on warm steady states and spend transition rounds only on what the transition judges; watch the log and CPU from launch; measure a choice with one switch-off run from the finished calibration rather than parallel arms.
+- **What happened:** ten transition solves and four rounds per idea while exploring; two control and treatment arms tuned in parallel for three rounds each (about two hours); stalled runs waited on for an hour that were a ladder of restarts; mechanisms stated without computing them from the output sent the work the wrong way more than once.
+- **Evidence:** session records 2026-11-12 to 11-25.
 - **When:** 2026-11.

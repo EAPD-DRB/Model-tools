@@ -216,9 +216,9 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 - `get_pop_objs` builds the last data year with the frozen rates while storing the previous year's
   rates for it, and switches to the fixed population at `fixper` in one period. These are the two
   single-period spikes of class I. Check the population law of motion (og-country-calibration,
-  households-demographics, "Discontinuities") before accepting them.
+  households-demographics, "The two population breaks and the run's tolerance") before accepting them.
 
-- TPI applies year-0 compliance/filer values to the whole path's revenue accounting — a
-  time-varying compliance reform shows behavior responding while revenue tracks baseline.
-- `SS.py` tiles capital-noncompliance from the labor rate in the post-solve `mtry_ss` diagnostic —
-  keep labor = capital noncompliance.
+- In ogcore before 0.17, TPI applied year-0 compliance/filer values to the whole path's revenue
+  accounting (a time-varying compliance reform shows behaviour responding while revenue tracks the
+  baseline), and `SS.py` tiled capital non-compliance from the labour rate in the post-solve
+  `mtry_ss` diagnostic. Both are fixed upstream; on an older build, upgrade.

@@ -3,76 +3,78 @@ name: og-country-calibration
 description: >-
   Calibrates, updates or reviews an OG-Core overlapping-generations country model (OG-USA, PHL,
   ZAF, IDN, BRA, ETH or a new country). Use when setting or checking macro and open-economy
-  parameters, gamma, the earnings matrix, demographics, preferences, pensions, initial wealth,
-  taxes or informality; when porting the model to a new country or updating a calibration to new
-  data; or when validating a steady state or transition against country data. Multi-industry work
-  is og-multi-industry-calibration; launching runs is og-run; a failing solve is
-  og-solver-diagnosis.
+  parameters, the capital stock and capital share, the earnings matrix, demographics, preferences,
+  pensions, initial wealth, taxes or informality; when porting the model to a new country or
+  updating a calibration to new data; when validating a steady state or transition against country
+  data; or when writing a calibration PR. Multi-industry work is og-multi-industry-calibration;
+  launching runs is og-run; a failing solve is og-solver-diagnosis.
 ---
 
 # Calibrating an OG-Core country model
 
-Methods and pitfalls learned across the OG-Core country models, for a new country or an update of
-an existing one. Every number here is an example; derive your own. Check each claim against the
-repo in front of you and the installed ogcore: parameters appear, get renamed or change shape
-between releases.
+Methods and checks learned across the OG-Core country models, for a new country or an update of an
+existing one. Numbers here are examples; derive your own. Check each claim against the repo in
+front of you and the installed ogcore: parameters appear, get renamed or change shape between
+releases, and some lessons need features only some builds have (each says how to check).
 
 ## Running the model
 
 Install each model with OG-Core's installer, one copy per commit, and run the repo's example script
 unchanged from that copy's environment; tuning uses the repo's own tuning script, and tests run in
-such a copy. A run outside this path cannot be reproduced or compared, so its numbers do not count.
-To investigate, read the saved output; for a quick check, run the example's steady state from the
-installed copy. A baseline takes under ten minutes. Report with every result the repo, commit,
-ogcore version, script and whether it ran online. Detail: [og-run-rules.md](references/og-run-rules.md).
+such a copy. One model job on the machine at a time. A run outside this path cannot be reproduced or
+compared, so its numbers do not count. To investigate, read the saved output. Report with every
+result the repo, commit, ogcore version, script and whether it ran online. Detail:
+[og-run-rules.md](references/og-run-rules.md) and the og-run skill.
 
 ## How a calibration runs
 
-The person you are working with leads: they decide what the baseline targets, which data sources
-to use, which method settles each parameter, and when to stop. Your part is to find the data and
-the methods, propose a choice with a recommendation and its evidence, run, check, and report
-plainly. The order that works:
+The person you are working with leads: they decide what the baseline targets, which sources to
+use, which method settles each parameter, and when to stop. Your part is to find the data and the
+methods, propose a choice with a recommendation and its evidence, run, check, and report plainly.
 
-1. **Targets.** The baseline is the observed economy in the start year (the latest year with data);
-   a fiscal program or a forecast is a scenario run against it. Fix the GDP basis once (for example
-   rebased national accounts at market prices) and use it for every ratio.
+1. **Targets.** The baseline is the country's normal operation in the start year (the latest year
+   with data) under current, adopted policy; programs and forecasts are scenarios. Fix the GDP
+   basis and the price basis once (market prices, one national-accounts vintage) and use them for
+   every ratio.
 2. **Inputs, one decision at a time.** For each input, the best available data or published
    method, starting with the national institution that owns the number; log each decision with its
-   source and the alternatives considered. Settle every input before tuning.
-3. **Tune once.** The dials (tax scales, `zeta_K`, patience) against their own measured moments.
-4. **Validate.** The example script, steady state and transition, against the dashboard
-   (validation-dashboard.md): fiscal rows first, then the first model year, then the long run.
-5. **Document,** with every value generated from code and pinned by a test.
-6. **Stop** when the remaining gaps are small or need a model the repo does not have, and say which
-   gaps remain and why.
+   source and the alternatives considered. A choice made by another model or institution is
+   evidence only with its reasoning. Settle every input before tuning.
+3. **Tune once.** The dials (tax scales, `r_gov_shift`, `zeta_K`, patience) against their own
+   measured moments.
+4. **Validate.** The example script, steady state and transition, against the dashboard: fiscal
+   rows first, then the first model years, then the long run.
+5. **Document,** with every number generated from the run and the packaged JSON.
+6. **Stop** when the remaining gaps are small or need a model the repo does not have; say which
+   gaps remain, with their measured causes. Call diminishing returns when you see them.
 
-Each block has a ladder from minimal to ideal: use the highest rung the data supports, and when you
-take a lower one, say so. A documented fallback is a legitimate calibration; an undocumented
-placeholder is not. Updating an existing calibration follows the same order: start from what the
-repo ships, list what the new data changes, and re-settle only those inputs before one retune.
+Each block has rungs from minimal to ideal: use the highest the data supports and say when you take
+a lower one. A documented fallback is a legitimate calibration; an undocumented placeholder is not.
+An update follows the same order: start from what the repo ships, list what the new data changes,
+re-settle only those inputs, then one retune.
 
 ## The mental model
 
-1. **The packaged `og<xxx>_default_parameters.json` is the source of truth.** `Calibration(p,
+1. **The packaged `og<xxx>_default_parameters.json` is the calibration.** `Calibration(p,
    update_from_api=False)` fetches nothing, but an example may call `update_from_api=True` when
    online and overwrite curated values. Read the example before trusting a hand-set value.
-2. **Anything you do not set stays American:** `delta_annual` 0.05, `beta_annual` 0.96,
-   `mean_income_data` in US dollars (it scales taxes and pensions), `pension_system` US Social
-   Security, `tax_func_type` `DEP`, `cit_rate` 0.21, `p_wealth` 0.0, `zeta_D` 0.4,
-   `debt_ratio_ss` 2.0, `c_min` 0, the `initial_guess_*` set. Count what your `Calibration`
-   actually delivers. [JPN]
-3. **Lead the dashboard with fiscal data.** Collections by instrument, debt, its foreign share and
-   the effective rate on debt are published precisely and check each other through the budget
-   identity. The foreign capital share `K_f/K` is first-tier too.
-4. **Calibrate effective, not statutory, quantities:** rate = actual collections ÷ the model's base,
-   for every instrument.
-5. **Single-industry first;** multi-industry is an overlay built afterwards.
+2. **Anything you do not set is OG-Core's default, mostly US values.** Diff the JSON against your
+   ogcore's `default_parameters.json`: every key still equal to the default (`delta_annual`,
+   `beta_annual`, `mean_income_data` in dollars, the US pension system, `tax_func_type`,
+   `cit_rate`, `eta`, `eta_RM`, `chi_b`, `chi_n`, the `initial_guess_*` seeds, `tG1`) is unexamined
+   unless documented. Read each parameter's valid range there too. [JPN]
+3. **Lead the dashboard with fiscal data.** Collections by instrument, debt, the interest bill and
+   the foreign-owned capital share are published precisely and check each other through the budget
+   identity.
+4. **Calibrate effective, not statutory, quantities:** rate = collections ÷ the model's base, for
+   every instrument.
+5. **One price basis for capital:** the stock, investment and depreciation all private and at
+   current national prices.
 6. **Find every lever before tuning.** Write the model's own closed form for each target moment and
    list every parameter in it ([method.md](references/method.md)); a lever that runs out of road is
-   the wrong lever, not a gap in the model.
-7. **Read a binding bound economically first.** A parameter stuck at its bound usually means
-   another input is wrong or a mechanism is missing; check units and the economics before asking
-   for a wider bound.
+   the wrong lever, and a parameter at its bound is a signal to read economically before widening
+   the bound.
+7. **Single-industry first;** multi-industry is an overlay built afterwards.
 
 ## Checklist for a new country
 
@@ -80,39 +82,40 @@ Copy into the work log and tick off. For an update, keep the rows the new data t
 
 ```
 - [ ] Existing work: open PRs and branches touching this block; the current gaps and their sign.
-- [ ] Targets and GDP basis agreed; a fiscal-path panel and a steady-state dashboard planned.
+- [ ] Targets, GDP basis and price basis agreed; fiscal path panel and dashboard planned.
 - [ ] Moment x lever table from OG-Core's equations (method.md).
-- [ ] Bootstrap from the closest sibling repo, then replace every inherited value (bootstrap.md).
-- [ ] Install with the installer; note the resolved ogcore; preflight.
-- [ ] Demographics: named country code + test; data window to the last usable year; g_n_ss
-      against the UN projection; income gradients if available.
-- [ ] Earnings: shares or Gini on the same concept as the reference; NTA age shape if available.
-- [ ] Macro: start_year, debt (measured start, anchored long run), external debt, zeta_D,
-      world rate, g_y per hour, remittances and aid, r_gov to the treasury's effective real rate,
-      debt premium centred on the target, public capital, initial wealth, transfers (cash only).
-      K/Y and delta on private capital.
-- [ ] Capital share from the labour share (adjusted for self-employment) or rent flows; decided
-      when sourced, never moved to close a K/Y gap.
-- [ ] Taxes: every rate effective (collections / model base), by instrument; close the budget
-      identity alpha_G + alpha_T + alpha_I + pensions/Y + UBI/Y = revenue/Y - pb*.
-- [ ] Pensions in local currency; chi_n to hours by age.
-- [ ] Preferences: sigma, a subsistence floor if relevant, Frisch; then patience.
+- [ ] Bootstrap from the closest sibling, then replace every inherited value (bootstrap.md).
+- [ ] Install with the installer; note the resolved ogcore; check which optional features it has.
+- [ ] Dimensions and age convention (households-demographics.md).
+- [ ] Demographics: named country code + test; window to the last usable year; g_n_ss against
+      the UN projection; income gradients if available.
+- [ ] Earnings: country age shape and group spread, one income concept.
+- [ ] Macro: start_year, debt (measured start, chosen anchor), debt abroad, world rate, g_y per
+      hour, remittances and aid, r_gov to the treasury's effective real rate, centred premium,
+      public capital, initial wealth, cash transfers only.
+- [ ] Capital: private K/Y and delta at current national prices; capital share from the labour
+      share (adjusted for self-employment), decided once; owners' return against evidence.
+- [ ] Taxes: every rate effective, by instrument; non-tax revenue mapped; close the budget
+      identity: G/Y = (revenue + aid)/Y − (TR + I_g + pensions + UBI)/Y − pb*.
+- [ ] Pensions in local currency; hours by age (chi_n) on survey ages; transfers by age (eta).
+- [ ] Preferences: sigma, a subsistence floor if relevant, Frisch, chi_b; then patience.
 - [ ] Tune the dials once; validate steady state and transition, including the first-year
-      cohorts (og-solver-diagnosis, class M).
-- [ ] Ship a warm-start seed from the first converged solve; regenerate after large moves.
-- [ ] Final solve of the packaged JSON with no overrides; tests; changelog; docs from the JSON.
+      cohorts (og-solver-diagnosis).
+- [ ] Warm-start seed from the first converged solve; regenerate after large moves.
+- [ ] Final solve of the packaged JSON with no overrides; tests; changelog; docs from the run.
 ```
 
 When a check fails, go back before moving on: after a tax change re-tune `zeta_K`; after a sourced
 input changes, redo the tax dials and then patience; if the packaged JSON fails on its own, revisit
-the overrides just folded in; if the transition's resource-constraint error is not small and
-steady, triage it by period (og-solver-diagnosis) before tuning.
+the overrides just folded in; if the transition's resource-constraint error is not small outside
+the known population breaks, triage it by period (og-solver-diagnosis) before tuning.
 
 ## Reporting
 
-Report in plain language: the baseline is the observed economy, a program is a scenario, and
-model-against-data tables use the names in the data. Say what is measured, what is assumed and what
-is a check. Keep internal labels (round names, "dials", "official run") out of reports.
+Report in plain language: model against data in tables and figures, with the names the data use.
+Say what is measured, what is assumed and what is a check; compute a mechanism from the saved output
+before stating it. Keep internal labels (round names, "dials", "official run") out of reports.
+The calibration PR is a fit report ([calibration-pr.md](references/calibration-pr.md)).
 
 ## Reference files
 
@@ -120,49 +123,53 @@ Read the one for the block you are working on.
 
 | File | Read when |
 |---|---|
-| [method.md](references/method.md) | Before tuning: the moment × lever table, finding every lever, why the transition is validated |
+| [method.md](references/method.md) | Before tuning: the moment × lever table, finding every lever, decomposing a gap that will not close |
 | [bootstrap.md](references/bootstrap.md) | Copying a sibling repo for a new country |
-| [macro-open-economy.md](references/macro-open-economy.md) | Start year, debt and external debt, `zeta_D`, `zeta_K`, world rate, `g_y`, `r_gov`, remittances and aid, debt premium, public capital, initial wealth, `delta`, `beta`, `gamma` |
-| [households-demographics.md](references/households-demographics.md) | Earnings matrix, demographics, preferences (`sigma`, `c_min`, Frisch), pensions, `chi_n` |
-| [fiscal-consistency.md](references/fiscal-consistency.md) | Spending shares, the budget identity, a debt path that runs away, the fiscal path panel |
-| [taxes-informality.md](references/taxes-informality.md) | Any tax rate, the income-tax form, payroll and bequest checks, informality, non-tax revenue |
-| [validation-dashboard.md](references/validation-dashboard.md) | Building or scoring the dashboard, data anchors, reading output, tests that pin values |
-| [solving-tuning.md](references/solving-tuning.md) | Environment, troubleshooting a run, the tuning loop and its order |
+| [macro-open-economy.md](references/macro-open-economy.md) | Start year, debt and debt abroad, the capital stock and its price basis, public capital, the capital share, `zeta_K`, world rate, `g_y`, `r_gov`, remittances and aid, initial wealth, patience, `alpha_T` |
+| [households-demographics.md](references/households-demographics.md) | Dimensions, earnings matrix, demographics, pensions, hours by age, transfers by age, family support, preferences |
+| [fiscal-consistency.md](references/fiscal-consistency.md) | The budget identity, the baseline fiscal stance and debt anchor, the closure, the fiscal path panel |
+| [taxes-informality.md](references/taxes-informality.md) | Any tax rate, the corporate block, the income-tax form, informality, non-tax revenue |
+| [validation-dashboard.md](references/validation-dashboard.md) | Building or scoring the dashboard, price and GDP basis, reading output, numbers in docs |
+| [solving-tuning.md](references/solving-tuning.md) | The tuning loop, spending runs while exploring, the environment |
 | [calibration-pr.md](references/calibration-pr.md) | Writing the calibration PR |
+| [provenance.md](references/provenance.md) | Tracing where an existing value came from |
 | [og-run-rules.md](references/og-run-rules.md) | How to run the model |
-| [lessons/INDEX.md](references/lessons/INDEX.md) | Your country has a feature another country has dealt with: the lessons by situation, with each country's case |
+| [lessons/INDEX.md](references/lessons/INDEX.md) | Your country has a feature another country has dealt with: the cases by situation, and repos worth reading as worked examples |
 
-Related skills: og-run, og-solver-diagnosis, og-multi-industry-calibration, og-scenario-report
-(presenting runs). Where an existing value came from: [provenance.md](references/provenance.md).
+Related skills: og-run, og-solver-diagnosis, og-multi-industry-calibration, og-scenario-report. If
+one is not available, do the job directly and say which skill would have covered it.
 
-## Lessons and tags
+## Lessons and their history
 
-A tag such as `[PHL]` records where a lesson was learned, not where it applies; the condition is
-stated as a country feature (informal economy, net creditor, concessional debt). `[family]` marks a
-practice shared by most repos, `[emerging]` one used in one or two, `[net-new]` one used nowhere
-yet. Each country's
-cases, with numbers and evidence, are in `references/lessons/<CODE>.md`; start from the index by
-situation. When your country teaches something new, add it as `docs/og-skills-maintenance.md` in
-Model-tools describes.
+A tag such as `[PHL]` records where a lesson was learned, not where it applies; each lesson states
+its condition as a country feature (informal economy, net creditor, concessional debt). Each
+country's cases, with numbers and evidence, are in `references/lessons/<CODE>.md`; start from the
+index by situation. When your country teaches something new, add it as `docs/og-skills-maintenance.md`
+in Model-tools describes.
 
 ## The traps that cost the most
 
 - **The budget does not balance at the debt target:** the transition runs away while the steady
   state looks fine (fiscal-consistency.md).
-- **Statutory rates in effective slots:** `tau_bq`, payroll on top of the income-tax function, a
-  flat income tax (taxes-informality.md).
-- **Placeholder `zeta_K`:** tune it to the measured foreign capital share (macro-open-economy.md).
-- **`r_gov` from the cross-country intercept:** anchor it to the treasury's effective real rate.
-- **Wrong `initial_debt_ratio`:** invisible in the steady state, obvious in the first year.
-- **A consumption spike in the first years:** rule out unsolved first-year cohorts
-  (og-solver-diagnosis, class M) before blaming the initial wealth.
-- **Short demographic window:** it sets the long-run growth rate silently.
-- **Live data overwriting a curated value:** take curated parameters off the live path.
+- **Statutory rates in effective slots:** `tau_bq`, payroll on top of the income-tax function
+  (taxes-informality.md).
+- **Capital on mixed bases:** a PPP stock with national-price depreciation and investment, or
+  total capital against the model's private `K` (macro-open-economy.md).
 - **Tuning before the inputs are settled:** every later correction costs a retune.
-- **Patience at its bound:** usually high curvature with fast growth, or a saving target the
-  long-run bounds cannot reach; see `beta_annual` and preferences before widening the bound.
-- **Patience judged on the steady state:** with measured initial wealth its effect shows in the
-  first transition years; judge it there, within the long-run bounds (macro-open-economy.md).
-- **The wrong consumption series with a subsistence floor:** OG-Core's `C` excludes the floor; score
-  `C_i`, and check that the expenditure shares add up to GDP (validation-dashboard.md).
+- **Patience judged on the steady state, or at the wrong extreme:** with measured starting wealth
+  its effect shows in the first years; set it within the long-run return bounds.
+- **The wrong consumption series or price basis:** with a subsistence floor score `C_i`, on market
+  prices, and check that the expenditure shares add up (validation-dashboard.md).
+- **Placeholder `zeta_K`, or `zeta_K` used to close an investment gap:** tune it to the measured
+  foreign-owned share.
+- **Wrong `initial_debt_ratio`:** invisible in the steady state, obvious in the first year.
+- **Transfer shares fixed while the population ages:** the oldest are overpaid many times over;
+  check transfers per person by age along the transition.
+- **An old-age hours target extrapolated with an income profile:** the fall in pay counted twice;
+  fit the survey ages.
+- **A cross-country table value used out of sample:** check whether it is an estimate or a formula.
+- **A consumption spike in the first years:** rule out unsolved first-year cohorts
+  (og-solver-diagnosis) before blaming the initial wealth.
+- **Short demographic window:** it sets long-run population growth silently.
+- **Live data overwriting a curated value:** take curated parameters off the live path.
 - **Remittances or aid left out where they matter:** a spurious trade surplus and a fiscal squeeze.
