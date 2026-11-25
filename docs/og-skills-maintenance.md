@@ -84,8 +84,28 @@ it as a history entry and adjust the skill. `evals/og-skills/` keeps written sce
 from earlier rounds; they check what an agent knows, not what it does under pressure, so treat
 them as a quick check of knowledge, not as the gate for a change.
 
-## Mirrors
+## One home per skill, and how other repos carry the skills
 
-Model-tools is canonical for the OG skills. MUIOGO-AI carries copies; copy whole files, never edit a
-copy. The MUIOGO-specific rules (its two installations, or "worlds") live in the MUIOGO skills and
-og-clews-linked-run, not in the OG skills.
+Every reusable skill has one home, and it is edited only there:
+- **Model-tools:** the OG skills (og-run, og-solver-diagnosis, og-country-calibration,
+  og-multi-industry-calibration, og-scenario-report), the CLEWs skills and the
+  handoff skills, with their history (`docs/og-lessons/`), shared rules (`skills/shared/`) and
+  evaluations.
+- **The repo whose code a skill drives:** a skill that instructs one product's interface lives with
+  that product (MUIOGO-AI's `muiogo-*` skills drive its `muiogo` command line, and
+  og-clews-linked-run drives the OG-CLEWS link inside a MUIOGO installation; MUIOGO-AI also holds
+  its installation rules, `WORLD_DISCIPLINE.md`).
+
+Skills here are written for any environment. They never depend on one; where an environment adds
+its own instructions (where models are installed, which installation to use), the skills follow
+them through one generic line in the shared run rules, and the environment states them in its own
+`AGENTS.md` or workspace skill.
+
+A repo that carries Model-tools skills (MUIOGO-AI) vendors them unchanged at a pinned Model-tools
+commit, records the pin, and checks that its copies equal the pinned ones; it never edits a copy.
+Fixes go here first, then the pin moves. Lessons learned while using a vendored copy come back here
+as history entries.
+
+Retired skills: og-run-preflight (now part of og-run), calibration-provenance (now
+og-country-calibration's provenance reference), og-analysis-studio (now og-scenario-report);
+og-repo-fleet-sync left this set. og-clews-linked-run moved to MUIOGO-AI.

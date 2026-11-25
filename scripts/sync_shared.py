@@ -48,11 +48,6 @@ VENDORED = {
         "og-run",
         "og-solver-diagnosis",
     ),
-    # MUIOGO's two installations ("worlds") matter only inside MUIOGO; the OG
-    # skills are for standalone repos and point to muiogo-workspace instead.
-    "world-discipline.md": (
-        "og-clews-linked-run",
-    ),
     "provenance/SCHEMA.md": (
         "build-clews-model",
         "calibrate-clews-model",

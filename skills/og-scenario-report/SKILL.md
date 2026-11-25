@@ -18,6 +18,9 @@ asks. Two rules hold in every mode:
    sensitivity sweep), stop: specify the run, and say what you will run and how long it should take
    (og-run), rather than quietly re-running a solve to fill a gap.
 
+If the environment you work in has its own instructions on where runs and models live (a project
+`AGENTS.md`, or a workspace skill such as MUIOGO-AI's muiogo-workspace), follow them first.
+
 ## Reading outputs safely
 
 - A run leaves `OUTPUT_BASELINE/` and `OUTPUT_REFORM/`, each with `SS/SS_vars.pkl`,
