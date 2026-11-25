@@ -10,6 +10,13 @@ are one country's numbers, kept here so the skills stay general. They record wha
 written; check the country repo before relying on any of them. Do not copy them into another
 country's calibration.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/SKILL.md
+- og-country-calibration/references/taxes-informality.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/validation-dashboard.md
+- og-solver-diagnosis/references/solve-procedures.md
+
 ## og-country-calibration/SKILL.md
 
 ### The mental model: judge the joint steady state against data

@@ -22,6 +22,15 @@ derivations), `CALIBRATION_JOURNEY.md` (a narrative of the session, with its cor
 means `https://github.com/marcelolafleur/OG-JPN/blob/e438fa2/<path>`. The arihantlodha-cmd `main`
 branch went on to a separate calibration after 2026-08-18; nothing below comes from it.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/SKILL.md
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/fiscal-consistency.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/validation-dashboard.md
+- og-country-calibration/references/solving-tuning.md
+- og-solver-diagnosis/references/solve-procedures.md
+
 ## og-country-calibration/SKILL.md
 
 ### Calibrating an OG-Core country model: country tags are provenance, not scope

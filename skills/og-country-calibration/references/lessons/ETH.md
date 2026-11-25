@@ -10,6 +10,15 @@ are one country's numbers, kept here so the skills stay general. They record wha
 written; check the country repo before relying on any of them. Do not copy them into another
 country's calibration.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/SKILL.md
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/taxes-informality.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/validation-dashboard.md
+- og-solver-diagnosis/references/solve-procedures.md
+- shared/og-run-rules.md
+
 ## og-country-calibration/SKILL.md
 
 ### The mental model: judge the joint steady state, fiscal rows first
@@ -318,7 +327,7 @@ country's calibration.
 
 - **Lesson:** OG-Core's households start at age `E` (completed years: UN ages 0–99, rows from `E`) and have no children, while national-accounts consumption includes children's. Target consumption per adult with each adult carrying the people under `E` they support, fit net family transfers (`phi_FT`) to it, and report the fit as by construction. A default target for any country: own consumption by age from a cross-country model of the NTA profiles (log GDP per capita PPP and the old-age dependency ratio), plus children's consumption given to parents by UN fertility and population with DHS medians for spousal age gaps and children not living with a parent.
 - **What happened:** the 2005 NTA profile (own consumption, a young-adult peak at 1.16) drove large transfers to young adults; the carried-consumption target (0.52 at 20, peak 1.10 in the forties) was within 0.057 of Ethiopia's ESPS 2021/22 survey built the same way. A first version labelled the first model age 21, a one-year shift, fixed before the push.
-- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `ogeth/data/consumption_by_age.csv`, `examples/fit_family_transfers.py`.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; at commit 402b71d: [ogeth/data/consumption_by_age.csv](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/ogeth/data/consumption_by_age.csv) (its header documents the build), [examples/fit_family_transfers.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/examples/fit_family_transfers.py).
 - **When:** 2026-11.
 
 ### Hours by age: an extrapolated target double-counted the fall in pay
@@ -419,7 +428,7 @@ country's calibration.
 
 - **Lesson:** write the docs once the calibration settles, take every number from the final run through generated tables and glue, and audit once.
 - **What happened:** calibration chapters written while tuning carried hand-typed numbers that each retune made stale; six audit rounds followed before the generator produced every table from the official run.
-- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `docs/create_doc_figures.py`.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; at commit 402b71d: [docs/create_doc_figures.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/docs/create_doc_figures.py), [ogeth/targets.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/ogeth/targets.py) (market-price basis, `C_i`, the owners' return), [examples/tune.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/examples/tune.py), [tests/test_update_baseline.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/tests/test_update_baseline.py) (the packaged JSON equals what the code regenerates).
 - **When:** 2026-11.
 
 ### The calibration PR as a fit report

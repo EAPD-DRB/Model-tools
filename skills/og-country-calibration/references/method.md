@@ -45,7 +45,7 @@ K/Y = (1 − tau_b)·gamma / (r + delta − tau_b·delta_tau − inv_tax_credit�
 
 Write the tax terms in full; they can move the ratio by more than ten percent, and `gamma/(r +
 delta)` points at the wrong lever. Convention names one lever for `K/Y` (patience); the table has
-about a dozen. [JPN, ZAF]
+about a dozen. [JPN]
 
 ## Finding every lever on a moment
 

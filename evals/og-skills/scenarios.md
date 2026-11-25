@@ -251,3 +251,109 @@ settings. You need four more rounds today. What do you do? At most 200 words.
 5. Treat any rounds already run without the settings as invalid and rerun them.
 6. Fold the settled values into the packaged parameters and take reported numbers from the
    shipped example, not from the tuning output.
+
+## S14. Two capital-output ratios
+
+**Prompt.** For a lower-middle-income country, Penn World Table 11.0 gives a capital-output ratio
+of 2.2 at current PPPs (`cn/cgdpo`) and 2.6 at current national prices (net stock over `v_gdp`).
+The national accounts give consumption of fixed capital of 11% of GDP and gross fixed capital
+formation of 24% (public 6%). A colleague prefers the PPP ratio because, with a capital share of
+0.45, the national-price ratio "implies a return on capital above 15%". Which ratio do you target,
+how do you set `delta_annual`, and what do you check about the return? At most 300 words.
+
+**Rubric.**
+1. Targets the national-price ratio: the model has one good and is scored on nominal shares, so the
+   stock, investment and depreciation share one price basis.
+2. Uses private capital: subtracts public capital (nominal) from the ratio and government CFC from
+   depreciation; `delta` = private CFC/Y over private K/Y on the same basis.
+3. Checks steady-state investment `(g + delta)·K/Y` against measured private investment.
+4. Answers the return objection by checking the capital share (self-employment income, resource
+   rents, product taxes, public capital) and comparing like with like (pre-tax evidence such as PWT
+   `irr` with a pre-tax model return; after-tax with the owners' return), not by switching basis.
+5. Does not compare return evidence with `r_p`.
+
+## S15. Old-age hours at the bound
+
+**Prompt.** Calibrating `chi_n` to hours per person by age, the fit hits OG-Core's upper bound
+(10,000) from age 64. The labour force survey reports one band for 65 and over; above that, the
+target was extended by tapering hours with the National Transfer Accounts' labour income per
+person. A colleague proposes rescaling the earnings matrix so `chi_n` fits under the bound, or
+ending working life at 80. What do you do? At most 250 words.
+
+**Rubric.**
+1. Identifies the double count: labour income per person already contains the fall in pay that the
+   earnings matrix applies again, so the extrapolated target is wrong.
+2. Builds the old-age decline from a household survey's own age bands, anchored to the labour force
+   survey's level, and fits only where data exist.
+3. Treats a units rescale as a normalisation only (and notes what else must scale: `chi_n`,
+   `c_min`, wealth-tax levels), not as a fix for a missing mechanism.
+4. Looks for the missing mechanism (family support, transfers by age) rather than chaining
+   workarounds; tests an idea cheaply and on the transition before adopting it.
+5. Reports ages at the bound as a gap instead of forcing them.
+
+## S16. Transfers per person by age
+
+**Prompt.** A young, fast-ageing country leaves OG-Core's default `eta` (the transfer allocation)
+and sets `alpha_T` from the budget. Aggregate transfers match the data, but the oldest households
+consume far more than any survey shows in the first decades of the transition. What is going on,
+and what do you check and change? At most 250 words.
+
+**Rubric.**
+1. Notes the default `eta` is not the country's (US population age shares times `lambdas`).
+2. Explains that households receive `eta·TR/omega`, so with a fixed share, transfers per person
+   move inversely with each cell's population share and the old are overpaid while their share is
+   small.
+3. Checks transfers per person by age and group along the transition, not only the aggregate.
+4. Rebuilds `eta` from the country's own population or programme evidence, and uses `eta` by year
+   where the installed ogcore supports it (an unreleased feature; checks).
+5. Applies the same to `eta_RM`.
+
+## S17. Reviewing a calibration PR draft
+
+**Materials.** None.
+
+**Prompt.** A draft calibration PR for OG-XXX has these sections: "How we got here" (five tuning
+rounds and why patience moved twice); a fit table (model, data, source); "Results of the example
+reform" (percent changes in GDP and revenue); "Tested" (test counts and run times); and paragraphs
+quoting numbers from the docs typed by hand. What do you change before it goes to review? At most
+250 words.
+
+**Rubric.**
+1. Removes the history of rounds and alternatives; the PR reports the fit, not how it was reached.
+2. Removes the reform results (a calibration is judged by its fit).
+3. Keeps and completes the fit table (every scored moment with source; steady state and early
+   transition labelled) and the remaining gaps with their causes.
+4. Requires every number and figure to come from the final run and the packaged JSON through the
+   repo's tooling, not typed.
+5. Adds an independent check of every number and claim before the push.
+6. Keeps the changed-parameters table (old → new).
+
+## S18. The budget identity with aid
+
+**Prompt.** Steady-state inputs: tax revenue 12% of GDP, foreign aid to the government
+(`alpha_FA`) 1.5%, transfers (`alpha_T`) 3%, public investment (`alpha_I`) 5%, pensions 1%, no UBI,
+`debt_ratio_ss` 0.40, `r_gov` 0.02, `g_y` 0.03, `g_n_ss` 0.01. What government consumption share is
+consistent with debt holding at its anchor, and how do you confirm it after a solve? At most 200
+words.
+
+**Rubric.**
+1. `pb* = (r_gov − g)·debt_ratio_ss` with `g = e^{g_y}(1 + g_n_ss) − 1` (about 0.0408), no
+   division by `1 + g`: `pb*` ≈ −0.83% of GDP.
+2. `G/Y = 12 + 1.5 − 3 − 5 − 1 + 0.83` ≈ 5.3% of GDP, with aid counted as a resource.
+3. Confirms by rebuilding `G/Y` from the saved output and matching the solved `G/Y`, and compares
+   it with the `alpha_G` entered.
+4. Notes the steady state solves whatever `alpha_G` is; the transition shows an inconsistency.
+
+## S19. An outlier from a cross-country table
+
+**Prompt.** A published cross-country table lists an intertemporal elasticity of substitution for
+your country of 0.05 (implying `sigma` 20), against 0.5 for a neighbour. OG-Core caps `sigma` at
+2. What do you do? At most 200 words.
+
+**Rubric.**
+1. Checks whether the value is a direct estimate or a formula applied to the country, and whether
+   the country is inside the sample.
+2. Treats the outlier as a question, not a finding.
+3. Does not request an OG-Core change to raise the cap before using existing levers.
+4. Considers a subsistence floor (`c_min`) to represent low substitution near subsistence, with
+   `sigma` near the default.

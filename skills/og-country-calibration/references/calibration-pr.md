@@ -24,7 +24,9 @@ calibration PRs for length and layout.
 **Check.**
 - Every number and figure comes from the final run and the packaged JSON through the repo's doc
   tooling; none is typed by hand.
-- No comparisons with earlier runs, tuning rounds, other countries or alternatives tried; no
+- Parameter changes are shown old against new (item 5); results are not compared with earlier
+  runs, tuning rounds, other countries or alternatives tried, unless the maintainers' convention
+  asks for a comparison with the previous release; no
   reform results (a calibration is judged by its fit; reform results belong to scenario work); no
   internal labels ("round", "dial", "official run").
 - Every term a reader outside the project would not know is explained where it first appears.
@@ -45,11 +47,11 @@ belongs in the PR conversation, not in the committed docs. [PHL]
 
 For a non-obvious fix (a units conversion, a rescaled level), state what was off, the arithmetic
 that causes it, and that the constant is derived, not fitted. For a fix forced by an ogcore
-upgrade, say what broke and give the resource-constraint error before and after. [PHL]
+upgrade, say what broke and give the resource-constraint error before and after.
 
 ## The multi-industry overlay
 
 A multi-industry calibration ships as its own generated file and leaves the single-industry
 default working. Its PR states how the capital shares were built (rescaled to the economy-wide
 share, with public capital taken out of capital, or `gamma_g` zero) so the reviewer need not ask
-(og-multi-industry-calibration). [PHL]
+(og-multi-industry-calibration). [PHL, ZAF]

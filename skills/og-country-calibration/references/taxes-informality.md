@@ -35,13 +35,13 @@ excess hides spending above revenue (fiscal-consistency.md) and mis-sizes every 
 
 ## Payroll tax
 
-**Rule.** `tau_payroll` (by year and income group in recent ogcore; an older flat-list value may not
-load) is levied on wages on top of the income-tax function. Use it only when the income-tax function
+**Rule.** `tau_payroll` (by year and income group where its `number_dims` is 2; an older flat-list
+value may not load) is levied on wages on top of the income-tax function. Use it only when the income-tax function
 excludes payroll; functions estimated from microdata (OG-USA) already include it, and `tau_payroll`
 stays zero. Set it from social contributions over the covered groups' wage bill.
 
-How revenue is reported: with `tau_payroll` nonzero, current ogcore computes payroll revenue
-directly and ignores `frac_tax_payroll`; with `tau_payroll` zero, `frac_tax_payroll` splits the
+How revenue is reported (check `aggregates.get_payroll_tax_revenue` in your build): with
+`tau_payroll` nonzero, payroll revenue is computed directly and `frac_tax_payroll` is ignored; with `tau_payroll` zero, `frac_tax_payroll` splits the
 income-tax total into income tax and payroll. Its default (about 0.47, from OG-USA) then reports
 almost half your income tax as payroll: set it to zero when your function is income tax only.
 

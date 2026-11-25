@@ -27,7 +27,7 @@ Contents
 
 **Subsistence consumption, fast growth, thin credit markets**
 - ETH: Preferences: a subsistence floor instead of a high sigma
-- ETH: Patience: one discount factor to the long-run return when the state finances investment
+- ETH: Patience: one discount factor to the long-run return when the state finances investment (superseded)
 - ETH: Patience: as much saving as the return evidence allows, judged on the first years
 - ETH: A cross-country table value was a formula applied out of sample
 - ETH: The poorest group's bequest weight broke a reform
@@ -173,6 +173,7 @@ Contents
 - ETH: zeta_K raises investment only through foreign ownership
 - ETH: Compare return evidence with the return on capital to owners, not the portfolio return
 - ETH: Exploring: one probe per idea, watch the run, one finished calibration
+- ZAF: The calibration's working files: plan, targets, tuning script, scorecard
 
 **Validation and tests**
 - ETH: The steady-state dashboard: a data-comparison table in macro.md
@@ -186,24 +187,10 @@ Contents
 - ETH: Consumption with a subsistence floor: score `C_i`, not `C`
 - ETH: Docs numbers typed by hand went through six audits
 - ETH: The calibration PR as a fit report
+- ZAF: The calibration's working files: plan, targets, tuning script, scorecard
 
 ## Multi-industry
 
 BRA, PHL and ZAF built multi-industry overlays from social accounting matrices; their entries are
 filed under og-multi-industry-calibration (finding the data, concordances, defining industries and
 goods, `gamma_m`, `io_matrix`, `Z_m`, reaching the steady state).
-
-## Repos worth reading as worked examples
-
-Read for how the work is organised, not for values to copy; check each against the repo's current
-default branch, and against the skill where the economics differ.
-
-- OG-ZAF (main, October 2026): `docs/CALIBRATION_PLAN.md` (moment × lever table with each lever's
-  status, and the tuning order), `ogzaf/targets.py` (every target with its source),
-  `examples/tune_ss.py`, `examples/validate_fiscal_path.py`, `examples/calibration_scorecard.py`
-  (docs tables regenerated from the run between markers), tests pinning values with sources. Its
-  capital block mixes price bases and its patience is tuned to the steady state (ZAF: Capital stock:
-  a PPP stock with national-price depreciation).
-- OG-ETH (PR 111, November 2026): `ogeth/targets.py` (market-price basis, `C_i`, the owners' return),
-  `examples/tune.py`, `docs/create_doc_figures.py` (every docs table and figure from the run), a
-  test that the packaged JSON equals what the code regenerates, and the fit-report PR.

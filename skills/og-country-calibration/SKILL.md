@@ -21,8 +21,9 @@ releases, and some lessons need features only some builds have (each says how to
 
 Install each model with OG-Core's installer, one copy per commit, and run the repo's example script
 unchanged from that copy's environment; tuning uses the repo's own tuning script, and tests run in
-such a copy. One model job on the machine at a time. A run outside this path cannot be reproduced or
-compared, so its numbers do not count. To investigate, read the saved output. Report with every
+such a copy, after og-run's check before a run. Solver settings live in the packaged parameters:
+Anderson (`TPI_outer_method = "anderson"`) with `nu` 0.2 or lower. One model job on the machine at
+a time. A run outside this path cannot be reproduced or compared, so its numbers do not count. To investigate, read the saved output. Report with every
 result the repo, commit, ogcore version, script and whether it ran online. Detail:
 [og-run-rules.md](references/og-run-rules.md) and the og-run skill.
 
@@ -34,14 +35,13 @@ methods, propose a choice with a recommendation and its evidence, run, check, an
 
 1. **Targets.** The baseline is the country's normal operation in the start year (the latest year
    with data) under current, adopted policy; programs and forecasts are scenarios. Fix the GDP
-   basis and the price basis once (market prices, one national-accounts vintage) and use them for
-   every ratio.
+   basis once (market prices, one national-accounts vintage) and use it for every ratio.
 2. **Inputs, one decision at a time.** For each input, the best available data or published
    method, starting with the national institution that owns the number; log each decision with its
    source and the alternatives considered. A choice made by another model or institution is
    evidence only with its reasoning. Settle every input before tuning.
-3. **Tune once.** The dials (tax scales, `r_gov_shift`, `zeta_K`, patience) against their own
-   measured moments.
+3. **Tune once.** The dials (the income-tax scale, `tau_c`, the corporate factor, `p_wealth`,
+   `tau_bq`, `r_gov_shift`, `zeta_K`, patience) against their own measured moments.
 4. **Validate.** The example script, steady state and transition, against the dashboard: fiscal
    rows first, then the first model years, then the long run.
 5. **Document,** with every number generated from the run and the packaged JSON.
@@ -68,8 +68,8 @@ re-settle only those inputs, then one retune.
    identity.
 4. **Calibrate effective, not statutory, quantities:** rate = collections ÷ the model's base, for
    every instrument.
-5. **One price basis for capital:** the stock, investment and depreciation all private and at
-   current national prices.
+5. **One capital price basis:** the stock, investment and depreciation all private and at current
+   national prices.
 6. **Find every lever before tuning.** Write the model's own closed form for each target moment and
    list every parameter in it ([method.md](references/method.md)); a lever that runs out of road is
    the wrong lever, and a parameter at its bound is a signal to read economically before widening
@@ -82,7 +82,7 @@ Copy into the work log and tick off. For an update, keep the rows the new data t
 
 ```
 - [ ] Existing work: open PRs and branches touching this block; the current gaps and their sign.
-- [ ] Targets, GDP basis and price basis agreed; fiscal path panel and dashboard planned.
+- [ ] Targets and GDP basis (market prices) agreed; fiscal path panel and dashboard planned.
 - [ ] Moment x lever table from OG-Core's equations (method.md).
 - [ ] Bootstrap from the closest sibling, then replace every inherited value (bootstrap.md).
 - [ ] Install with the installer; note the resolved ogcore; check which optional features it has.
@@ -95,8 +95,11 @@ Copy into the work log and tick off. For an update, keep the rows the new data t
       public capital, initial wealth, cash transfers only.
 - [ ] Capital: private K/Y and delta at current national prices; capital share from the labour
       share (adjusted for self-employment), decided once; owners' return against evidence.
-- [ ] Taxes: every rate effective, by instrument; non-tax revenue mapped; close the budget
-      identity: G/Y = (revenue + aid)/Y − (TR + I_g + pensions + UBI)/Y − pb*.
+- [ ] Taxes: every rate effective, by instrument; a progressive income tax (GS) fitted to the
+      schedule; non-tax revenue mapped. Close the budget identity:
+      G/Y = (revenue + aid + net FDC)/Y − (TR + I_g + pensions + UBI)/Y − pb*, where pb* is the
+      primary balance that holds debt at debt_ratio_ss. Start alpha_G from the data, solve once,
+      then set it from the identity (fiscal-consistency.md).
 - [ ] Pensions in local currency; hours by age (chi_n) on survey ages; transfers by age (eta).
 - [ ] Preferences: sigma, a subsistence floor if relevant, Frisch, chi_b; then patience.
 - [ ] Tune the dials once; validate steady state and transition, including the first-year
@@ -106,7 +109,7 @@ Copy into the work log and tick off. For an update, keep the rows the new data t
 ```
 
 When a check fails, go back before moving on: after a tax change re-tune `zeta_K`; after a sourced
-input changes, redo the tax dials and then patience; if the packaged JSON fails on its own, revisit
+input changes, redo the tax dials, then `zeta_K`, then patience; if the packaged JSON fails on its own, revisit
 the overrides just folded in; if the transition's resource-constraint error is not small outside
 the known population breaks, triage it by period (og-solver-diagnosis) before tuning.
 
@@ -134,7 +137,7 @@ Read the one for the block you are working on.
 | [calibration-pr.md](references/calibration-pr.md) | Writing the calibration PR |
 | [provenance.md](references/provenance.md) | Tracing where an existing value came from |
 | [og-run-rules.md](references/og-run-rules.md) | How to run the model |
-| [lessons/INDEX.md](references/lessons/INDEX.md) | Your country has a feature another country has dealt with: the cases by situation, and repos worth reading as worked examples |
+| [lessons/INDEX.md](references/lessons/INDEX.md) | Your country has a feature another country has dealt with: the cases by situation, each with its evidence at a fixed commit |
 
 Related skills: og-run, og-solver-diagnosis, og-multi-industry-calibration, og-scenario-report. If
 one is not available, do the job directly and say which skill would have covered it.
@@ -153,11 +156,12 @@ in Model-tools describes.
   state looks fine (fiscal-consistency.md).
 - **Statutory rates in effective slots:** `tau_bq`, payroll on top of the income-tax function
   (taxes-informality.md).
-- **Capital on mixed bases:** a PPP stock with national-price depreciation and investment, or
+- **Capital on mixed price bases:** a PPP stock with national-price depreciation and investment, or
   total capital against the model's private `K` (macro-open-economy.md).
 - **Tuning before the inputs are settled:** every later correction costs a retune.
-- **Patience judged on the steady state, or at the wrong extreme:** with measured starting wealth
-  its effect shows in the first years; set it within the long-run return bounds.
+- **Patience judged on the steady state where the population is far from stationary, or pushed past
+  the long-run return bound:** with measured starting wealth its effect shows in the first years
+  (macro-open-economy.md).
 - **The wrong consumption series or price basis:** with a subsistence floor score `C_i`, on market
   prices, and check that the expenditure shares add up (validation-dashboard.md).
 - **Placeholder `zeta_K`, or `zeta_K` used to close an investment gap:** tune it to the measured

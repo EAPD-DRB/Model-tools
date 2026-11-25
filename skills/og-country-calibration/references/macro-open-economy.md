@@ -54,9 +54,9 @@ in which case use a projected medium-term flow. In the steady state the foreign 
 `zeta_D` by construction: an input, not a moment to score.
 
 **Applies when** much public debt is owed to official lenders abroad on concessional terms. Debt
-contracted abroad at its own rate (`alpha_D_ext`, `r_D_ext_annual`) is in no OG-Core release as of
-0.25.2 (open PR PSLmodels/OG-Core#1279; OG-ETH installs it by a commit pin; check with `hasattr` on
-`Specifications()`). Where you have it, model that debt as its own stock at its own real rate (the
+contracted abroad at its own rate (`alpha_D_ext`, `r_D_ext_annual`) is not in released OG-Core;
+check with `hasattr(Specifications(), "alpha_D_ext")`, and see the ETH history for the build that
+has it. Where you have it, model that debt as its own stock at its own real rate (the
 foreign-currency rate less foreign inflation, plus expected real depreciation), with market debt,
 `debt_ratio_ss` and `zeta_D` covering the rest, and decide what happens after the sustainability
 analysis's last year: held at a share of GDP with a rate below growth, it is a permanent inflow from
@@ -223,8 +223,8 @@ set `r_gov_floor` (if your ogcore has it) below that rate.
 of debt from the anchor, below as well as above. Where the premium is evaluated on total debt
 including debt contracted abroad, centre it on the long-run total, not on `debt_ratio_ss` alone.
 
-**Check.** Solved steady-state `r_gov` equals the effective rate; a reported `r_gov` of exactly
-zero means the floor clipped it; a live-data refresh does not rewrite the shift.
+**Check.** Solved steady-state `r_gov` equals the effective rate; a reported `r_gov` equal to
+`r_gov_floor` means the floor clipped it; a live-data refresh does not rewrite the shift.
 
 **Why.** The cross-country intercept over-predicted what treasuries pay by 0.5 to 3 points; a
 marginal or ten-year yield is new-issue cost, not the average; a clipped negative rate moves `pb*`
@@ -239,10 +239,12 @@ spurious trade surplus and a fiscal squeeze.
 - Level: personal remittances (BPM6, household income from abroad), on one GDP denominator; a
   central bank's headline ratio is often the narrower cash series, about a point of GDP lower. Aid
   to the government goes in `alpha_FA`.
-- Path: `get_RM` compounds `(1 + g_RM)/(e^{g_y}(1 + g_n))` up to `tG2`, after which remittances are
-  `alpha_RM_T·Y`. So `g_RM[t] = e^{g_y}(1 + g_n[t−1]) − 1` holds remittances constant in model
-  units, a path regenerated with the demographics. `g_RM` is in model growth units, not a nominal
-  currency growth rate. The steady state reads only `alpha_RM_T`.
+- Path: remittances start at `alpha_RM_1·Y` in the first year; until `tG1`, `get_RM` compounds them
+  by `(1 + g_RM)/(e^{g_y}(1 + g_n))`; from `tG1` to `tG2` it blends linearly toward `alpha_RM_T·Y`,
+  which holds from `tG2` and in the steady state. Before `tG1`,
+  `g_RM[t] = e^{g_y}(1 + g_n[t−1]) − 1` holds remittances constant in model units, a path
+  regenerated with the demographics. `g_RM` is in model growth units, not a nominal currency growth
+  rate.
 - Distribution: OG-Core's default `eta_RM` (identical to the default `eta`) is US population age
   shares times `lambdas`. Households receive `eta_RM·RM/omega` with your own population, so the
   default hands old households in a young country several times the average. At least rebuild it
@@ -285,9 +287,9 @@ first period agree, and report the gap that remains. Keep the shape smooth acros
 - Solved first-year wealth over GDP equals the target, and the outer-loop distance falls; if the
   outer loop stalls with the level anchored inside the loop, compare with the level fixed before the
   solve. [KOR]
-- Minimum household consumption in the pickle is positive: start cohorts have reached
-  negative-consumption solutions that OG-Core's constraint checker did not flag
-  (PSLmodels/OG-Core#1189). [PHL]
+- Minimum household consumption in the pickle is positive, and the start cohorts' first-order
+  conditions hold (og-solver-diagnosis, class M); OG-Core's constraint checker does not watch
+  those cohorts. [KOR]
 - The first-year foreign-owned share `K_f(0)/K(0)` against the investment position; it is not
   targeted, and where model `K/Y` exceeds the data, measured wealth and the measured foreign share
   cannot both hold. [PHL]

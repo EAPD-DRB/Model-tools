@@ -39,9 +39,8 @@ measured on the same income concept as the reference you start from. Three rungs
 1. Age shape from the National Transfer Accounts' labour income by age, country against the
    reference country, same variable and type, normalised over ages 20 to 64, the ratio capped where
    both near zero; group spread from income shares by group (for example WID pre-tax shares). NTA
-   has no API (a session form with a `Referer` header; the US is "US"); port an existing
-   implementation (OG-JPN `scripts/fetch_nta_age_profiles.py` and `ogjpn/income.py`, or OG-ETH
-   `ogeth/income.py`). [ETH, KOR, JPN]
+   has no API (a session form with a `Referer` header; the US is "US"); the JPN and KOR cases cite
+   the code that does it. [ETH, KOR, JPN]
 2. The reference matrix with one exponential tilt, `e·exp(a·e)`, as the country repos'
    `get_e_interp(gini_to_match=…)` does: it solves `a` so that the Gini of the tilted ability matrix
    over the US matrix's equals the country's data Gini over a hard-coded US 41.5 (World Bank, income
@@ -92,9 +91,10 @@ country a two-year window more than doubled the long-run population decline. [JP
 
 **Rule.** Expect two bookkeeping breaks in the transition's population: where the rates freeze
 (the last data year), and at `fixper = int(1.5·S)`, where ogcore swaps in the stationary
-population in one period. They show as resource-constraint errors in those periods. Upstream has no
-smoother join as of 0.25.2 (a local phase-in cut the largest error about seventy-fold); keep the
-breaks out of the tuning and report them.
+population in one period. They show as resource-constraint errors in those periods. Check whether
+your ogcore phases the population into the stationary one (`get_pop_objs`' signature and the
+code around `fixper`); if not, keep the breaks out of the tuning and report them (a local phase-in
+removed most of the error). [KOR]
 
 **Check.**
 - The stored rates reproduce the stored population,
@@ -196,9 +196,9 @@ or at least rebuild them from the country's own population, and say which.
 **Check.** Transfers per person by age and group in the first years and a few decades into the
 transition, not only the aggregate. With `eta` fixed, transfers per person move inversely with each
 cell's population share: where today's population is younger than the one `eta` was built for, the
-old are overpaid in the early decades. If your ogcore accepts `eta` by year (open PR
-PSLmodels/OG-Core#1297 as of 0.25.2), build it from each year's population. The same holds for
-family transfers, also divided by the population.
+old are overpaid in the early decades. If your ogcore accepts `eta` by year (its `number_dims` in
+`default_parameters.json` is 3; released builds take 2), build it from each year's population. The
+same holds for family transfers, also divided by the population.
 
 **Why.** A fixed share overpaid the oldest by five to over a hundred times in the early decades.
 [ETH]
@@ -206,8 +206,8 @@ family transfers, also divided by the population.
 ## Family support and consumption by age
 
 **Applies when** many older people or young adults live on support from relatives. Net family
-transfers (`phi_FT`) are in no OG-Core release as of 0.25.2 (open PR PSLmodels/OG-Core#1298;
-check with `hasattr`).
+transfers (`phi_FT`) are not in released OG-Core; check with `hasattr(Specifications(), "phi_FT")`,
+and see the ETH history for the build that has them.
 
 **Rule.** Fit `phi_FT` by age and group so that consumption per adult by age follows a target,
 netting to zero within each group. The target concept: OG-Core's households start at
@@ -217,7 +217,7 @@ adults transfers that go to their children). Where no survey links children to p
 target from a cross-country model of the NTA profiles (knots regressed on log GDP per capita at PPP
 and the old-age dependency ratio; out-of-sample error about 0.07), with children's consumption
 assigned to parents by fertility by age and spousal age gaps; where a survey exists, use it, with the
-default as a check. OG-ETH's `ogeth/data/consumption_by_age.csv` documents one build.
+default as a check; the ETH case cites one build.
 
 **Check.** The target averages one over the base ages (for example 30 to 49); transfers sum to
 zero within each group every year; consumption by age against the target, reported as a fit by
@@ -243,7 +243,8 @@ construction that treats every difference from the target as family support. [ET
   that makes the poorest group hoard wealth into old age can break a reform's transition.
 
 **Check.**
-- Patience off its bound; the poorest group above the floor at every age and in the first years;
+- Patience inside its valid range (if a long-run return bound binds, the saving gap is reported:
+  macro-open-economy.md); the poorest group above the floor at every age and in the first years;
   the effective curvature by group reported.
 - A sourced preference is not a tuning lever: if fitting hours or saving needs Frisch or `sigma`
   moved, something else is missing.

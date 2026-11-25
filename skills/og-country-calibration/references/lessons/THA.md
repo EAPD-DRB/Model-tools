@@ -15,6 +15,16 @@ skills, 2026-10-19 (12:21 to 14:29), on ogcore 0.21.2 from PyPI. The repo `OG-TH
 `calib/tha-bootstrap`) is a local test repo and is not published; commits below are its hashes.
 Its `DEMO_LOG.md` (timed steps) and `PROGRESS.md` (running log) are the written record.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/references/bootstrap.md
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/validation-dashboard.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/fiscal-consistency.md
+- og-solver-diagnosis/references/failure-taxonomy.md
+- og-solver-diagnosis/references/solve-procedures.md
+- og-run-preflight/SKILL.md
+
 ## og-country-calibration/references/bootstrap.md
 
 ### De-siblinging: the sibling's solver seeds stalled the first steady state

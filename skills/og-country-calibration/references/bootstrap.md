@@ -17,10 +17,10 @@ fail silently. [KOR] Before any solve:
 - **Audit every inherited JSON value:** diff the JSON against the sibling's and against your
   ogcore's `default_parameters.json`, and
   list each key as sourced, tuned to a named moment, or defaulted with a reason. Include solver
-  settings (`TPI_outer_method`, `nu`, `initial_guess_*`): a sibling can predate a run rule (KOR
-  inherited `nu` 0.4 with Anderson from PHL). The seeds are the sibling's solution, not neutral
-  defaults: ogcore guesses GDP as `initial_guess_TR_SS / alpha_T`, so a sibling's TR seed against
-  the new `alpha_T` put KOR's GDP guess 4.6x too high and stalled the solve. What replaces each
+  settings (`TPI_outer_method`, `nu`, `initial_guess_*`): a sibling can predate a run rule. The
+  seeds are the sibling's solution, not neutral defaults: ogcore guesses GDP as
+  `initial_guess_TR_SS / alpha_T`, so a sibling's TR seed against the new `alpha_T` can put the GDP
+  guess far off and stall the solve. [KOR] What replaces each
   inherited value:
 
   | Inherited | Replace with |

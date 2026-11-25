@@ -12,7 +12,9 @@ Contents
 - An early spike points elsewhere
 
 Each lesson gives the rule, the check, why, and where it was learned (`[CODE]`; the case is in
-`lessons/<CODE>.md`). Formulas follow OG-Core's `fiscal.py`; confirm them in your ogcore.
+`lessons/<CODE>.md`). Formulas follow OG-Core's `fiscal.py`; confirm them in your ogcore. Ratios
+here are to the model's `Y`; compare them with data on one GDP basis (validation-dashboard.md):
+convert the data, or report the model over `Y + cons_tax_revenue`.
 
 ## The budget identity at the debt anchor
 
@@ -158,7 +160,8 @@ alpha_G(t) = [revenue(t) + aid(t) + net FDC(t) − TR(t) − I_g(t) − pensions
 with each term taken from a baseline run's own paths and `pb_plan` on the model's concept (grants
 included). Where the plan is a debt path, OG-Core's timing gives
 `pb_plan(t) = (1 + r_gov,t)·d(t) − (1 + g_t)·d(t+1)`, with `d(t)` debt at the start of year `t`
-over that year's GDP (published ratios are end of year) and `r_gov,t`, `g_t` the near-term rates
+over that year's GDP (published ratios are end of year), `g_t` the model's own GDP growth in levels,
+`e^{g_y}(1 + g_n[t])·Y(t+1)/Y(t) − 1` with the saved, detrended `Y` (not the trend `g` above), and `r_gov,t` the near-term rate
 from the baseline run. This avoids bridging the plan's revenue concepts to the model's. Follow the
 adopted plan's years; for projection years beyond them, hold at `pb*`.
 

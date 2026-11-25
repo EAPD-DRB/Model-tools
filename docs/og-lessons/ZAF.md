@@ -13,6 +13,16 @@ branch `feature/single-industry-refresh`, head 8292bbe) and
 `feature/multi-industry-calibration`, head 571376e, stacked on #135). Upstream `main` (cc357bb)
 still ships the old calibration.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/SKILL.md
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/fiscal-consistency.md
+- og-country-calibration/references/taxes-informality.md
+- og-country-calibration/references/calibration-pr.md
+- og-multi-industry-calibration/references/inputs.md
+- og-multi-industry-calibration/references/alignment.md
+- og-solver-diagnosis/references/failure-taxonomy.md
+
 ## og-country-calibration/SKILL.md
 
 ### Calibrating an OG-Core country model: country tags are provenance
@@ -93,6 +103,13 @@ still ships the old calibration.
 - **What happened:** OG-ZAF main targets private K/Y 2.80 from PWT 11.0 at current PPPs (3.82 total, less the government's 26.7 percent) and sets `delta_annual` to private CFC at domestic prices over that stock (0.0405). On one consistent basis the national-price ratio is 2.42 (1.77 private) and depreciation 0.064. The docs reject the national-price ratio because it implies a 15–20 percent return while the PPP ratio's 11 percent matches PWT's `irr` (12 percent); but `irr` is pre-tax, excludes resource rents and is computed on stocks at national prices, and with PWT's labour share and the SARB's CFC the national-price stock gives about 13 percent. The PPP match rested on offsetting errors.
 - **Evidence:** OG-ZAF upstream/main 9259d22, `docs/book/content/calibration/firms.md` (capital stock section), `ogzaf/targets.py`; PWT 11.0; review notes 2026-11-25 (og-analysis/skill-review/zaf_exemplar.md, local).
 - **When:** 2026-11-25 (review of the October 2026 calibration).
+
+### The calibration's working files: plan, targets, tuning script, scorecard
+
+- **Lesson:** keep the calibration's working tools in the repo in a small, fixed form: a written moment × lever table with each lever's status (sourced, tuned, defaulted, unexamined) and the tuning order; one module listing every target with its source; a tuning script that solves the packaged parameters plus overrides and prints model against target; a fiscal-path check on the baseline transition; and a script that regenerates the docs' fit tables from the run.
+- **What happened:** OG-ZAF's October 2026 calibration shipped all five, and its docs tables were the only ones in the fleet regenerated from the run (between markers), so they could not drift from it. A review on 2026-11-25 found its economics weaker than its tooling (see "Capital stock: a PPP stock with national-price depreciation"), and its generated parameter table stale because it was not rerun.
+- **Evidence:** at commit 9259d22: [docs/CALIBRATION_PLAN.md](https://github.com/EAPD-DRB/OG-ZAF/blob/9259d221cf9554f518e96ad2c400bf3954ca986a/docs/CALIBRATION_PLAN.md), [ogzaf/targets.py](https://github.com/EAPD-DRB/OG-ZAF/blob/9259d221cf9554f518e96ad2c400bf3954ca986a/ogzaf/targets.py), [examples/tune_ss.py](https://github.com/EAPD-DRB/OG-ZAF/blob/9259d221cf9554f518e96ad2c400bf3954ca986a/examples/tune_ss.py), [examples/validate_fiscal_path.py](https://github.com/EAPD-DRB/OG-ZAF/blob/9259d221cf9554f518e96ad2c400bf3954ca986a/examples/validate_fiscal_path.py), [examples/calibration_scorecard.py](https://github.com/EAPD-DRB/OG-ZAF/blob/9259d221cf9554f518e96ad2c400bf3954ca986a/examples/calibration_scorecard.py).
+- **When:** 2026-10 (reviewed 2026-11-25).
 
 ## og-country-calibration/references/fiscal-consistency.md
 

@@ -5,8 +5,9 @@ re-calibrating a parameter of unclear origin. The rest of this skill sets values
 documents where existing ones came from.
 
 In the EAPD-DRB repos many values were derived in standalone notebooks and hard-coded with no trace
-back. Where the notebooks are available, Model-tools `docs/notebook-map.md` is a dated survey of
-which notebook derives which parameter; re-verify any row before relying on it.
+back. Where the notebooks are available, look for a survey of which notebook derives which
+parameter (the Model-tools repo keeps a dated one in `docs/`); re-verify any row before relying on
+it.
 
 ## The three provenance patterns (classify first)
 
@@ -52,14 +53,14 @@ The same parameter can have different traceability in different repos:
      modified copies of `og*_default_parameters.json`. Confirm you are tracing the canonical
      repo's file, by path, before concluding anything.
    - **Vintage traps**: API revisions and GDP rebasing move ratios with no real change; record
-     the vintage next to the value (the Gini-concept and GDP-vintage rules in
-     `og-country-calibration` apply here verbatim).
+     the vintage next to the value (the Gini concept: households-demographics.md; the GDP basis:
+     validation-dashboard.md).
    - **Series that stopped reporting**: a series can be zero-filled, blank, or last reported
      years before the target year, and a "latest available year" fallback then silently returns
      an old value (one IMF social-benefits series had data only for 2002). Check the series has
      data near the target year; a silent fall back to an old year is a provenance break.
    - **Concept**: record whether the series matches the concept the model needs (for `alpha_T`,
-     cash transfers only; see `og-country-calibration`).
+     cash transfers only; macro-open-economy.md).
    - **Secrets**: notebooks in the tracing path contain live bearer tokens in cells and
      `un_api_token.txt` files. Do not quote, copy, or commit them; flag them for rotation when
      you find them.
@@ -81,7 +82,7 @@ Write the chain into the repo you traced, not into the notebooks dir: the repo's
 For numbers quoted in prose, recommend reading them from the JSON in the docs
 (validation-dashboard.md, keeping numbers true to the run). If the trace ends at "no source
 found", the record is `PLACEHOLDER — undocumented, needs recalibration`, which is exactly
-the state og-country-calibration exists to fix.
+the state this skill exists to fix.
 
 Scope: draft the provenance record in the repo you traced, following the project's rules.
 Re-verifying a chain by solving is a separate model run, outside this scope.

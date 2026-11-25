@@ -22,8 +22,9 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   exceeds revenue − required primary balance. Over-collecting placeholder taxes (flat PIT set too
   high, spurious `tau_bq`) can *mask* it until a tax is fixed — then the "fix" seems to break the
   model.
-- **Remedy**: audit revenue by instrument against actual collections; set spending to
-  `Σrev/Y − pb*` where `pb* = (r_gov − g)/(1+g)·debt_ratio_ss`; check `r_gov − g` against the
+- **Remedy**: audit revenue by instrument against actual collections; set spending from the
+  steady-state budget identity, `G/Y = (revenue + aid + net FDC)/Y − (TR + I_g + pensions + UBI)/Y
+  − pb*` with `pb* = (r_gov − g)·debt_ratio_ss`, `g = e^{g_y}(1 + g_n_ss) − 1`; check `r_gov − g` against the
   country's actual. Check the debt-elastic premium is centred: with `r_gov_DY2 > 0`, the
   premium should be zero at `debt_ratio_ss` (`r_gov_DY = -2·r_gov_DY2·D̄`, the constant folded
   into `r_gov_shift`). An uncentred premium adds points to `r_gov` at the target itself and
@@ -57,7 +58,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
 - **Remedy**: the standard setting is Anderson (`TPI_outer_method="anderson"`) with
   `nu` 0.2 or lower on every run, so check those are set before anything else (field names can
   differ between ogcore releases).
-  Then lower `nu` further (0.4 → 0.3 → 0.2 → lower); continuation solve for multi-industry cold
+  Then lower `nu` further (below 0.2: 0.1, 0.05); continuation solve for multi-industry cold
   starts. Watch the distance series on the first Anderson run and fall back to damped iteration
   if it oscillates. These treat oscillation only, not class A. Recent ogcore can tell a
   cycling loop from a diverging economy for you (solve-procedures.md, "Stall detection").
@@ -69,7 +70,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   slower, so it can exceed the run rules' 5–7 minute guide without anything being wrong; record
   the iteration time.
 - **Variant: a stall with a drifting debt path** [THA]. Signature: Anderson stalls near the
-  target while debt climbs well above the program on the way. Treat the fiscal setup as the cause
+  target while debt climbs well above the adopted plan on the way. Treat the fiscal setup as the cause
   (class A; often pensions paid at the mature rate from t=0): finish with damped iteration if
   needed, fix the cause, then retry Anderson before shipping damped iteration as the default
   (history: THA).

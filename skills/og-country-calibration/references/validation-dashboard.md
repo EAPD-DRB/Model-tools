@@ -81,7 +81,8 @@ the data's factor, market-price GDP over the model's `Y` concept (`1 / (1 − pr
 the product-tax share as your revenue mapping defines it), and check the solved
 `(Y + cons_tax_revenue)/Y` against it. The capital share is a share of the model's `Y`: a labour
 share measured over market-price GDP converts the same way. Shares of `K` or `D` (`K_f/K`, `zeta_D`)
-and rates do not convert.
+and rates do not convert. Ratios of stocks to GDP (private `K/Y`, wealth) follow the same rule; the
+closed forms in method.md are written on the model's `Y`, so convert when you use them.
 
 **Check.** The conversion factor is reported and agrees with the data's; after a national-accounts
 rebasing every stock and flow is on the new basis (or on the old one and converted at the end),
@@ -194,4 +195,4 @@ with their sources, or, where the repo can rebuild its packaged JSON offline, a 
 equals the rebuilt one, catches silent drift.
 
 **Why.** Hand-typed numbers drifted from the shipped JSON in several repos, and docs written while
-tuning went through repeated audits. [PHL, IDN, BRA, ETH]
+tuning went through repeated audits. [ETH, ZAF, BRA]

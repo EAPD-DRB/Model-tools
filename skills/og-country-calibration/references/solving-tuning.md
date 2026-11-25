@@ -37,7 +37,9 @@ cost fourteen rounds on one country and many on others. [JPN, ETH, PHL]
 
 **Rule.** Tune with real solves through the repo's tuning script: it loads the packaged JSON plus
 an overrides file, solves, prints model against target, and writes the next round's overrides with
-every setting carried forward. Static dials (tax scales, `tau_c`, the corporate factor, `p_wealth`,
+every setting carried forward. If the repo has none, add one to that contract as its own change.
+[ZAF, ETH, PHL] Static dials (tax scales, `tau_c` (effective rate matched in the model, since its base is the
+model's own consumption), the corporate factor, `p_wealth`,
 `r_gov_shift`, `zeta_K`) are tuned on warm-started steady states with secant steps, usually in three
 to five rounds; spend transition rounds only on what the transition judges (patience, initial
 wealth, spending paths). When the dials settle, fold them into the JSON (and any scales into the

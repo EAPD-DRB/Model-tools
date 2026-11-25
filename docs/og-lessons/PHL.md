@@ -14,6 +14,19 @@ open-economy fix is merged in [EAPD-DRB/OG-PHL#68](https://github.com/EAPD-DRB/O
 A few numbers survive only in the author's working notes (project_tax_recalibration,
 unpublished); those entries say so.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/fiscal-consistency.md
+- og-country-calibration/references/taxes-informality.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/validation-dashboard.md
+- og-country-calibration/references/solving-tuning.md
+- og-country-calibration/references/calibration-pr.md
+- og-multi-industry-calibration/references/inputs.md
+- og-multi-industry-calibration/references/alignment.md
+- og-solver-diagnosis/references/failure-taxonomy.md
+- og-solver-diagnosis/references/solve-procedures.md
+
 ## og-country-calibration/references/macro-open-economy.md
 
 ### start_year: a start one year past the latest data
