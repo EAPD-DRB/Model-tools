@@ -39,6 +39,10 @@ PROMOTION_GATES = PRE_SOLVE_GATES + (
 MATERIAL_STAGES = {"source-input-patch", "pre-solve", "promotion"}
 FINDING_STATUSES = {"pending", "resolved", "declared", "exempted", "deferred"}
 OPTIONAL_GATES = {"matrix_check", "stock_resource_account_checks"}
+# Extra gates an explicitly requested single parameter change may scope out,
+# with a reason tied to references/gate-scoping.md.
+SINGLE_CHANGE_SCOPABLE_GATES = {"connectivity_review"}
+SCOPE_MODES = {"wave", "explicit_single_change"}
 DELIVERY_STATES = {"working", "source_input_patch", "promoted"}
 RESULT_STATUSES = {"absent", "stale", "fresh"}
 REPORTING_LAYER_TYPES = {"solver_native", "postprocessed"}
@@ -317,6 +321,7 @@ def validate_gate(
     errors: list[str],
     *,
     gate_name: str | None = None,
+    optional_gates: set[str] | frozenset[str] = frozenset(OPTIONAL_GATES),
 ) -> Path | None:
     if not isinstance(gate, dict):
         errors.append(f"{location} must be an object")
@@ -330,7 +335,7 @@ def validate_gate(
         return None
     if status == "not_applicable":
         require_text(gate, "reason", location, errors)
-        if required and gate_name not in OPTIONAL_GATES:
+        if required and gate_name not in optional_gates:
             errors.append(f"{location} is mandatory and cannot be not_applicable")
         return None
     if status == "passed":
@@ -1093,6 +1098,30 @@ def validate_package(
             ):
                 errors.append(f"delivery.history_artifact does not exist: {history}")
 
+    optional_gates = set(OPTIONAL_GATES)
+    scope = package.get("scope")
+    if scope is not None:
+        if not isinstance(scope, dict):
+            errors.append("scope must be an object")
+        elif scope.get("mode") not in SCOPE_MODES:
+            errors.append(f"scope.mode must be one of {sorted(SCOPE_MODES)}")
+        elif scope.get("mode") == "explicit_single_change":
+            require_text(scope, "requested_by", "scope", errors)
+            require_text(scope, "gate_scoping_row", "scope", errors)
+            scoped_changes = package.get("changes")
+            if (
+                not isinstance(scoped_changes, list)
+                or len(scoped_changes) != 1
+                or not isinstance(scoped_changes[0], dict)
+                or scoped_changes[0].get("change_type") != "parameter_update"
+            ):
+                errors.append(
+                    "scope.mode explicit_single_change requires exactly one "
+                    "parameter_update in changes"
+                )
+            else:
+                optional_gates |= SINGLE_CHANGE_SCOPABLE_GATES
+
     gates = package.get("gates")
     gate_reports: dict[str, dict[str, Any]] = {}
     if not isinstance(gates, dict):
@@ -1118,6 +1147,7 @@ def validate_package(
                     base_dir,
                     errors,
                     gate_name=name,
+                    optional_gates=optional_gates,
                 )
                 if name == "connectivity_review":
                     report = validate_report(

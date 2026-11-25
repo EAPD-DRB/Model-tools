@@ -1,5 +1,15 @@
 # Policy-neutral technology deployment envelopes
 
+## Contents
+
+- [Keep five quantities separate](#keep-five-quantities-separate)
+- [Classify the evidence and scope](#classify-the-evidence-and-scope)
+- [Use a non-forcing annual formulation](#use-a-non-forcing-annual-formulation)
+- [Classify technology roles before assigning headroom](#classify-technology-roles-before-assigning-headroom)
+- [Do not confuse permission with economic choice](#do-not-confuse-permission-with-economic-choice)
+- [Validate deterministically before solving](#validate-deterministically-before-solving)
+- [Report realism by dimension](#report-realism-by-dimension)
+
 Use this pattern to represent how quickly a real construction, financing,
 permitting, equipment-supply and grid-connection ecosystem can commission
 capacity. The master rule in [non-forcing.md](non-forcing.md) remains

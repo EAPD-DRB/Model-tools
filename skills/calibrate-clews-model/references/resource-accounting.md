@@ -1,5 +1,20 @@
 # Closed resource-account calibration
 
+## Contents
+
+- [Scope](#scope)
+- [1. Define the boundary](#1-define-the-boundary)
+- [2. Build an explicit crosswalk](#2-build-an-explicit-crosswalk)
+- [3. Initialize every class](#3-initialize-every-class)
+- [4. Close every modeled year](#4-close-every-modeled-year)
+- [5. Separate stock from productive activity](#5-separate-stock-from-productive-activity)
+- [6. State conversion scope precisely](#6-state-conversion-scope-precisely)
+- [7. Implement the claimed transition](#7-implement-the-claimed-transition)
+- [8. Verify serializer and index behavior](#8-verify-serializer-and-index-behavior)
+- [9. Pre-solve stress tests](#9-pre-solve-stress-tests)
+- [10. Validate solved behavior](#10-validate-solved-behavior)
+- [11. Prove constraint representability](#11-prove-constraint-representability)
+
 ## Scope
 
 Use this protocol for land, water, biomass, fisheries, minerals, emissions

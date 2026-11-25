@@ -1,5 +1,13 @@
 # CLEWs connectivity and basic-realism audit
 
+## Contents
+
+- [Purpose](#purpose)
+- [Declare roles before judging](#declare-roles-before-judging)
+- [Audit dimensions](#audit-dimensions)
+- [Resolution hierarchy](#resolution-hierarchy)
+- [Required evidence](#required-evidence)
+
 ## Purpose
 
 Find model components that are syntactically present but physically,

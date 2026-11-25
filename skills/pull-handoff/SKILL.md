@@ -1,6 +1,6 @@
 ---
 name: pull-handoff
-description: Bootstrap or pull the official Fiji and Philippines model repositories, safely unzip their current MUIO cases into ignored repository-local working trees, and maintain relative MUIOGO DataStorage symlinks. Use for a pristine MUIOGO setup or an existing two-laptop handoff.
+description: Bootstraps or pulls the official Fiji and Philippines CLEWs repositories, installs their current MUIO case into an ignored repository-local working tree, and keeps MUIOGO's DataStorage entry a relative symlink to it. Keeps or backs up local work and never deletes it. Use for a fresh MUIOGO setup or to receive a two-laptop handoff; push-handoff is the sending side.
 ---
 
 # Pull Handoff
@@ -36,15 +36,19 @@ will do before it does anything.
    archive from filename sorting: the newest-looking name is routinely a
    control run or a predecessor kept for reference. If two archives could
    plausibly be the one, ask.
-3. **Plan.** Run this for each country repository, and read the output:
+3. **Plan.** Run `install.py` from this skill's folder for each country
+   repository (its path depends on where the skill is installed), and read the
+   output:
 
    ```bash
-   python .claude/skills/pull-handoff/install.py --repo <country-repository> --case <case-name> --pull
+   python <this skill>/install.py --repo <country-repository> --case <case-name> --pull
    ```
 
    It changes nothing without `--apply`. It reports what it would pull, which
-   archive it resolved, which live case it would overwrite and how large it is,
-   what it would do to the MUIOGO link, and any reason it refuses to start.
+   archive it resolved, whether it keeps the live case or moves it aside (and
+   where), what it would do to the MUIOGO entry, and any reason it refuses to
+   start. When the plan moves anything aside, show the plan to the user before
+   applying.
    Add `--archive` when the archive path is ambiguous, `--datastorage` when
    MUIOGO is not a sibling, and drop `--pull` to install from what is already
    checked out. **Exit 1 or 2 stops the handoff.** Report what failed; do not
@@ -52,7 +56,7 @@ will do before it does anything.
 4. **Apply.** Re-run the same command with `--apply`.
 
    ```bash
-   python .claude/skills/pull-handoff/install.py --repo <country-repository> --case <case-name> --pull --apply
+   python <this skill>/install.py --repo <country-repository> --case <case-name> --pull --apply
    ```
 
    It fast-forwards with `git pull --ff-only` on a clean branch and stops on
@@ -66,16 +70,23 @@ will do before it does anything.
    that it resolves; and recreates the empty `res/<run>/csv` directories named
    in `view/resData.json`.
 
-   **It overwrites the live case.** That is deliberate — the case is gitignored
-   working state, everything that matters travels in the tracked archive, and
-   solver results are excluded from the archive because they are re-created by
-   solving. Nothing is backed up. A failure at any point leaves the previous
-   case exactly where it was.
+   **It never deletes local work.** A live case whose files outside `res/`
+   already match the archive is kept as it is, local solve results included. A
+   live case that differs is moved to `case/.backups/<case-name>-<time>` before
+   the new one goes in. A real folder, file or wrong link where MUIOGO's entry
+   belongs is moved to `case/.backups/<case-name>-datastorage-<time>`: it may
+   hold edits or results that never came from an archive. `case/` is gitignored,
+   so backups stay out of git; tell the user where they are, and leave clearing
+   them to the user. A failure at any point leaves the previous case in place.
+
+   Skills installed or updated by the pull register on the next session start;
+   tell the user to reload if they need them now.
 
 Never reset, clean, rebase, or force-update a country repository.
 
 Do not solve, run validation, reconstruct provenance, or edit the model.
 
 Report repositories cloned and pulled, repository-local case paths, relative
-symlink targets, archive hashes, and any repository skipped because of local
+symlink targets, archive hashes, every backup made and its path, and any
+repository skipped because of local
 changes or an occupied clone destination.

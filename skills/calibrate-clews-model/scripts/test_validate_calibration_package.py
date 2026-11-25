@@ -370,6 +370,59 @@ class CalibrationPackageTest(unittest.TestCase):
         self.assertTrue(any("reason must be non-empty" in e for e in errors))
         self.assertTrue(any("mandatory and cannot" in e for e in errors))
 
+    def test_explicit_single_change_may_scope_out_connectivity(self) -> None:
+        package = self.ready("promotion")
+        package["gates"]["connectivity_review"] = {
+            "status": "not_applicable",
+            "artifact": None,
+            "reason": "ResidualCapacity row in gate-scoping.md (synthetic test)",
+        }
+        errors = self.validate(package, "promotion")
+        self.assertTrue(any("mandatory and cannot" in e for e in errors))
+
+        package["scope"] = {
+            "mode": "explicit_single_change",
+            "requested_by": "Synthetic explicit request",
+            "gate_scoping_row": "ResidualCapacity",
+        }
+        self.assertEqual(self.validate(package, "promotion"), [])
+
+        package["gates"]["equation_unit_replay"] = {
+            "status": "not_applicable",
+            "artifact": None,
+            "reason": "not scopable",
+        }
+        errors = self.validate(package, "promotion")
+        self.assertTrue(
+            any("equation_unit_replay is mandatory" in e for e in errors)
+        )
+
+    def test_single_change_scope_requires_one_parameter_update(self) -> None:
+        package = self.ready("pre-solve")
+        package["scope"] = {
+            "mode": "explicit_single_change",
+            "requested_by": "",
+            "gate_scoping_row": "ResidualCapacity",
+        }
+        second = copy.deepcopy(package["changes"][0])
+        second["change_id"] = "CHG_SECOND"
+        package["changes"].append(second)
+        package["gates"]["connectivity_review"] = {
+            "status": "not_applicable",
+            "artifact": None,
+            "reason": "incorrectly scoped",
+        }
+        errors = self.validate(package, "pre-solve")
+        self.assertTrue(any("scope.requested_by" in e for e in errors))
+        self.assertTrue(any("exactly one parameter_update" in e for e in errors))
+        self.assertTrue(
+            any("connectivity_review is mandatory" in e for e in errors)
+        )
+
+        package["scope"] = {"mode": "sector"}
+        errors = self.validate(package, "pre-solve")
+        self.assertTrue(any("scope.mode must be one of" in e for e in errors))
+
     def test_source_diff_is_checked_against_real_files(self) -> None:
         package = self.ready("pre-solve")
         (self.root / "candidate_json/OTHER.json").write_text("{}\n", encoding="utf-8")

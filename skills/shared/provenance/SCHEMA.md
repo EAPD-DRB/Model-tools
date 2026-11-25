@@ -2,6 +2,12 @@
 
 Six CSV tables, one validator. Every CLEWs skill points here; none redefines the schema.
 
+## Contents
+- The invariants and how to validate
+- ID conventions
+- SOURCES.csv, CALCULATIONS.csv, ASSUMPTIONS.csv, MODEL_MAP.csv, GAPS.csv, CHANGES.csv
+- What this validator deliberately does not do
+
 **The invariant:** every populated model value resolves to exactly one `MODEL_MAP` row; every
 `MODEL_MAP` row carries at least one evidence ID; every referenced ID resolves; every retained
 evidence file matches its `sha256`.
@@ -13,18 +19,25 @@ may document chronology, but the new version must be independently interpretable
 depend on an earlier package or installed case to supply its sources, calculations, assumptions,
 mappings, gaps, or evidence files.
 
-Worked examples live in `templates/`. Validate with:
+Worked examples are in the Model-tools repository, `skills/shared/provenance/templates/`; they
+are not shipped inside each skill. Validate with:
 
 ```
-python provenance.py LEDGER_DIR [--stage scaffold|build|delivery] [--model-inputs DIR] [--json REPORT]
+python provenance.py LEDGER_DIR [--stage scaffold|build|delivery] [--model-inputs DIR]
+    [--required-input FILE ...] [--allow-inherited-coverage-gaps] [--json REPORT]
 ```
 
 Exit 0 passes, exit 1 fails. `scaffold` checks only that the six files exist with the right
 columns. `build` adds every row, reference and digest check. Input coverage — proving every
 populated input file is mapped — runs at any stage once `--model-inputs` is given, and
 `delivery` additionally requires it. So a wrapper that knows where inputs live, as the
-packaged `validate_provenance.py` does, proves coverage from `build` onwards; expect
-unmapped-input failures there rather than only at `delivery`.
+`validate_provenance.py` wrapper in `build-clews-model` does, proves coverage from `build`
+onwards; expect unmapped-input failures there rather than only at `delivery`.
+
+Naming the touched scope with `--required-input` (repeat it per file) keeps those inputs
+strict at every stage. Inherited inputs outside that scope then fail on their own line,
+and `--allow-inherited-coverage-gaps` lowers that failure to a warning before `delivery`
+only. With no `--required-input`, every unmapped input fails, as above.
 
 ## ID conventions
 
