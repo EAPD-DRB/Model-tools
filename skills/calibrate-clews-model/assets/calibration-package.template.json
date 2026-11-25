@@ -10,6 +10,11 @@
     "horizon": "2020-2050",
     "intended_use": "National CLEWs scenario analysis"
   },
+  "scope": {
+    "mode": "wave",
+    "requested_by": null,
+    "gate_scoping_row": null
+  },
   "provenance": {
     "inherited_ledger_dir": "data_sources",
     "predecessor_ledger_dir": "../COUNTRY_BASIC/data_sources",

@@ -71,6 +71,7 @@ PYTHON_VENDORED = {
 SKILL_VENDORED = {
     ("clews-model-review", "audit.py"): (
         ("clews-model-fix", "audit.py"),
+        ("assess-clews-calibration", "scripts/audit.py"),
     ),
     # Push verifies the archive it sends; pull verifies the archive it
     # receives. One file, so the two ends cannot drift into disagreeing about

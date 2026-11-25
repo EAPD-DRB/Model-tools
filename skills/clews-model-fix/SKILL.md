@@ -1,6 +1,6 @@
 ---
 name: clews-model-fix
-description: Make a structural fix to a MUIO/OSeMOSYS CLEWs model that cannot change any solved value — remove unreferenced technologies, commodities or emissions, fix placeholder descriptions, adjust technology groups. Refuses anything that alters a parameter value.
+description: Makes structural fixes to a MUIO/OSeMOSYS CLEWs model that cannot change any solved value - removes unreferenced technologies, commodities or emissions, replaces placeholder descriptions, adjusts technology groups - and refuses anything that alters a parameter value. Use when clews-model-review flags such defects or the user asks for that kind of cleanup; value changes go to calibrate-clews-model.
 ---
 
 # Fix a CLEWs model structurally
@@ -22,7 +22,7 @@ heavier calibration plan.
 ## In scope
 
 - Delete an unreferenced `TEC_`, `COM_` or `EMI_`.
-- Delete an orphaned or stranded commodity.
+- Delete an orphaned commodity: defined, but referenced nowhere else.
 - Replace a placeholder description (`TBD`, `xxx`, a repeated stub).
 - Add or change a `TECHGROUP` assignment. Grouping is interface metadata and must not alter
   parameters.
@@ -33,7 +33,10 @@ heavier calibration plan.
 
 - **Any evidence-based change to a numeric parameter value** → `calibrate-clews-model`.
 - **Deleting an object that is still referenced** → the solution can change; use
-  `calibrate-clews-model` or the relevant sector skill.
+  `calibrate-clews-model` or the relevant sector skill. This includes a stranded
+  commodity (produced by some technology but consumed by nothing): its output rows
+  still reference it, so removing it is calibrate's inactive-branch retirement
+  procedure, not a fix here.
 - **A unit correction that implies a conversion** → `calibrate-clews-model`; it requires a
   calculation and provenance.
 - **Anything chosen merely to reproduce an observed outcome** → reject and record a gap.
@@ -45,12 +48,13 @@ heavier calibration plan.
 1. **Gate.** Prove the object is referenced nowhere but its own definition:
 
    ```bash
-   python audit.py MODEL_DIR --removable TEC_x --json diagnostics/removable.json
+   python <this skill>/audit.py MODEL_DIR --removable TEC_x --json diagnostics/removable.json
    ```
 
    Exit 0 means removable. Exit non-zero names the files that still reference it — read
-   them. If a reference is itself dead, that is a second Class A change: clear it first,
-   re-run the gate, and record both.
+   them. If the reference is another definition-only object, clear that one first (it is
+   a second change of the same kind), re-run the gate, and record both. If clearing it
+   would mean editing a parameter row, stop: that is out of scope here.
 
    `audit.py` ships in this skill's directory — a synced copy of the one
    `clews-model-review` owns — so the gate runs whether or not that skill is installed.
@@ -63,7 +67,7 @@ heavier calibration plan.
 2. **Back up**, then make the edit in the case JSON. Never hand-edit `data.txt`, processed
    data, LP/MPS files, solver output, result CSVs or Pivot output.
 
-3. **Confirm.** Re-run `python audit.py MODEL_DIR`. Require: the ID is gone, no new
+3. **Confirm.** Re-run `python <this skill>/audit.py MODEL_DIR`. Require: the ID is gone, no new
    findings, and no finding that was absent before.
 
 4. **Record.** One row in `CHANGES.csv`

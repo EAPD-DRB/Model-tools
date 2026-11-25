@@ -1,5 +1,14 @@
 # Stock, turnover and adoption patterns
 
+## Contents
+
+- [Interpret observations first](#interpret-observations-first)
+- [Trace the local capacity equations](#trace-the-local-capacity-equations)
+- [Represent inherited stock](#represent-inherited-stock)
+- [Test the entire horizon](#test-the-entire-horizon)
+- [Separate adoption from utilization](#separate-adoption-from-utilization)
+- [Treat aggregate coupling as a performance risk](#treat-aggregate-coupling-as-a-performance-risk)
+
 ## Interpret observations first
 
 - A stock observation initializes capacity or an age cohort.

@@ -5,12 +5,15 @@ Companion to SKILL.md (pull-handoff), and the mirror image of push-handoff's
 verify.py. That script only judges, because in a push the model does the work.
 Here the work IS the job -- unzip, replace, link -- so this one acts.
 
-It overwrites. The live case is gitignored and everything that matters about it
-travels in the tracked archive; solver results under res/ are excluded from the
-archive on purpose and are re-created by solving. There is nothing to preserve,
-so nothing is backed up.
+It never deletes. A live case whose files outside res/ already match the
+archive is left exactly as it is, so its local solve results survive. A live
+case that differs is moved to case/.backups/<case>-<time> before the new one
+goes in, and so is a real folder or a wrong link sitting where MUIOGO's entry
+belongs: those may hold edits or results that never came from an archive.
+case/ is gitignored, so the backups stay out of git; clearing old ones is a
+person's decision.
 
-What it will not do is leave a half-installed case behind. The archive is
+It will not leave a half-installed case behind either. The archive is
 verified before anything moves, extraction happens beside the target and is
 moved into place only once complete, and a failure at any point leaves the
 previous case exactly where it was.
@@ -30,7 +33,7 @@ Exit status:
     2   the request was unusable (bad path, no archive, ambiguous archive)
 """
 from __future__ import annotations
-import argparse, json, os, shutil, sys, tempfile, zipfile, zlib
+import argparse, json, os, shutil, sys, tempfile, time, zipfile, zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import verify  # noqa: E402  -- vendored from push-handoff; see scripts/sync_shared.py
@@ -143,11 +146,65 @@ def verify_archive(plan, repo, archive, case):
     return True
 
 
+def backup_path(backups, name):
+    """A fresh path under case/.backups for something about to be moved aside."""
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    path = os.path.join(backups, "{}-{}".format(name, stamp))
+    n = 1
+    while os.path.lexists(path):
+        n += 1
+        path = os.path.join(backups, "{}-{}-{}".format(name, stamp, n))
+    return path
+
+
+def kept_files(root):
+    """Relative paths of every file under root, except solver results and Finder litter."""
+    found = set()
+    for dirpath, dirnames, filenames in os.walk(root):
+        rel_dir = os.path.relpath(dirpath, root)
+        if rel_dir.split(os.sep)[0] == "res":
+            dirnames[:] = []
+            continue
+        for name in filenames:
+            if name != ".DS_Store":
+                found.add(os.path.normpath(os.path.join(rel_dir, name)))
+    return found
+
+
+def matches_archive(archive, live):
+    """True when the live case holds exactly the archive's files outside res/, byte for byte."""
+    top = os.path.basename(live)
+    wanted = {}
+    with zipfile.ZipFile(archive) as zf:
+        for info in zf.infolist():
+            if info.is_dir():
+                continue
+            parts = info.filename.split("/")
+            if parts[0] != top or len(parts) < 2 or parts[1] == "res" or parts[-1] == ".DS_Store":
+                continue
+            wanted[os.path.normpath(os.path.join(*parts[1:]))] = info.filename
+        if kept_files(live) != set(wanted):
+            return False
+        for rel, member in wanted.items():
+            with open(os.path.join(live, rel), "rb") as fh:
+                if fh.read() != zf.read(member):
+                    return False
+    return True
+
+
 def install(plan, archive, live, apply_):
     parent = os.path.dirname(live)
+    backups = os.path.join(parent, ".backups")
+    aside = None
     if os.path.isdir(live):
+        if matches_archive(archive, live):
+            plan.step("keep live case", "{} — matches the archive outside res/; "
+                      "local results kept".format(live))
+            return True
         n = sum(len(f) for _, _, f in os.walk(live))
-        plan.step("replace live case", "{} — {} files, overwritten".format(live, n))
+        aside = backup_path(backups, os.path.basename(live))
+        plan.step("back up live case", "{} — {} files -> {}".format(live, n, aside))
+        plan.step("install case from archive", live)
     else:
         plan.step("create live case", live)
     if not apply_:
@@ -170,9 +227,17 @@ def install(plan, archive, live, apply_):
         if not os.path.isdir(extracted):
             plan.block("archive did not extract a {}/ folder".format(os.path.basename(live)))
             return False
-        if os.path.isdir(live):
-            shutil.rmtree(live)
-        shutil.move(extracted, live)
+        if aside:
+            os.makedirs(backups, exist_ok=True)
+            shutil.move(live, aside)
+        try:
+            shutil.move(extracted, live)
+        except OSError as exc:
+            if aside and not os.path.exists(live):
+                shutil.move(aside, live)
+            plan.block("could not move the new case into place ({}) — previous case "
+                       "restored".format(exc))
+            return False
     finally:
         shutil.rmtree(staging, ignore_errors=True)
     return True
@@ -183,35 +248,38 @@ def link(plan, live, datastorage, case, apply_):
 
     Relative so the pair of repositories can be cloned anywhere as long as they
     stay siblings; an absolute link works on the machine that made it and
-    nowhere else.
+    nowhere else. Whatever already sits at the entry is moved to case/.backups,
+    never deleted: a real folder there may hold edits or results that no
+    archive has.
     """
     if not datastorage:
         plan.step("skip MUIOGO link", "no --datastorage and no sibling MUIOGO found")
         return True
     dest = os.path.join(datastorage, case)
     target = os.path.relpath(live, datastorage)
+    backups = os.path.join(os.path.dirname(live), ".backups")
 
     if os.path.islink(dest) and os.path.realpath(dest) == os.path.realpath(live):
         plan.step("MUIOGO link already correct", dest)
         return True
-    if os.path.islink(dest):
-        plan.step("repoint MUIOGO link", "{} -> {}".format(dest, target))
-    elif os.path.isdir(dest):
-        n = sum(len(f) for _, _, f in os.walk(dest))
-        plan.step("replace directory with link",
-                  "{} — {} files -> {}".format(dest, n, target))
-    elif os.path.exists(dest):
-        plan.step("replace file with link", "{} -> {}".format(dest, target))
-    else:
-        plan.step("create MUIOGO link", "{} -> {}".format(dest, target))
+    aside = None
+    if os.path.lexists(dest):
+        aside = backup_path(backups, case + "-datastorage")
+        if os.path.islink(dest):
+            what = "link -> {}".format(os.readlink(dest))
+        elif os.path.isdir(dest):
+            what = "folder, {} files".format(sum(len(f) for _, _, f in os.walk(dest)))
+        else:
+            what = "file"
+        plan.step("move aside MUIOGO entry", "{} ({}) -> {}".format(dest, what, aside))
+    plan.step("link MUIOGO entry", "{} -> {}".format(dest, target))
     if not apply_:
         return True
 
     os.makedirs(datastorage, exist_ok=True)
-    if os.path.islink(dest) or os.path.isfile(dest):
-        os.unlink(dest)
-    elif os.path.isdir(dest):
-        shutil.rmtree(dest)
+    if aside:
+        os.makedirs(backups, exist_ok=True)
+        shutil.move(dest, aside)
     os.symlink(target, dest)
     if os.path.realpath(dest) != os.path.realpath(live):
         plan.block("link {} does not resolve to {}".format(dest, live))

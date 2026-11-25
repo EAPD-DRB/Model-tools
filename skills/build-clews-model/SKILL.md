@@ -1,6 +1,6 @@
 ---
 name: build-clews-model
-description: Build or evolve an uncalibrated OSeMOSYS/CLEWs country model from CLEWs Global and package it as a solved, source-traceable MUIO case. Use for new country builds, new versions of existing country models, GeoCLEWs adaptation, otoole/MUIO import, or delivery packaging. Not for calibration, and not for structural cleanup - see clews-model-fix.
+description: Builds or evolves an uncalibrated OSeMOSYS/CLEWs country model from CLEWs Global and packages it as a solved, source-traceable MUIO case. Use for new country builds, new versions of existing country models, GeoCLEWs adaptation, otoole/MUIO import, or delivery packaging. Not for calibration (calibrate-clews-model) or structural cleanup (clews-model-fix).
 ---
 
 # Build a CLEWs country model through MUIO
@@ -25,9 +25,10 @@ or gap for later assessment. Binding for this whole workflow,
 including the MUIO phase. Before delivery, `python scripts/audit_no_forcing.py` must report
 zero failures.
 
-Full rules — the forbidden-pattern list, and how OSeMOSYS activates bounds (`-1` disables an
-upper limit but `0` is a live lock, which forcing checks get wrong):
-[references/non-forcing.md](references/non-forcing.md).
+Full rules — the forbidden-pattern list, and how bounds are activated, which forcing checks
+get wrong: [references/non-forcing.md](references/non-forcing.md). In short, the raw CLEWs
+Global model switches an upper bound off with `-1`, MUIO with its `999999` default, so an
+upstream `-1` carried into MUIO becomes a live limit below zero; `0` is a live lock in both.
 
 `audit_no_forcing.py` is the only script here that needs a third-party package — PyYAML, to
 read `config.yaml`. Every other script in this skill is stdlib-only, so switching interpreters
@@ -61,7 +62,8 @@ and update or supersede records for changed inputs. A previous-version reference
 chronology, but it must never replace the inherited source, calculation, assumption or model-map
 records. The new version's ledger must stand on its own without opening an earlier package.
 
-Three validation checkpoints, and only three:
+Script paths in this file are relative to this skill's folder. Three validation checkpoints,
+and only three:
 
 ```bash
 python scripts/validate_provenance.py PKG --stage scaffold
@@ -88,7 +90,9 @@ ledger.
 
 2. **Pin both codebases.** Clone CLEWs Global recursively; record root and every submodule
    commit in `config/upstream_versions.json`. Record the MUIO version/commit. Run a
-   dependency preflight and record exact versions. Never start from a calibrated country
+   dependency preflight and record exact versions. Record checksums of the importer, parameter
+   registry and formulation in `config/upstream_versions.json`, and cache importer capability
+   results by those checksums. Never start from a calibrated country
    model. Code pins do not freeze data behind mutable URLs — record editions, access dates
    and checksums for downloaded inputs.
 
@@ -103,7 +107,9 @@ ledger.
    `CURRENT_MODEL.md`, `MODEL_STRUCTURE.md`, `KNOWN_LIMITATIONS.md`, and add a dated
    `HISTORY.md` entry.
    → [references/provenance-and-layout.md](references/provenance-and-layout.md) for the
-   package layout and the government-review table.
+   package layout, and
+   [references/source-and-government-review.md](references/source-and-government-review.md)
+   for source fields, the crop proxy register and the government-review table.
 
 5. **Preflight before the expensive run.** Inspect the raster cache for stale, zero-byte or
    corrupt files and missing crop/variable/water combinations. Measure raster coverage over
@@ -138,6 +144,9 @@ ledger.
    and do not modify shared MUIO code. Refuse to overwrite an existing case silently.
    → [references/muio-import.md](references/muio-import.md) and
    [references/import-quality-gates.md](references/import-quality-gates.md).
+   If a `muiogo-ai` launcher is present, resolve the case with
+   `muiogo-ai case-path --case <name>` rather than guessing a path, and name the installation
+   it reports in the delivery report. Without the launcher, use the case path the user gave.
 
 10. **Repair and verify temporal structure.** Reconstruct each timeslice's season, day type
     and daily bracket from the authoritative `Conversionls/ld/lh.csv`, and `DaySplit` from
@@ -165,7 +174,38 @@ ledger.
     unless asked; retain the generation command and solver log). Freeze the baseline with
     `python scripts/freeze_raw_baseline.py PKG --muio-archive muio/C_raw_MUIO.zip`, then the
     `delivery` checkpoint and `python scripts/validate_delivery.py PKG`.
-    → [references/resource-and-packaging.md](references/resource-and-packaging.md).
+    → [references/resource-and-packaging.md](references/resource-and-packaging.md); what the
+    package documents and `validation_summary.json` must say:
+    [references/handoff-and-status.md](references/handoff-and-status.md).
+
+## Checklist
+
+Copy this into your notes and tick as you go. Each go-back line says where to return.
+
+```
+- [ ] 1-2  Scaffold, `scaffold` checkpoint; both codebases and MUIO checksums pinned
+- [ ] 3-6  Structural inputs, configuration, preflight, estimate (stop on failed inputs)
+- [ ] 7-8  Native workflow solves; nexus checks; gap table marked diagnostic
+- [ ] 8    `build` checkpoint passes before step 9 (audit_no_forcing.py also at zero failures)
+- [ ] 9-10 MUIO import; temporal repair
+- [ ] 11   Parity classified; upstream_raw, muio_import, muio_final reported separately
+- [ ] 12   Reserve-margin check reads CURRENT with zero mismatches
+- [ ] 13   Resource estimate re-run on real dimensions; open-solver solve optimal
+- [ ] 14   Freeze, `delivery` checkpoint, validate_delivery.py all exit 0
+```
+
+Go back when a gate fails:
+
+- Parity failure: fix and return to step 9 (import) or 10 (temporal repair), then re-run
+  step 11. Do not carry on to step 12 with a failed row.
+- Reserve check reads `STALE`: re-apply the workaround at step 12, then re-run the check
+  before solving.
+- `build` checkpoint fails: fix the ledger or the input it names and re-run
+  `--stage build` before step 9. Do not start the import on a failing build.
+- `delivery` checkpoint or `validate_delivery.py` fails: fix the cause, then re-run from the
+  failing checkpoint. Check the pins and the MUIO checksums before freezing: the freeze
+  command refuses to overwrite a completed manifest, and the delivery checkpoint re-checks the
+  records it hashed, so a later fix to a covered file means a new dated milestone.
 
 ## Permitted changes
 
@@ -186,6 +226,7 @@ Do not restate their checks here. What they cannot judge, and you must:
   separately alongside `muio_import`;
 - parity differences are *explained*, not merely counted;
 - every crop proxy and consequential source choice is named in the government-review table
+  ([references/source-and-government-review.md](references/source-and-government-review.md))
   with the agency that could validate it;
 - each applied technical correction addresses software behaviour, not historical fit;
 - unsupported inputs are explicitly inventoried rather than silently dropped;

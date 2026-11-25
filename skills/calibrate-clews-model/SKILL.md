@@ -1,6 +1,6 @@
 ---
 name: calibrate-clews-model
-description: "Calibrate a solved country CLEWs model when explicitly requested or when localizing a complete sector, closed resource account, or coupled interface package with traceable national evidence. Not for isolated value refreshes or minor calibration fixes—record those in the calibration backlog—nor for initial builds (use build-clews-model) or value-neutral cleanup (use clews-model-fix)."
+description: "Calibrates a solved MUIO/OSeMOSYS country CLEWs model from traceable national evidence, never by fitting outcomes. Use when the user explicitly asks for a calibration change, or when localizing a complete sector, closed resource account, or coupled interface. Not for unrequested value refreshes (record them in the calibration backlog), initial builds (build-clews-model), value-neutral cleanup (clews-model-fix), or grading (assess-clews-calibration)."
 ---
 
 # Calibrate a CLEWs country model
@@ -16,8 +16,8 @@ Require a solved country baseline. Use `build-clews-model` if none exists and
 `clews-model-fix` for edits that cannot change any model value.
 
 Use this workflow only when the user invokes it explicitly or the work closes a
-complete sector, resource account, or coupled interface. Put isolated value
-updates, citation refreshes, and minor calibration fixes in
+complete sector, resource account, or coupled interface. Put unrequested
+isolated value updates, citation refreshes, and minor calibration fixes in
 `calibration-backlog.csv` and batch them into the next coherent wave.
 
 Apply the counterfactual test in
@@ -28,13 +28,28 @@ Apply the counterfactual test in
 Use observations as physical inputs, demand, initial stock, availability,
 documented real-world constraints, or diagnostic benchmarks. Never select a
 parameter merely to reduce historical error; record unresolved mismatches as gaps.
+A change that fails the counterfactual test is outcome fitting. Refuse it and
+record it as a gap; no route through this skill makes it acceptable.
+
+### Explicit single change
+
+When the user asks for one specific parameter change, run it as a one-change
+wave. Gates the changed family cannot affect may be `not_applicable` with a
+stated reason. [references/gate-scoping.md](references/gate-scoping.md) sets
+which ones. Beyond the always-optional gates, that covers only
+`connectivity_review`, and only when the family row allows it. Declare
+`scope.mode = "explicit_single_change"` in the package; the validator then
+requires exactly one `parameter_update`. Every other gate, the single solve and
+the comparison still apply.
 
 ## Calibration package
 
 Put a completed copy of `assets/calibration-package.template.json` at
 `CASE_DIR/documentation/calibration-package.json`. Maintain the backlog at
 `CASE_DIR/documentation/calibration-backlog.csv`. All package paths are relative to
-`CASE_DIR`; override inference explicitly with `--case-dir`:
+`CASE_DIR`; override inference explicitly with `--case-dir`. Script paths in
+this skill are relative to this skill's folder; pass absolute `CASE_DIR` and
+`LEDGER_DIR` paths:
 
 ```bash
 python scripts/validate_calibration_package.py \
@@ -47,15 +62,44 @@ derives the allowlist from `changes[].source_file`, resolves lineage against the
 six CSV ledgers, verifies
 the inherited ledger and retained evidence against the predecessor, reads JSON
 gate reports, and checks connectivity dispositions. A passed gate needs a JSON
-artifact whose top-level status is `pass`; only the explicitly optional gates may
-be `not_applicable`, with a reason. Do not solve while the design gate fails.
+artifact whose top-level status is `pass`. Only `matrix_check` and
+`stock_resource_account_checks`, plus `connectivity_review` for a declared
+explicit single change, may be `not_applicable`, with a reason (see
+[references/gate-scoping.md](references/gate-scoping.md)). Do not solve while
+the design gate fails.
+
+## Wave checklist
+
+Copy this into the working notes and tick it off:
+
+```text
+[ ] 1. Baseline and inventory recorded; stored baseline passes identity and hash checks
+[ ] 2. Connectivity audit run; every active finding has a disposition
+[ ] 3. Representation designed; each changed parameter checked against gate-scoping.md
+[ ] Design stage: validate_calibration_package.py --stage design
+      If this stage fails, return to step 1 or 3; do not solve.
+[ ] 4. Provenance recorded and source implemented; regenerated through UpdateCase
+[ ] Source-input-patch stage (only for a source-only handoff)
+      If this stage fails, return to step 4; do not solve.
+[ ] 5. Gate reports attached; no-forcing audit run
+[ ] Pre-solve stage: validate_calibration_package.py --stage pre-solve
+      If this stage fails, return to step 2, 3 or 4 for the failing gate; do not solve.
+[ ] 6. One wave solve; at most three repair re-solves
+[ ] 7. Comparison classified; live case regenerated; archive identity checked
+[ ] Promotion stage: validate_calibration_package.py --stage promotion
+      If this stage fails, return to step 6 or 7; do not promote.
+```
 
 ## Workflow
 
 ### 1. Establish the baseline and inventory
 
 Record the source and candidate cases, scenario, horizon, intended use, stored
-baseline identity, solver status, objective, runtime, and model dimensions. Start
+baseline identity, solver status, objective, runtime, and model dimensions.
+Check the stored baseline's case, scenario and source hash against the source
+case. If it fails those identity or hash checks, solve one unchanged control
+through the normal application chain and use it as the baseline. Record why.
+This is the only control solve the workflow allows. Start
 the candidate with a complete copy of the current ledger and retained evidence.
 Classify result surfaces as raw solver output, ordinary generated views, or
 postprocessed reporting. Record each postprocessed layer in `reporting_layers`
@@ -108,8 +152,11 @@ Do not add dummy demand, supply, or disposal solely to silence a warning.
 
 Read the exact local equation and export path for each changed parameter. Verify
 ratio direction, units, indices, guards, defaults, generated-data behavior, and
-national-versus-cluster scope. Use the fewest objects needed for a defensible
-physical chain, leaving choices endogenous beyond documented constraints.
+national-versus-cluster scope. Use
+[references/gate-scoping.md](references/gate-scoping.md) to find the
+constraint blocks each family enters and the extra checks it needs. Use the
+fewest objects needed for a defensible physical chain, leaving choices
+endogenous beyond documented constraints.
 
 Use transparent, bounded, and replaceable proxies when national evidence is
 unavailable. Resolve conflicting evidence explicitly. For each material proxy,
@@ -144,7 +191,7 @@ python scripts/provenance.py LEDGER_DIR --stage build \
   --model-inputs MODEL_INPUT_DIR \
   --required-input AFFECTED_INPUT.csv \
   --allow-inherited-coverage-gaps \
-  --json documentation/provenance.json
+  --json CASE_DIR/documentation/provenance.json
 ```
 
 Modify source parameter JSON and `genData.json`, then regenerate through
@@ -175,7 +222,8 @@ does not certify a solve or promote the case.
 ### 5. Pass pre-solve gates
 
 Attach the machine reports named by the package's `gates` keys, resolve every
-active connectivity finding, and run the mandatory non-forcing audit. A deferred
+active connectivity finding, and run the mandatory non-forcing audit. Run the
+extra checks the gate-scoping table lists for each changed family. A deferred
 finding must cite its `GAPS.csv` item; it does not masquerade as evidence.
 
 ```bash
@@ -207,7 +255,9 @@ mapping, unit, scope, evidence, or formulation defects—not historical mismatch
 Allow at most three repair re-solves by default. At that point, consolidate the
 diagnosis and park the unresolved package as a documented gap while continuing
 independent work; run more only with explicit user authorization. Never run an
-unchanged control, parameter sweep, scenario ranking, or calibration A/B.
+unchanged control, parameter sweep, scenario ranking, or calibration A/B. The
+one exception is the single baseline control in step 1, when the stored
+baseline fails its identity or hash checks.
 
 After each retained feasible solve, run every declared postprocessed reporting
 publisher, verify its manifest against the current raw-result hashes and
