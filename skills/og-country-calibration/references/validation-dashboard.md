@@ -165,8 +165,12 @@ Use `ogcore.utils.safe_read_pickle` on `SS_vars.pkl` rather than eyeballing it. 
 revenue lines over `Y` (or over the basis chosen above): PIT `iit_revenue/Y`, CIT
 `business_tax_revenue/Y`, indirect `cons_tax_revenue/Y`, total `total_tax_revenue/Y`. `D/Y`,
 `D_f/D`, `K/Y` from the aggregates over `Y`; `r`, `r_gov`, `factor` directly; consumption share as
-`p_tilde·C/Y` (not raw `C/Y` when `I > 1`). Transition paths come from `TPI_vars.pkl`, parameters
-from `model_params.pkl`.
+`p_tilde·C/Y` (not raw `C/Y` when `I > 1`). With a subsistence floor (`c_min > 0`) the saved `C` is
+consumption above the floor; spending on goods, the floor included, is `C_i`, the consumption the
+resource constraint uses. Score private consumption and net exports with `C_i`: on ETH reading `C`
+understated consumption and overstated net exports by about 6.5 points of GDP for a week, and the
+false trade surplus sent the diagnosis toward foreign financing. [ETH] (history: ETH) Transition
+paths come from `TPI_vars.pkl`, parameters from `model_params.pkl`.
 
 ## Structural validation (multi-industry)
 
@@ -179,6 +183,13 @@ og-multi-industry-calibration skill.
 gap is identically the sum of the other gaps. Decompose it; each piece has its own cause. Related
 trap: `I_total` in the SS output is private investment, while national-accounts GFCF is private plus
 public. Compare `I_total + I_g`, or the gap is overstated by all of public investment.
+
+**Check the identities every solve.** Private consumption, investment, government consumption and
+net exports must add up to GDP on the dashboard's own definitions; if a component adds something
+GDP does not (national-accounts government consumption includes depreciation of public capital),
+say so next to the table. Work the current account out two ways, from flows (net exports plus
+remittances and aid less payments abroad) and from the change in foreign-owned capital and external
+debt; a mismatch means a misread series. [ETH] (history: ETH)
 
 **Score consumption at producer prices.** The model's `C` excludes the consumption tax, while
 national accounts report household consumption at purchaser prices. Compare like with like, or

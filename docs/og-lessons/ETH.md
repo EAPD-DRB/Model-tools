@@ -90,6 +90,8 @@ country's calibration.
 
 ### Patience: one discount factor to the long-run return when the state finances investment
 
+- **Superseded (2026-11-25)** by "Patience: as much saving as the return evidence allows, judged on the first years" below. The premise did not hold for ETH today: state investment is about 3–4 percent of GDP, and the remaining gap was household saving.
+
 - **Lesson:** where the state, state enterprises or foreign lenders finance much of investment, do
   not tune patience to first-year investment; set one discount factor to the long-run return at
   the world rate and score investment as a check. Use wealth shares by income group as a check if
@@ -128,6 +130,41 @@ country's calibration.
   savings are mostly bequests; 30% per round at ages below 80 converged. The gap that remained
   (4.6% weighted by wealth) sat at ages 21–24, which hold about 2% of wealth.
 - **Evidence:** OG-ETH `ogeth/initial_wealth.py`; commits 814a1d7, 4e90baa, 2480d1e.
+- **When:** 2026-11.
+
+### Patience: as much saving as the return evidence allows, judged on the first years
+
+- **Lesson:** patience sets household saving; today's returns do not depend on it (technology and the measured capital stock fix them). Judge it on the first transition years (private consumption and investment against the data), not the steady state, and set it as high as the long-run bounds allow: the owners' long-run return on capital (firms' return plus public-capital rent, government debt excluded) at or above the bottom of the return evidence, and foreign-owned capital non-negative in the steady state. Do not jump between the two extremes (first-year investment fully matched; the steady-state firms' return at the world rate).
+- **What happened:** patience had been tuned to first-year investment (needing a long-run return near 2 percent), then from 16 November to the steady-state firms' return at the 4 percent world rate (0.887 to 0.903). The steady-state sweep looked weak (0.887 to 0.95 moved long-run consumption only 81.9 to 78.7 percent of GDP), but one transition probe at 0.94 moved first-year consumption from 77.6 to 70.0 and investment from 24.9 to 30.8 (data 64.4 and 35.3): the measured starting stock sits below what more patient households hold, so they build capital, from 1.66 to 1.84 times GDP by 2035, and the firms' return falls to the world rate by about 2035. At 0.94 the owners' long-run return on capital is 6.1 percent (evidence range 6–10); from 0.96 the steady state exports capital. Adopted 0.94 as a documented constant; about 60 percent of the consumption and investment gap closed.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commit fdd3b2b; validation and households chapters.
+- **When:** 2026-11.
+
+### Compare return evidence with the return on capital to owners, not the portfolio return
+
+- **Lesson:** OG-Core's `r_p` averages the return on capital with government debt at `r_gov`; where debt is repressed it reads far below the return on capital. Evidence on returns (FDI returns, Caselli-Feyrer) is about capital: compare it with `r + (1 − tau_b)·MPK_g·K_g/K` (`aggregates.get_r_p`), not `r_p`.
+- **What happened:** a first patience target used `r_p` (8.1 percent in 2025, with `r_gov` at −10.4) while the capital return was 9.4; an adversarial review caught it before the push.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `targets.ss_moments` (`r_K`).
+- **When:** 2026-11.
+
+### zeta_K raises investment only through foreign ownership
+
+- **Lesson:** raising `zeta_K` to close an investment gap buys capital owned by foreigners, as a jump in the first year rather than a build-up, and pays them the owners' return; keep it on the measured foreign share.
+- **What happened:** a probe at 0.95 (from 0.185) put first-year investment at 33.9 percent of GDP but the foreign share of private capital at 32 percent (59 by 2050, FDI data 10), net exports at −9.1 (data −4.4) and payments abroad at 3.4 percent of GDP (data 0.4).
+- **Evidence:** OG-ETH exploration notes, 2026-11-25 (local).
+- **When:** 2026-11.
+
+### State enterprises' foreign loans sit in household wealth unless counted
+
+- **Lesson:** loans that state enterprises owe abroad are neither government external debt nor FDI; if left out of both, the initial-wealth construction counts the capital they financed as household wealth. Either treat guaranteed infrastructure enterprises as part of the state (external debt at its own rate, public investment, public capital) or add the loans to the foreign capital target; with OG-Core paying foreign capital the owners' return, the second raises payments abroad, so weigh it before adopting.
+- **What happened:** 6.3 percent of rebased GDP (Ministry of Finance Bulletin 56) sat in household wealth. A probe moving it to foreign capital raised investment 0.8 points and payments abroad from 1.16 to 1.77 percent of GDP (data 0.37); documented as a known inconsistency instead.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; macro chapter of OG-ETH.
+- **When:** 2026-11.
+
+### An investment gap: decompose it with the financing identity before choosing a lever
+
+- **Lesson:** before attributing an investment gap to the state or to the capital share, write investment = domestic saving + net foreign financing for the data and the model, measure state investment today (budget capital spending, state-enterprise flows), and read the country's financing history; the gap's half that is missing names the lever.
+- **What happened:** the 2005–2019 boom was financed by saving drawn through state banks, state enterprises' foreign borrowing, and remittances and grants (IMF CR 13/308, 20/29); today state investment is 3–4 percent of GDP and the current account about −0.7. With the dashboard corrected, the model's net foreign financing was close to the data and the whole gap was household saving; a week spent on the capital share, the state-investment story, `zeta_K` and state-enterprise loans would have been saved.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH exploration and financing-history notes, 2026-11-25 (local).
 - **When:** 2026-11.
 
 ## og-country-calibration/references/taxes-informality.md
@@ -234,7 +271,7 @@ country's calibration.
   against 4%. With sigma 1.5 and `c_min` at 80% of the cost of an energy-sufficient diet
   (World Bank/FAO Food Prices for Nutrition; the full cost would have put the poorest group below
   the floor), patience fell to 0.903, first-year investment rose from 23.2% to 27.5% of GDP and
-  private consumption fell from 79.7% to 68.2% (data 35.3 and 64.4). The effective sigma is 2.2 for
+  private consumption fell from 79.7% to 68.2% (data 35.3 and 64.4). Correction (2026-11-25): the 68.2 was read from OG-Core's `C`, which excludes the floor; counted with the floor (`C_i`) private consumption was about 6.5 points higher (see "Consumption with a subsistence floor"). The effective sigma is 2.2 for
   the poorest group and 1.63 at mean consumption. The Ethiopia Socioeconomic Panel Survey 2021/22
   supports the floor: three-quarters of loans come from relatives and neighbours, 0.1% from banks,
   and 80% of savers save for emergencies, 0.9% for old age. `c_min` is in growth-adjusted units and
@@ -250,6 +287,13 @@ country's calibration.
 - **What happened:** at sigma 3, `chi_n` exceeded the bound at every age. `Z` = 5 moved the foreign
   capital share; `e` × 10 reproduced every ratio of the original solution in a probe.
 - **Evidence:** OG-ETH commit 04d4701; `ogeth.macro_params.EARNINGS_SCALE`.
+- **When:** 2026-11.
+
+### Consumption by age: the consumption adults carry, and the model's age convention
+
+- **Lesson:** OG-Core's households start at age `E` (completed years: UN ages 0–99, rows from `E`) and have no children, while national-accounts consumption includes children's. Target consumption per adult with each adult carrying the people under `E` they support, fit net family transfers (`phi_FT`) to it, and report the fit as by construction. A default target for any country: own consumption by age from a cross-country model of the NTA profiles (log GDP per capita PPP and the old-age dependency ratio), plus children's consumption given to parents by UN fertility and population with DHS medians for spousal age gaps and children not living with a parent.
+- **What happened:** the 2005 NTA profile (own consumption, a young-adult peak at 1.16) drove large transfers to young adults; the carried-consumption target (0.52 at 20, peak 1.10 in the forties) was within 0.057 of Ethiopia's ESPS 2021/22 survey built the same way. A first version labelled the first model age 21, a one-year shift, fixed before the push.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `ogeth/data/consumption_by_age.csv`, `examples/fit_family_transfers.py`.
 - **When:** 2026-11.
 
 ## og-country-calibration/references/validation-dashboard.md
@@ -302,6 +346,13 @@ country's calibration.
   statistical discrepancy; the central bank's series is 3.67%, and the model came within 0.3 point
   of it.
 - **Evidence:** OG-ETH commit 8b8a2fa.
+- **When:** 2026-11.
+
+### Consumption with a subsistence floor: score `C_i`, not `C`
+
+- **Lesson:** with `c_min > 0`, OG-Core saves `C` as consumption above the floor and `C_i` as spending on goods, floor included (the resource constraint's consumption). Score private consumption and net exports with `C_i`, and check every solve that consumption, investment, government consumption and net exports add up to GDP.
+- **What happened:** from the floor's introduction (18 November) the dashboard read `C`, understating private consumption and overstating net exports by about 6.5 points of GDP (71.1 against 77.6; +1.1 against −5.4). The reported trade surplus sent the diagnosis toward foreign financing for a week. It was found when the current account computed from flows (+4.5) contradicted the change in foreign liabilities (−2.0).
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commit fdd3b2b (`targets.py`).
 - **When:** 2026-11.
 
 ## og-solver-diagnosis/references/solve-procedures.md

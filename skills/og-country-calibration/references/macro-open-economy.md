@@ -108,6 +108,12 @@ domestic saving, which moves `K_f/K` at a fixed `zeta_K` (on PHL, recalibrated t
 Chinn-Ito as the target and never solving for the level. The opposite failure: a placeholder 0.10
 (the OG-Core default) that left the JPN `K/Y` and consumption gaps open for fourteen rounds.
 
+**Not a lever for an investment gap.** Raising `zeta_K` closes an investment gap only by making
+foreigners own the new capital, which arrives as a jump in the first year rather than a build-up
+and is paid the owners' return. Keep it on the measured foreign share. On ETH, 0.95 instead of 0.185
+raised first-year investment by 9 points of GDP with a foreign share of 32 percent against 10.
+[ETH] (history: ETH)
+
 **Exemplar.** Method: IDN, ETH; level tuning executed on PHL. The 0.9 pitfall: IDN and PHL both hit
 it and fixed it.
 
@@ -296,7 +302,12 @@ the start year. There are two ways to measure it, and they differ:
   (history: PHL, ZAF, ETH)
 
 Prefer the capital-side number, cross-check against the balance-sheet one, and write down which you
-used and why. Expect initial < steady-state wealth ratio for a fast-growing economy.
+used and why. **Foreign loans to state enterprises** are neither government external debt nor FDI;
+left out of both, the capital-side number counts the capital they financed as household wealth.
+Either treat guaranteed state enterprises as part of the state (external debt at its own rate,
+public investment, public capital) or subtract the loans and add them to the foreign-capital
+target; the second raises payments abroad while OG-Core pays foreign capital the owners' return.
+[ETH] (history: ETH) Expect initial < steady-state wealth ratio for a fast-growing economy.
 
 **The shape.** The steady-state profile is a defensible start. For an age shape from data, the
 National Transfer Accounts' private asset income by age (the same download as the labour-income
@@ -353,40 +364,50 @@ the implied `r` about 0.9pp below the world rate). [KOR] (history: KOR)
 
 ## beta_annual
 
-**Method.** Not observable; calibrate it to the capital-output ratio through the firm FOC (method.md,
-Step zero). With `gamma` and `delta` sourced, `K/Y` is a function of `r`, and `r` is what `beta`
-moves; two or three SS solves bracket it. `beta` is one of eleven levers on `K/Y`, so check Step
-zero before concluding it is the binding one. Order matters: sourced parameters first, then look at
-`K/Y`. If it already sits on the PWT value, `beta` has no room and moving it is curve-fitting; if
-`K/Y` is off, `beta` is the right instrument.
+**Method.** Not observable. Patience sets how much households save; it does not set today's
+returns, which the capital share, depreciation and the measured starting stock already fix. Two
+routes, by what the data can carry:
+- *The `K/Y` route* (stationary population, reliable capital stock): calibrate it to the
+  capital-output ratio through the firm FOC (method.md, Step zero). With `gamma` and `delta`
+  sourced, `K/Y` is a function of `r`, and `r` is what `beta` moves; two or three SS solves bracket
+  it. `beta` is one of eleven levers on `K/Y`, so check Step zero first; if `K/Y` already sits on
+  the PWT value, `beta` has no room.
+- *The saving route* (population far from stationary, `initial_wealth_ratio` set from data): the
+  same patience implies more wealth relative to GDP once the population has aged, so a `beta`
+  tuned to a steady-state moment can be wrong for today. Judge it on the first transition years:
+  private consumption and `(I+I_g)/Y` against the data. [PHL] (history: PHL)
 
-**When the initial wealth is anchored to data.** Applies when the population is far from
-stationary (young or fast-ageing) and `initial_wealth_ratio` is set from data. Then a `beta` tuned to
-the steady-state `K/Y` can be wrong for today: the same patience implies more wealth relative to GDP
-once the population has aged, so a steady state tuned to today's ratio makes households too
-impatient, and starting from measured wealth they consume a windfall in the first years. Check the
-first transition year: `C/Y` and `(I+I_g)/Y` against the data. If they miss, tune `beta` to the
-first-year investment share instead, and report the steady-state `K/Y` as an outcome; if the state
-or foreign lenders finance a large share of that investment, the next paragraph applies instead.
-[PHL] (history: PHL)
+**Judge patience on the transition, not the steady state.** Starting from measured wealth below
+what more patient households want to hold, they save and build capital in the first years; the
+steady state shows little of that. Check: one transition probe at a candidate `beta`. On ETH,
+0.887 to 0.95 moved long-run consumption by 3 points of GDP, while 0.94 moved first-year consumption
+by 7.6 points and investment by 6. [ETH] (history: ETH)
 
-**When the state finances much of investment.** Applies when state enterprises, state banks or
-foreign lenders finance a large share of measured investment. Tuning patience to first-year
-investment then makes households finance all of it: patience rises, the long-run return falls
-below the world rate, and foreign capital turns negative. Set one discount factor so that the
-long-run return equals the world rate, score first-year investment as a check, and report the gap
-with the state channels you measured. [ETH] (history: ETH)
+**Bounds.** Set patience to the saving moment, as high as two long-run bounds allow, and stop at
+the bound if it binds:
+- the owners' long-run return on capital (firms' return plus the public-capital rent OG-Core passes
+  to them, government debt excluded; Capital share, below) stays inside the return evidence;
+- foreign-owned capital stays non-negative in the steady state (from there the long-run economy
+  turns into a capital exporter).
+The return evidence describes returns today; applying it to the long run is a judgement, so state
+it as one. If a bound binds, make `beta` a documented constant rather than a tuned dial, and report
+the remaining saving gap with its measured causes. Avoid both extremes: tuning to first-year investment
+outright (it made ETH's households finance all of it, with a long-run return near 2 percent), and
+tuning the steady-state firms' return to the world rate (it made them too impatient to save what
+the national accounts show). Before attributing a saving or investment gap to the state, decompose
+it (method.md, "Diagnosing a gap that will not close"). [ETH] (history: ETH)
 
-**Patience at its bound.** Read it economically before widening the bound. Two causes seen so far:
-a high `sigma` with fast labour-productivity growth, where households want to consume against their
-future income (households-demographics.md, preferences), and households financing investment the
-state finances (above). If matching wealth shares by income group pushes patience above one or to
-its lower bound, use one discount factor and keep the shares as a check. [ETH] (history: ETH)
+**Patience at its bound.** Read it economically before widening the bound. Causes seen so far: a
+high `sigma` with fast labour-productivity growth, where households want to consume against their
+future income (households-demographics.md, preferences); a saving target the long-run bounds above
+cannot reach. If matching wealth shares by income group pushes patience above one or to its lower
+bound, use one discount factor and keep the shares as a check. [ETH] (history: ETH)
 
 **Pitfall.** Leaving OG-USA's 0.96 unexamined, or moving `beta` while `K/Y` is already on target.
 Re-ask after any change to `gamma`, `delta` or `g_y`; on JPN the answer flipped twice.
 
-**Exemplar.** JPN (the K/Y route); PHL (first-year investment); ETH (the long-run return).
+**Exemplar.** JPN (the `K/Y` route); PHL (first-year investment); ETH (first-year saving within the
+long-run bounds).
 
 ## alpha_T
 
@@ -419,6 +440,11 @@ publicly provided in kind, which is most of the OECD.
   - *Cross-sectional rescale* [multi-industry; PHL]: keep the SAM's per-industry dispersion but
     rescale so the value-added-weighted mean equals the economy-wide capital share. Where the table
     has a mixed-income row, split it per industry first [BRA] (og-multi-industry-calibration).
+- **Compare return evidence with the owners' return on capital.** OG-Core pays capital owners the
+  firms' return plus the public-capital rent, `r + (1 − tau_b)·MPK_g·K_g/K` (`aggregates.get_r_p`).
+  Its `r_p` also averages in government debt at `r_gov`, so where debt is repressed it reads well
+  below the return on capital. FDI returns and Caselli–Feyrer estimates are returns on capital:
+  compare them with the owners' return, not with `r` or `r_p`. [PHL, ETH] (history: ETH)
 - **Pitfall [ETH, verified].** The `update_from_api=True` path recomputes the naive `1 − ILOSTAT`
   and silently overwrites a hand-triangulated `gamma` (on ETH, with a value about 0.2 higher; case
   notes: ETH), undoing the whole argument in the docs. Because some examples call that path

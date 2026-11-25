@@ -86,6 +86,18 @@ dial by that moment, not to close a residual; score every resource-constraint co
 early transition, not only the steady state. The four rules and their cases are in
 [validation-dashboard.md](validation-dashboard.md). [net-new: JPN]
 
+## Diagnosing a gap that will not close
+
+Before reaching for a lever, decompose the gap with the identities the model and the data share:
+investment = domestic saving + net foreign financing, and the current account from flows against
+the change in foreign liabilities. The half that is missing names the lever (saving: patience and
+preferences; foreign financing: `zeta_K`, external debt, payments abroad). Measure the candidate
+channels in today's data rather than in the country's history: a policy that drove investment a
+decade ago may be gone. Then probe each candidate once, at a bound, on the transition, and record
+what it buys and what it costs on the other moments. On ETH a misread consumption series made the
+gap look like foreign financing, and a week went to the capital share, the state, `zeta_K` and
+state-enterprise loans before the decomposition showed it was household saving. [ETH] (history: ETH)
+
 ## Why the baseline transition is not optional
 
 The steady state uses one number from each time-varying path (its terminal value), so a whole

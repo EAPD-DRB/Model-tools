@@ -159,6 +159,10 @@ Model-tools describes.
 - **Short demographic window:** it sets the long-run growth rate silently.
 - **Live data overwriting a curated value:** take curated parameters off the live path.
 - **Tuning before the inputs are settled:** every later correction costs a retune.
-- **Patience at its bound:** usually high curvature with fast growth, or households financing
-  investment the state finances; see `beta_annual` and preferences before widening the bound.
+- **Patience at its bound:** usually high curvature with fast growth, or a saving target the
+  long-run bounds cannot reach; see `beta_annual` and preferences before widening the bound.
+- **Patience judged on the steady state:** with measured initial wealth its effect shows in the
+  first transition years; judge it there, within the long-run bounds (macro-open-economy.md).
+- **The wrong consumption series with a subsistence floor:** OG-Core's `C` excludes the floor; score
+  `C_i`, and check that the expenditure shares add up to GDP (validation-dashboard.md).
 - **Remittances or aid left out where they matter:** a spurious trade surplus and a fiscal squeeze.

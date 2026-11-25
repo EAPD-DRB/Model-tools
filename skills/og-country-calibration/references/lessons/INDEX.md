@@ -27,9 +27,12 @@ Contents
 **Subsistence consumption, fast growth, thin credit markets**
 - ETH: Preferences: a subsistence floor instead of a high sigma
 - ETH: Patience: one discount factor to the long-run return when the state finances investment
+- ETH: Patience: as much saving as the return evidence allows, judged on the first years
 
 **Investment financed by the state or state enterprises**
-- ETH: Patience: one discount factor to the long-run return when the state finances investment
+- ETH: An investment gap: decompose it with the financing identity before choosing a lever
+- ETH: State enterprises' foreign loans sit in household wealth unless counted
+- ETH: Patience: one discount factor to the long-run return when the state finances investment (superseded)
 
 **National accounts rebased, or ratios on a mixed GDP basis**
 - PHL: GDP price basis: ratios to market-price GDP
@@ -104,6 +107,9 @@ Contents
 - KOR: Initial household wealth: test an initial-wealth build on your country before adopting it
 - KOR: Pensions: a young pension system needs two checks
 
+**Family support between generations; consumption by age**
+- ETH: Consumption by age: the consumption adults carry, and the model's age convention
+
 **Young, fast-growing population; initial wealth far from the steady state**
 - PHL: Initial wealth: the released parameters, a data shape, and beta tuned to the first year
 - PHL: Initial household wealth: the old default scale was a windfall
@@ -155,6 +161,8 @@ Contents
 - JPN: Completeness: a dial moved to close a residual is a free parameter
 - JPN: Dashboard completeness: every tuned dial needs its own scored moment
 - PHL: The in-model tuning loop: real solves are cheap
+- ETH: zeta_K raises investment only through foreign ownership
+- ETH: Compare return evidence with the return on capital to owners, not the portfolio return
 
 **Validation and tests**
 - ETH: The steady-state dashboard: a data-comparison table in macro.md
@@ -165,6 +173,7 @@ Contents
 - JPN: Consumption is a residual: decompose its gap, and compare like with like
 - PHL: Verify both tails of every path: the min-only debt check
 - KOR: Two traps when adding rows: use the model's own K concept
+- ETH: Consumption with a subsistence floor: score `C_i`, not `C`
 
 ## Multi-industry
 

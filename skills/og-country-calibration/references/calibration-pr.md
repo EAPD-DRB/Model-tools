@@ -12,6 +12,12 @@ alternatives and the caveats. Put design-justification paragraphs ("worth review
 carrier", why-not-X) in the PR only when you ask the maintainers to decide something; otherwise
 they read as an invitation to a debate nobody asked for. [review feedback on the PHL PR text]
 
+The PR reports how the calibration fits the data, not how it was arrived at: no comparisons with
+earlier runs or versions, in the PR or in the docs. Build every table and figure from the official
+run with the repo's own doc tooling, and before pushing have an independent reviewer check every
+number and claim against the run and the sources (on ETH such a review found twelve problems, two
+serious, in a text already checked by its author). [ETH] (history: ETH)
+
 PR style: narrative, plain language, the why first, detail in the docs. Include a
 changed-parameters table, the goodness-of-fit table, and an example macro-results table.
 

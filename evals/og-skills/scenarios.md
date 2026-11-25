@@ -202,7 +202,9 @@ At most 250 words.
 1. Explains that a steady state tuned to today's ratio is wrong for a young population: the same
    patience implies more wealth once the population ages, so households start with a windfall.
 2. Does not expect the age shape of initial wealth alone to fix it.
-3. Tunes `beta` to first-year moments (the investment share), not the steady-state `K/Y`.
+3. Tunes `beta` to first-year moments (consumption and investment shares), judged on the
+   transition rather than the steady state, and within the long-run bounds: the owners' return on
+   capital inside the return evidence and foreign-owned capital non-negative in the steady state.
 4. Reports the steady-state `K/Y` as an outcome, expected above today's ratio.
 5. Uses the released parameters (`initial_wealth_ratio`, `initial_hhwealth_dist`) and checks the
    solved first-year wealth ratio equals the target.

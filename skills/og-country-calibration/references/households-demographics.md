@@ -9,6 +9,7 @@ Contents
 - Income-differentiated demographics
 - Pensions
 - Labour supply (chi_n)
+- Family support between generations and consumption by age
 - Preferences: sigma, the subsistence floor and Frisch
 
 ## Earnings (the e ability matrix)
@@ -115,7 +116,8 @@ on the resource constraint. The two breaks routinely exceed it, so a sibling's J
 loosened value (one sibling ships 100 times the default) that the audit should catch and either
 justify or tighten. Triage by period before accepting it: tabulate the error at each break period,
 at the last period, and the largest everywhere else (and in the first ten years). Keep the loosened
-tolerance only with that table in the docs. [KOR] (history: PHL, KOR)
+tolerance only with that table in the docs, and re-tabulate after a calibration change: the break
+can grow (on ETH, from 1.8e-3 to 2.3e-3 when patience rose). [KOR] (history: PHL, KOR)
 
 ## Cache the processed arrays
 
@@ -248,6 +250,30 @@ an actual 2.1%; a 25-year phase-in matched today's spending and removed a debt o
 - In a multi-industry model, `chi_n`/`chi_b` also take the units conversion
   (og-multi-industry-calibration).
 
+## Family support between generations and consumption by age
+
+**Applies when** older people or young adults live largely on support from relatives rather than on
+their own income, and OG-Core's net family transfers (`phi_FT`) are available.
+- **The target concept.** OG-Core's households enter at age `E` and have no children, while
+  national-accounts consumption includes children's. Target consumption per adult with each adult
+  carrying the consumption of the people under `E` they support, not each person's own consumption
+  (the NTA concept): fitting the own-consumption profile hands young adults transfers that in the
+  data go to their children.
+- **Ages.** Model row `s` is completed age `E + s` (OG-Core reads UN ages 0–99 and keeps rows from
+  `E`), the same convention the hours and earnings targets use.
+- **A default target for any country.** Own consumption by age from a cross-country model of the
+  NTA profiles (knot values regressed on log GDP per capita PPP and the old-age dependency ratio;
+  out-of-sample error about 0.07), then children's consumption given to parents: the mother's age
+  from UN fertility by age times population, the father's from the DHS distribution of spousal age
+  gaps, and the share of children living with neither parent to the grandparents' generation,
+  weighted by survival. Where a household survey with parent links in its roster exists, build the
+  target from it and use the default as a check (on ETH they differed by 0.057).
+- **The fit.** Fit `phi_FT` by age and income group so that each group's consumption follows the
+  target, netting to zero within each group. The fit is close by construction, so report it as a
+  fit, not as validation, and say that it treats every difference from the target as family support.
+- **Check.** The target's mean at the base ages equals one; the transfers sum to zero within each
+  group every year; consumption by age against the target. [ETH] (history: ETH)
+
 ## Preferences: sigma, the subsistence floor and Frisch
 
 - **`sigma`.** The curvature of utility; with no income risk in OG-Core it is the inverse of the
@@ -265,8 +291,8 @@ an actual 2.1%; a 25-year phase-in matched today's spending and removed a debt o
   Food Prices for Nutrition) as a share of consumption per person, and convert it to model units.
   It is one value for every age and income group, so cap it at what the poorest group can afford at
   its lowest-consumption age, and say how far below the source that puts it. `c_min` is in
-  growth-adjusted units, so it rises with labour productivity. The consumption the model reports is
-  the part above the floor.
+  growth-adjusted units, so it rises with labour productivity. OG-Core's saved `C` is the part above
+  the floor; total consumption is `C_i` (validation-dashboard.md).
 - **Saving motives.** Check them against a household survey. OG-Core's households save for
   retirement and bequests only. An LSMS-type survey's credit and savings modules show who borrows,
   from whom and why, and why people save; where saving is mostly precautionary, patience is

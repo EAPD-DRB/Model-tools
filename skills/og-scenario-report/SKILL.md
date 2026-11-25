@@ -29,6 +29,9 @@ asks. Two rules hold in every mode:
   currency (`factor` converts; ratios and % changes are quotable); multi-industry consumption is
   `p_tilde·C`, not raw `C`; nominal sector shares are distorted by the numeraire; net exports is a
   residual.
+- With a subsistence floor (`c_min > 0`), `C` is consumption above the floor and `C_i` total
+  spending on goods; a percent change in `C` overstates the change in total consumption. Quote
+  `C_i`, or say which one the number is.
 - **Know what the run can answer.** A single-industry run has no industry detail; a reform that
   bundles several changes cannot attribute effects to one of them. Say so instead of producing a
   figure that implies otherwise, and offer the run that would answer it.
