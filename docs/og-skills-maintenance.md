@@ -1,7 +1,19 @@
 # Maintaining the OG skills
 
-How the OG skills (og-country-calibration, og-multi-industry-calibration, og-solver-diagnosis,
-og-run, og-run-preflight) are written, tested and extended.
+How the OG skills (og-country-calibration, og-multi-industry-calibration, og-run,
+og-solver-diagnosis, og-scenario-report) are written and extended.
+
+## How the skills are divided
+
+By the job a person brings, not by the steps inside it: calibrating or updating a country model
+(og-country-calibration, with og-multi-industry-calibration for the overlay), just running a model
+(og-run), a solve that fails or looks wrong (og-solver-diagnosis), designing scenarios and
+presenting results (og-scenario-report). Tools for maintaining the EAPD-DRB repos themselves
+(carrying a change across the country repos, PR conventions) are kept privately by their
+maintainers and are not part of this set. Guidance every job needs (how to run the model) lives in one shared file,
+copied into each skill that needs it and stated briefly on its front page, so a job never depends on
+a second skill being loaded. The skills are written for anyone doing OG work with an AI assistant:
+approval habits and writing style belong to each user's or project's own rules, not to the skills.
 
 ## Objective
 
@@ -14,7 +26,7 @@ anyone who needs to look deeper.
 | Layer | Holds | Lives in | Installed with the skill |
 |---|---|---|---|
 | Skill | Methods and checks that apply to a country you have never seen | `skills/<skill>/` | Yes |
-| History | What happened, where, with the evidence: one entry per lesson | `docs/og-lessons/` | No; linked |
+| History | What happened, where, with the evidence: one entry per lesson, and `INDEX.md` by situation | `docs/og-lessons/` | Yes: copied into og-country-calibration `references/lessons/` by `scripts/sync_shared.py` |
 | Repo state | What a repo ships today and its open defects | That repo's issues and docs | No |
 
 The skill grows only when a country teaches a new method. Most countries add a history entry and
@@ -32,6 +44,11 @@ Each lesson is short and has the same parts, in this order:
 4. **Why:** one sentence, at most one size example ("on JPN this moved K/Y from 3.67 to 3.81").
 5. **History:** the country tag (`[KOR]`), plus a `(history: KOR)` marker where the lesson's own
    numbers live in `docs/og-lessons/KOR.md` rather than in the skill.
+
+Write each lesson so an assistant can act on it without the code it came from: the data concept,
+the transformation, and the check. Name sources and scripts only as examples or helpers ("for
+example", "if the repo has one"), never as the one required route; OG-Core's own parameter and
+function names stay, since they are the interface.
 
 Not in the skill:
 - A country's own values (targets, data years, tuned parameters). They go in its history entry.
@@ -52,22 +69,23 @@ Not in the skill:
 
 ## Adding a lesson
 
-1. Write the history entry first.
+1. Write the history entry first, and list it under its situation in `docs/og-lessons/INDEX.md`.
 2. Ask: does an existing lesson in the skill already cover it? If yes, add the history link to that
    lesson and stop.
 3. If it is a new method, add a lesson in the shape above, in the reference file for its block.
-4. Run the evaluations (`evals/og-skills/`) before and after. Keep the change only if it does not
-   make any scenario worse.
+4. Re-read the skill as someone new to the country would: does the lesson sit where that person
+   will look, and does it say what to do in plain words?
 
-## Evaluations
+## Learning from use
 
-`evals/og-skills/` holds scenarios that a fresh agent answers with only the skill. Each has a
-rubric of the points a correct answer contains. Run each scenario without the change and with
-it; a change ships when it improves a scenario or keeps them all equal.
+The skills improve through real calibrations: each country, update or multi-industry build is the
+test. When a session shows the skill missing something, misleading, or being worked around, record
+it as a history entry and adjust the skill. `evals/og-skills/` keeps written scenarios with rubrics
+from earlier rounds; they check what an agent knows, not what it does under pressure, so treat
+them as a quick check of knowledge, not as the gate for a change.
 
 ## Mirrors
 
-Model-tools is canonical for og-country-calibration and og-multi-industry-calibration; MUIOGO-AI
-is canonical for og-solver-diagnosis, og-run and og-run-preflight. Each repo carries a copy of the
-other's skills. Copy whole files, never edit a copy; the front pages differ only by MUIOGO-AI's
-"Which world" section.
+Model-tools is canonical for the OG skills. MUIOGO-AI carries copies; copy whole files, never edit a
+copy. The MUIOGO-specific rules (its two installations, or "worlds") live in the MUIOGO skills and
+og-clews-linked-run, not in the OG skills.

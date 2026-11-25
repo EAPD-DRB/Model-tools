@@ -14,6 +14,19 @@ open-economy fix is merged in [EAPD-DRB/OG-PHL#68](https://github.com/EAPD-DRB/O
 A few numbers survive only in the author's working notes (project_tax_recalibration,
 unpublished); those entries say so.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/fiscal-consistency.md
+- og-country-calibration/references/taxes-informality.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/validation-dashboard.md
+- og-country-calibration/references/solving-tuning.md
+- og-country-calibration/references/calibration-pr.md
+- og-multi-industry-calibration/references/inputs.md
+- og-multi-industry-calibration/references/alignment.md
+- og-solver-diagnosis/references/failure-taxonomy.md
+- og-solver-diagnosis/references/solve-procedures.md
+
 ## og-country-calibration/references/macro-open-economy.md
 
 ### start_year: a start one year past the latest data
@@ -131,7 +144,8 @@ unpublished); those entries say so.
 
 ### Initial household wealth: the old default scale was a windfall
 
-- **Lesson:** older ogcore rescales initial wealth so aggregate `B(0) = B_ss`; for a young
+- **Lesson:** with the initial-wealth parameters unset, ogcore rescales initial wealth so aggregate
+  `B(0) = B_ss` (still true in 0.25.2); for a young
   population that is a windfall that shows up only in level exercises.
 - **What happened:** for PHL the rescale factor was 1.625, a 63% windfall for every household.
   Retirees consumed at 3–7× steady state for years. Aggregate consumption jumped 41% for one year,
@@ -150,7 +164,7 @@ unpublished); those entries say so.
 
 - **Lesson:** set the start with `initial_wealth_ratio` and `initial_hhwealth_dist`; where the
   population is far from stationary, tune `beta` to first-year moments rather than the steady-state
-  `K/Y` (macro-open-economy.md, "Initial household wealth" and "beta_annual").
+  `K/Y` (macro-open-economy.md, "Initial household wealth" and "Patience (beta_annual)").
 - **What happened:** with `beta` tuned so the steady state held today's capital (3.59 times GDP),
   households starting from measured wealth (3.35 times GDP) consumed 80.8% of GDP in 2025 against
   76.1% in the data, and invested 20.2% against 23.6%. An age shape from NTA private asset income
@@ -354,7 +368,7 @@ unpublished); those entries say so.
 
 - **Lesson:** compare the model's labour supply by age with hours per person by age, calibrate
   `chi_n` to it with a warm start between solves, and make the earnings profile per hour
-  (households-demographics.md, "Labour supply").
+  (households-demographics.md, "Hours of work by age (chi_n)").
 - **What happened:** with OG-USA's `chi_n`, the model worked about 45% of the time endowment at every
   age up to 55 and a third at 75, against 29% and 5% in the 2024 Labor Force Survey (ILOSTAT), though
   total hours per working-age person were 7% above the US. The OG-ETH loop, run from a cold start,
@@ -407,8 +421,8 @@ unpublished); those entries say so.
 
 ### GDP price basis: ratios to market-price GDP
 
-- **Lesson:** compare model and data ratios on one price basis (validation-dashboard.md, "Mind the
-  price basis too").
+- **Lesson:** compare model and data ratios on one price basis (validation-dashboard.md, "One GDP
+  basis: market prices").
 - **What happened:** OG-Core's `Y` is the sum of `p_m Y_m`, with the consumption tax paid on top, so
   it excludes product taxes, while every Philippine target is a share of market-price GDP. With a
   consumption tax near 7.9% of GDP, every model ratio over `Y` sat about 8% above the same quantity

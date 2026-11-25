@@ -46,16 +46,12 @@ VENDORED = {
         "og-country-calibration",
         "og-multi-industry-calibration",
         "og-run",
-        "og-run-preflight",
         "og-solver-diagnosis",
     ),
+    # MUIOGO's two installations ("worlds") matter only inside MUIOGO; the OG
+    # skills are for standalone repos and point to muiogo-workspace instead.
     "world-discipline.md": (
-        "og-run",
-        "og-run-preflight",
-        "og-solver-diagnosis",
-        "calibration-provenance",
         "og-clews-linked-run",
-        "og-repo-fleet-sync",
     ),
     "provenance/SCHEMA.md": (
         "build-clews-model",
@@ -88,6 +84,17 @@ SKILL_VENDORED = {
         ("pull-handoff", "verify.py"),
     ),
 }
+
+# The country lessons (history) ship with the calibration skill, so an agent on
+# a new country can read how others handled the same situation. One editable
+# source in docs/og-lessons/, copied into the skill's references/lessons/.
+LESSONS = REPO / "docs" / "og-lessons"
+LESSONS_VENDORED = {"og-country-calibration": "references/lessons"}
+LESSONS_BANNER = (
+    "<!-- GENERATED FILE - do not edit here.\n"
+    "     Source: docs/og-lessons/{source}\n"
+    "     Regenerate: python scripts/sync_shared.py -->\n\n"
+)
 
 BANNER = (
     "<!-- GENERATED FILE - do not edit here.\n"
@@ -179,6 +186,15 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"no skill dir for {skill}", file=sys.stderr)
                 return 2
             target = skill_root / relative_target
+            written += sync_target(target, payload, args.check, stale)
+
+    for skill, relative_dir in LESSONS_VENDORED.items():
+        for source in sorted(LESSONS.glob("*.md")):
+            if source.name == "README.md":
+                continue
+            text = source.read_text(encoding="utf-8")
+            payload = LESSONS_BANNER.format(source=source.name) + text
+            target = REPO / "skills" / skill / relative_dir / source.name
             written += sync_target(target, payload, args.check, stale)
 
     for (owner, owner_relative), targets in SKILL_VENDORED.items():

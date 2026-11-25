@@ -10,6 +10,13 @@ Commits named below: `abd25de` is PSLmodels/OG-BRA main (2026-08-31). `73e07f9` 
 PR #10 (branch `multi-industry-data`, the M=9 calibration). `50144b5` is the head of PR #11
 (branch `feature/single-industry-refresh`). Both PRs were open on 2026-10-19.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/taxes-informality.md
+- og-country-calibration/references/households-demographics.md
+- og-multi-industry-calibration/references/inputs.md
+- og-multi-industry-calibration/references/alignment.md
+
 ## og-country-calibration/references/macro-open-economy.md
 
 ### zeta_K: the 0.9 placeholder is still on main

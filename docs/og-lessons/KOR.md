@@ -16,6 +16,18 @@ output in `examples/OG-KOR-Example/`. Below, "OG-KOR commit" means a commit in t
 "install-NN" means that run folder. OG-Core 0.21.2 from PyPI unless an entry says otherwise. The
 skill changes from the test were merged as EAPD-DRB/Model-tools#5 and EAPD-DRB/MUIOGO-AI#8.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/SKILL.md
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/fiscal-consistency.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/validation-dashboard.md
+- og-country-calibration/references/solving-tuning.md
+- og-solver-diagnosis/SKILL.md
+- og-solver-diagnosis/references/failure-taxonomy.md
+- og-solver-diagnosis/references/solve-procedures.md
+- og-run-preflight/SKILL.md
+
 ## og-country-calibration/SKILL.md
 
 ### De-siblinging a bootstrap copy: grep for the sibling and audit every inherited value

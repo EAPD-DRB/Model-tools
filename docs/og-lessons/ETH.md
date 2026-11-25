@@ -6,6 +6,15 @@ are one country's numbers, kept here so the skills stay general. They record wha
 written; check the country repo before relying on any of them. Do not copy them into another
 country's calibration.
 
+Contents (by the skill file each entry backs; search a file for its `###` headings)
+- og-country-calibration/SKILL.md
+- og-country-calibration/references/macro-open-economy.md
+- og-country-calibration/references/taxes-informality.md
+- og-country-calibration/references/households-demographics.md
+- og-country-calibration/references/validation-dashboard.md
+- og-solver-diagnosis/references/solve-procedures.md
+- shared/og-run-rules.md
+
 ## og-country-calibration/SKILL.md
 
 ### The mental model: judge the joint steady state, fiscal rows first
@@ -76,6 +85,118 @@ country's calibration.
   https://github.com/EAPD-DRB/OG-ETH/pull/63; https://github.com/EAPD-DRB/OG-IDN/pull/55.
 - **When:** 2026-07 (PR #63 merged 2026-07-03); still true at upstream/main 49ec411 (2026-10-19).
 
+### Capital stock on one GDP basis after a rebasing
+
+- **Lesson:** keep capital stocks and investment in one GDP basis; after a rebasing, measure the
+  investment the old accounts missed against old-base GDP and convert the stock at the end.
+- **What happened:** the first rebased build subtracted two investment shares with different
+  denominators (35.3% of rebased GDP less 20.1% of old-base GDP) and left the stock over old-base
+  GDP, giving total K/Y 2.51. A reviewer's audit found it; in one basis the gap is 36.1 points of
+  old-base GDP and total K/Y 2.00. Initial wealth, depreciation and the foreign capital share all
+  moved with it, and the whole retune was redone.
+- **Evidence:** the review on https://github.com/EAPD-DRB/OG-ETH/pull/111; fix in OG-ETH commit 6119f1d.
+- **When:** 2026-11.
+
+### Patience: one discount factor to the long-run return when the state finances investment
+
+- **Superseded (2026-11-25)** by "Patience: as much saving as the return evidence allows, judged on the first years" below. The premise did not hold for ETH today: state investment is about 3–4 percent of GDP, and the remaining gap was household saving.
+
+- **Lesson:** where the state, state enterprises or foreign lenders finance much of investment, do
+  not tune patience to first-year investment; set one discount factor to the long-run return at
+  the world rate and score investment as a check. Use wealth shares by income group as a check if
+  matching them forces patience above one or to its lower bound.
+- **What happened:** tuning patience to first-year investment (35.3% of rebased GDP) made
+  households finance all of it, including state-enterprise investment financed through state banks,
+  and needed a long-run return near 2% with foreign capital leaving. The measurable state channels
+  (state-enterprise retained earnings about 0.7% of GDP, financial repression beyond the
+  below-market government rate about 0.2%) closed less than a point. Matching the WID wealth shares
+  by group pushed the top group's patience above one and the bottom's to 0.5. One discount factor
+  set to the 4% world rate gave 0.903 (after the preference change below), with first-year
+  investment 27.5% against 35.3% reported as a measured miss.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commits c257c41, 814a1d7, 93ce1f3; validation chapter of OG-ETH.
+- **When:** 2026-11.
+
+### External debt at its own interest rate
+
+- **Lesson:** where external debt is large and mostly concessional, check whether your ogcore models
+  debt contracted abroad (`alpha_D_ext`, `r_D_ext_annual`); without it that debt earns the
+  household return and interest paid abroad is overstated. Held at a share of GDP with a rate below
+  growth, it gives the long-run budget a net inflow from abroad; phase it out where that is wrong.
+- **What happened:** with Ethiopia's external debt (15.5% of rebased GDP) held as market debt
+  abroad, interest on it was 1.6% of GDP against about 0 in the data. Modelled at the DSA's average
+  rate (about −1% real), it was −0.2%. OG-ETH follows the IMF DSA path to 2045 and then phases the
+  stock to zero. A reform now starts from the baseline's stock.
+- **Evidence:** https://github.com/PSLmodels/OG-Core/pull/1279 (Issue #1125) and its review; https://github.com/EAPD-DRB/OG-ETH/pull/111.
+- **When:** 2026-11.
+
+### Initial wealth distribution by a damped burn-in
+
+- **Lesson:** with no wealth-by-age data, impute `initial_hhwealth_dist` from the model: feed the
+  savings households choose in the first period back as the starting shape, part of the way each
+  round and only at life-cycle ages, until start and first period agree; report the gap.
+- **What happened:** the steady-state shape handed first-year households a windfall. A full
+  feedback step stalled the transition (74 iterations) because the oldest cohorts' first-period
+  savings are mostly bequests; 30% per round at ages below 80 converged. The gap that remained
+  (4.6% weighted by wealth) sat at ages 21–24, which hold about 2% of wealth.
+- **Evidence:** OG-ETH `ogeth/initial_wealth.py`; commits 814a1d7, 4e90baa, 2480d1e.
+- **When:** 2026-11.
+
+### Patience: as much saving as the return evidence allows, judged on the first years
+
+- **Lesson:** patience sets household saving; today's returns do not depend on it (technology and the measured capital stock fix them). Judge it on the first transition years (private consumption and investment against the data), not the steady state, and set it as high as the long-run bounds allow: the owners' long-run return on capital (firms' return plus public-capital rent, government debt excluded) at or above the bottom of the return evidence, and foreign-owned capital non-negative in the steady state. Do not jump between the two extremes (first-year investment fully matched; the steady-state firms' return at the world rate).
+- **What happened:** patience had been tuned to first-year investment (needing a long-run return near 2 percent), then from 16 November to the steady-state firms' return at the 4 percent world rate (0.887 to 0.903). The steady-state sweep looked weak (0.887 to 0.95 moved long-run consumption only 81.9 to 78.7 percent of GDP), but one transition probe at 0.94 moved first-year consumption from 77.6 to 70.0 and investment from 24.9 to 30.8 (data 64.4 and 35.3): the measured starting stock sits below what more patient households hold, so they build capital, from 1.66 to 1.84 times GDP by 2035, and the firms' return falls to the world rate by about 2035. At 0.94 the owners' long-run return on capital is 6.1 percent (evidence range 6–10); from 0.96 the steady state exports capital. Adopted 0.94 as a documented constant; about 60 percent of the consumption and investment gap closed.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commit fdd3b2b; validation and households chapters.
+- **When:** 2026-11.
+
+### Compare return evidence with the return on capital to owners, not the portfolio return
+
+- **Lesson:** OG-Core's `r_p` averages the return on capital with government debt at `r_gov`; where debt is repressed it reads far below the return on capital. Evidence on returns (FDI returns, Caselli-Feyrer) is about capital: compare it with `r + (1 − tau_b)·MPK_g·K_g/K` (`aggregates.get_r_p`), not `r_p`.
+- **What happened:** a first patience target used `r_p` (8.1 percent in 2025, with `r_gov` at −10.4) while the capital return was 9.4; an adversarial review caught it before the push.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `targets.ss_moments` (`r_K`).
+- **When:** 2026-11.
+
+### zeta_K raises investment only through foreign ownership
+
+- **Lesson:** raising `zeta_K` to close an investment gap buys capital owned by foreigners, as a jump in the first year rather than a build-up, and pays them the owners' return; keep it on the measured foreign share.
+- **What happened:** a probe at 0.95 (from 0.185) put first-year investment at 33.9 percent of GDP but the foreign share of private capital at 32 percent (59 by 2050, FDI data 10), net exports at −9.1 (data −4.4) and payments abroad at 3.4 percent of GDP (data 0.4).
+- **Evidence:** OG-ETH exploration notes, 2026-11-25 (local).
+- **When:** 2026-11.
+
+### State enterprises' foreign loans sit in household wealth unless counted
+
+- **Lesson:** loans that state enterprises owe abroad are neither government external debt nor FDI; if left out of both, the initial-wealth construction counts the capital they financed as household wealth. Either treat guaranteed infrastructure enterprises as part of the state (external debt at its own rate, public investment, public capital) or add the loans to the foreign capital target; with OG-Core paying foreign capital the owners' return, the second raises payments abroad, so weigh it before adopting.
+- **What happened:** 6.3 percent of rebased GDP (Ministry of Finance Bulletin 56) sat in household wealth. A probe moving it to foreign capital raised investment 0.8 points and payments abroad from 1.16 to 1.77 percent of GDP (data 0.37); documented as a known inconsistency instead.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; macro chapter of OG-ETH.
+- **When:** 2026-11.
+
+### An investment gap: decompose it with the financing identity before choosing a lever
+
+- **Lesson:** before attributing an investment gap to the state or to the capital share, write investment = domestic saving + net foreign financing for the data and the model, measure state investment today (budget capital spending, state-enterprise flows), and read the country's financing history; the gap's half that is missing names the lever.
+- **What happened:** the 2005–2019 boom was financed by saving drawn through state banks, state enterprises' foreign borrowing, and remittances and grants (IMF CR 13/308, 20/29); today state investment is 3–4 percent of GDP and the current account about −0.7. With the dashboard corrected, the model's net foreign financing was close to the data and the whole gap was household saving; a week spent on the capital share, the state-investment story, `zeta_K` and state-enterprise loans would have been saved.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH exploration and financing-history notes, 2026-11-25 (local).
+- **When:** 2026-11.
+
+### Capital stock at current national prices; public capital in nominal terms
+
+- **Lesson:** keep the capital stock, investment and depreciation on one price basis, current national prices, nominal over nominal; take public capital from a nominal series.
+- **What happened:** the capital-output ratio was first taken from PWT at current PPPs (2.167 in 2023). The PWT stock at current national prices over GDP at current prices was 2.366, 9 percent higher; the two differ by up to a third in other years (2010: 2.52 at PPP, 1.85 at national prices). The public stock first used IMF ICSD's real ratio (0.667) where the nominal one is 0.840. An estimate of the relative price of investment (3.8) was dropped for the direct stock.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH `ogeth/macro_params.py` (PWT_CAPITAL_OUTPUT_RATIO, PUBLIC_CAPITAL_OUTPUT_RATIO), `scripts/derive_sourced_values.py`, `ogeth/data/pwt110_eth_capital*.csv`.
+- **When:** 2026-11-16.
+
+### Capital share: inefficiency counted once, side implications checked, published sources
+
+- **Lesson:** put the inefficiency of public investment in one place (leakage and the measured stock), check the labour share and return a chosen capital share imply, and cite the published version of an estimate.
+- **What happened:** the inefficiency was applied both to the output elasticity of public capital and through leakage; the elasticity was the Bom-Ligthart working-paper figure (0.08) where the published article gives 0.083 short run and 0.122 long run; a lower capital share then implied a labour share near 0.76, double the measured one. Half a day of revisions.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; session record 2026-11-16.
+- **When:** 2026-11-16.
+
+### Starting wealth smooth across an age cutoff
+
+- **Lesson:** keep starting wealth smooth across any age boundary used in its construction.
+- **What happened:** the burn-in of the starting wealth shape stopped at 80 and the oldest ages kept another shape; the step at 80 made the household solve fail for the poorest cohorts crossing it, in three runs. Continuing ages 80 and over from age 79 per person fixed it.
+- **Evidence:** OG-ETH commit 460109e.
+- **When:** 2026-11.
+
 ## og-country-calibration/references/taxes-informality.md
 
 ### Standing check: the bequest tax: ETH ships 0
@@ -126,6 +247,7 @@ country's calibration.
 - **Evidence:** https://github.com/EAPD-DRB/OG-ETH/commit/5a39a86c9486c3ab4c3599f6bbf27fa3134c739e
   (https://github.com/EAPD-DRB/OG-ETH/pull/70); https://github.com/EAPD-DRB/OG-ETH/issues/33
   (still open).
+- **Code:** [ogeth/income.py at 402b71d](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/ogeth/income.py) (NTA age factor and WID group shares).
 - **When:** tilt until 2026-09; replaced in 0.3.0 (merged 2026-09-26).
 
 ### Demographics: method and country_id: the wrong literal, twice
@@ -167,6 +289,78 @@ country's calibration.
   Solved factor value: not found (searched: OG-ETH docs, CHANGELOG, PR #70 body, code).
 - **When:** 2026-09 (seed set); checked at upstream/main 49ec411 on 2026-10-19; cap checked on
   OG-Core master 81f4549 (v0.21.2).
+
+### Preferences: a subsistence floor instead of a high sigma
+
+- **Lesson:** where subsistence consumption is common and growth is fast, keep sigma near OG-Core's
+  default and set the subsistence floor `c_min` (Stone-Geary) to a sourced cost; a high sigma for
+  every household makes richer households consume against future income and pins patience at its
+  bound. Cap the floor at what the poorest group can afford at its lowest-consumption age.
+- **What happened:** the low elasticity of substitution measured near subsistence (Havranek 2015;
+  Ogaki, Ostry and Reinhart 1996) first led to sigma 3 for everyone. With labour productivity
+  growing 4.7% a year, patience then sat at its 0.995 bound and the long-run return stayed at 4.75%
+  against 4%. With sigma 1.5 and `c_min` at 80% of the cost of an energy-sufficient diet
+  (World Bank/FAO Food Prices for Nutrition; the full cost would have put the poorest group below
+  the floor), patience fell to 0.903, first-year investment rose from 23.2% to 27.5% of GDP and
+  private consumption fell from 79.7% to 68.2% (data 35.3 and 64.4). Correction (2026-11-25): the 68.2 was read from OG-Core's `C`, which excludes the floor; counted with the floor (`C_i`) private consumption was about 6.5 points higher (see "Consumption with a subsistence floor"). The effective sigma is 2.2 for
+  the poorest group and 1.63 at mean consumption. The Ethiopia Socioeconomic Panel Survey 2021/22
+  supports the floor: three-quarters of loans come from relatives and neighbours, 0.1% from banks,
+  and 80% of savers save for emergencies, 0.9% for old age. `c_min` is in growth-adjusted units and
+  the model's reported consumption is the part above the floor.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commit 93ce1f3; `examples/ess_credit_saving.py`.
+- **When:** 2026-11.
+
+### Labour units: scale the earnings matrix, not productivity
+
+- **Lesson:** when `chi_n` runs into OG-Core's 10,000 bound because model consumption is small,
+  rescale the earnings matrix (exact); rescaling productivity `Z` is not neutral, because OG-Core's
+  capital demand at the world rate leaves out public capital, and `Z` is capped at 5.
+- **What happened:** at sigma 3, `chi_n` exceeded the bound at every age. `Z` = 5 moved the foreign
+  capital share; `e` × 10 reproduced every ratio of the original solution in a probe.
+- **Evidence:** OG-ETH commit 04d4701; `ogeth.macro_params.EARNINGS_SCALE`.
+- **When:** 2026-11.
+
+### Consumption by age: the consumption adults carry, and the model's age convention
+
+- **Lesson:** OG-Core's households start at age `E` (completed years: UN ages 0–99, rows from `E`) and have no children, while national-accounts consumption includes children's. Target consumption per adult with each adult carrying the people under `E` they support, fit net family transfers (`phi_FT`) to it, and report the fit as by construction. A default target for any country: own consumption by age from a cross-country model of the NTA profiles (log GDP per capita PPP and the old-age dependency ratio), plus children's consumption given to parents by UN fertility and population with DHS medians for spousal age gaps and children not living with a parent.
+- **What happened:** the 2005 NTA profile (own consumption, a young-adult peak at 1.16) drove large transfers to young adults; the carried-consumption target (0.52 at 20, peak 1.10 in the forties) was within 0.057 of Ethiopia's ESPS 2021/22 survey built the same way. A first version labelled the first model age 21, a one-year shift, fixed before the push.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; at commit 402b71d: [ogeth/data/consumption_by_age.csv](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/ogeth/data/consumption_by_age.csv) (its header documents the build), [examples/fit_family_transfers.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/examples/fit_family_transfers.py).
+- **When:** 2026-11.
+
+### Hours by age: an extrapolated target double-counted the fall in pay
+
+- **Lesson:** fit `chi_n` on the ages the survey covers, with old-age targets from survey bands; an old-age target built from labour income per person counts the fall in pay twice. Judge `chi_n` by its rise from prime to old age; stop after two workarounds that do not converge and look for the missing mechanism.
+- **What happened:** with sigma 1.5 and the subsistence floor, `chi_n` hit OG-Core's 10,000 bound from age 64 and the fit asked for 1 to 3 million at 80 and over. The hours target beyond the survey had been tapered with NTA labour income per person, which already contains the wage fall that `e` applies again (fixed in commit 78748d5). A chain of workarounds followed over about three working days (an end to working life at 80, direct support for the poorest elderly, a raised cap, ten-fold steps), each breaking the steady state or the transition. It was resolved by a target from survey bands (commit 2aa75b1), transfer shares by year (OG-Core PR 1297) and family transfers fitted to consumption by age (OG-Core PR 1298), with `chi_n` free through 69.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commits 78748d5, c7550b6, 2aa75b1; PSLmodels/OG-Core#1297, #1298.
+- **When:** 2026-11-19 to 11-24.
+
+### Transfer shares fixed over time overpaid the oldest
+
+- **Lesson:** check transfers per person by age and group along the transition; a fixed `(S, J)` share of transfers with an ageing population pays the oldest more each year. Use transfer shares by year where your ogcore has them, built from each year's population.
+- **What happened:** OG-Core's `eta` and `eta_RM` are held at one `(S, J)` matrix over the whole path. As the population aged, transfers per person to the oldest rose to between 5 and about 160 times the intended amount in the early decades (the poorest group at 95: 80 times). The overpayment masked the old-age labour problem; with shares by year, people over 80 consumed a third less and worked more in the early years.
+- **Evidence:** PSLmodels/OG-Core#1297 (open); OG-ETH test branch runs of 2026-11-23.
+- **When:** 2026-11-19 to 11-23.
+
+### A cross-country table value was a formula applied out of sample
+
+- **Lesson:** before using a country's value from a cross-country table, check whether it is an estimate for that country or a formula applied to it, and whether the country is inside the sample; and use the model's existing levers before drafting an OG-Core change.
+- **What happened:** a table in Ogaki, Ostry and Reinhart (1996) gave Ethiopia an elasticity implying sigma 19.2, next to 1.8 for the Philippines; the values came from one fitted formula applied at an assumed subsistence level. An OG-Core change to raise the sigma ceiling was drafted and a second session started before the case was dropped for sigma 1.5 with a subsistence floor. About a day and a half.
+- **Evidence:** session record 2026-11-17/18; OG-ETH commit 93ce1f3.
+- **When:** 2026-11-17.
+
+### The poorest group's bequest weight broke a reform
+
+- **Lesson:** when a transition fails for old households of one group, read that group's wealth and transfers by age; a bequest weight inherited from other groups can make the poorest hoard.
+- **What happened:** the reform transition failed at age 90 in the poorest group (Euler error 109), the same on the released ogcore. That group, at the subsistence floor, held wealth to 3.15 with transfers several times its consumption; a `chi_b` of its own (8.73) fixed it.
+- **Evidence:** session record 2026-11-11; OG-ETH JSON `chi_b`.
+- **When:** 2026-11-11.
+
+### A sourced value is not a tuning lever
+
+- **Lesson:** a parameter settled from evidence (Frisch, sigma) is not moved to hit a target; a target it would need flags a missing piece.
+- **What happened:** moving Frisch to its maximum was proposed to close old-age hours; it had been settled at 0.25 from bias-corrected evidence, and the gap was a missing mechanism (family support).
+- **Evidence:** session record 2026-11-23.
+- **When:** 2026-11-23.
 
 ## og-country-calibration/references/validation-dashboard.md
 
@@ -210,9 +404,42 @@ country's calibration.
   https://github.com/EAPD-DRB/OG-ETH/commit/159315fba05a8b7c364a96ca8f315c54b22cbe7f
 - **When:** 2026-05.
 
+### Government consumption: score against the measured series
+
+- **Lesson:** score `G/Y` against measured government final consumption, adding the depreciation
+  of public capital as the national accounts do, not against the expenditure-side residual.
+- **What happened:** the rebased residual (4.7% of GDP) holds non-profit institutions and the
+  statistical discrepancy; the central bank's series is 3.67%, and the model came within 0.3 point
+  of it.
+- **Evidence:** OG-ETH commit 8b8a2fa.
+- **When:** 2026-11.
+
+### Consumption with a subsistence floor: score `C_i`, not `C`
+
+- **Lesson:** with `c_min > 0`, OG-Core saves `C` as consumption above the floor and `C_i` as spending on goods, floor included (the resource constraint's consumption). Score private consumption and net exports with `C_i`, and check every solve that consumption, investment, government consumption and net exports add up to GDP.
+- **What happened:** from the floor's introduction (18 November) the dashboard read `C`, understating private consumption and overstating net exports by about 6.5 points of GDP (71.1 against 77.6; +1.1 against −5.4). The reported trade surplus sent the diagnosis toward foreign financing for a week. It was found when the current account computed from flows (+4.5) contradicted the change in foreign liabilities (−2.0).
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; OG-ETH commit fdd3b2b (`targets.py`).
+- **When:** 2026-11.
+
+### Docs numbers typed by hand went through six audits
+
+- **Lesson:** write the docs once the calibration settles, take every number from the final run through generated tables and glue, and audit once.
+- **What happened:** calibration chapters written while tuning carried hand-typed numbers that each retune made stale; six audit rounds followed before the generator produced every table from the official run.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111; at commit 402b71d: [docs/create_doc_figures.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/docs/create_doc_figures.py), [ogeth/targets.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/ogeth/targets.py) (market-price basis, `C_i`, the owners' return), [examples/tune.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/examples/tune.py), [tests/test_update_baseline.py](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/tests/test_update_baseline.py) (the packaged JSON equals what the code regenerates).
+- **When:** 2026-11.
+
+### The calibration PR as a fit report
+
+- **Lesson:** the PR shows the fit to data in tables and figures from the run, with no history, comparisons with earlier runs, tested alternatives or reform results; an independent review checks every number before the push.
+- **What happened:** the PR text was rewritten more than five times; a reform table and a tested block were removed ("we are building a calibration, not assessing policy"); a fresh reviewer found twelve problems, two serious, in a draft its author had checked.
+- **Evidence:** https://github.com/EAPD-DRB/OG-ETH/pull/111 (description).
+- **When:** 2026-11-25.
+
 ## og-solver-diagnosis/references/solve-procedures.md
 
 ### Running against an unreleased ogcore: ETH's main pins ogcore by commit
+
+- **Superseded (2026-11-25)** for the build: OG-ETH 0.4.0 pins the integration build in the next entry; the method (pin by commit, official installer) is unchanged.
 
 - **Lesson:** to run on an unreleased ogcore, keep the official installer and pin ogcore by commit
   in `[tool.uv.sources]`.
@@ -226,6 +453,13 @@ country's calibration.
   https://github.com/EAPD-DRB/OG-ETH/blob/49ec411ab7e6fe36938d402b5280aa2e84084516/pyproject.toml;
   https://github.com/EAPD-DRB/OG-ETH/pull/70.
 - **When:** 2026-09.
+
+### The integration build with debt abroad, transfer shares by year and family transfers
+
+- **Lesson:** features the calibration needs before they are released (debt contracted abroad, `eta` by year, net family transfers) come from one integration build of OG-Core pinned by commit, installed the official way; a lesson that needs them says how to check a build for them.
+- **What happened:** OG-ETH 0.4.0 pins `marcelolafleur/OG-Core` at `e0415472` (branch `int/eth-pin-v2`): OG-Core 0.25.2 plus PSLmodels/OG-Core#1279 (`alpha_D_ext`, `r_D_ext_annual`), #1297 (`eta` and `eta_RM` by year; `number_dims` 3) and #1298 (`phi_FT`), all open on 2026-11-25.
+- **Evidence:** [pyproject.toml at 402b71d](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/pyproject.toml) (`[tool.uv.sources]`); https://github.com/PSLmodels/OG-Core/pull/1279, /1297, /1298.
+- **When:** 2026-11.
 
 ## shared/og-run-rules.md
 
@@ -265,4 +499,11 @@ country's calibration.
   skills still planned to run its treatment and control copies in parallel and compare their
   times.
 - **Evidence:** session logs of 2026-11-12/13; evals/og-skills/scores/2026-11-13.md.
+- **When:** 2026-11.
+
+### Exploring: one probe per idea, watch the run, one finished calibration
+
+- **Lesson:** while exploring, one probe per idea, read for what it buys and costs; tune static dials on warm steady states and spend transition rounds only on what the transition judges; watch the log and CPU from launch; measure a choice with one switch-off run from the finished calibration rather than parallel arms.
+- **What happened:** ten transition solves and four rounds per idea while exploring; two control and treatment arms tuned in parallel for three rounds each (about two hours); stalled runs waited on for an hour that were a ladder of restarts; mechanisms stated without computing them from the output sent the work the wrong way more than once.
+- **Evidence:** session records 2026-11-12 to 11-25.
 - **When:** 2026-11.
