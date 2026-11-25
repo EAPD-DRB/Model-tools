@@ -91,6 +91,10 @@ be made if no historical outcome were known?* If not, do not promote it as count
 - [`og-multi-industry-calibration`](og-multi-industry-calibration/SKILL.md):
   build a multi-industry OG-Core calibration from a SAM or IO tables and keep it
   consistent with the single-industry model.
+- [`og-run`](og-run/SKILL.md): install and run an OG-Core model the way its users do, check
+  the environment before a run, and collect the output.
+- [`og-solver-diagnosis`](og-solver-diagnosis/SKILL.md): find the root cause of a solve that
+  fails, stalls or looks wrong.
 - [`og-scenario-report`](og-scenario-report/SKILL.md): design OG-Core reforms,
   produce the standard baseline-vs-reform deliverable, and analyse results further.
 - [`pull-handoff`](pull-handoff/SKILL.md): update the Fiji, Philippines, and
