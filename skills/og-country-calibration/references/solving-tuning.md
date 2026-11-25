@@ -49,7 +49,7 @@ code that builds it), commit, re-install, and solve the packaged JSON with no ov
 **Check.**
 - Every solve logs to a named file with its settings first. [KOR]
 - Each solve is seeded from the last converged one; after a large change (preferences, the capital
-  stock) regenerate the repo's warm-start seed. A move that breaks a warm-started solve is a
+  stock) regenerate the warm-start seed, if the repo keeps one. A move that breaks a warm-started solve is a
   calibration signal; one that breaks a cold start is usually the seed. [KOR, ETH]
 - A parameter made a constant is no longer steered by the tuning script.
 - The final reported numbers come from the example script on the packaged JSON.

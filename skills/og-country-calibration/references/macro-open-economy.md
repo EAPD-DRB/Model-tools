@@ -80,8 +80,9 @@ delta_g     = government CFC / public capital     (parameter delta_g_annual)
 
 **Check.**
 - Use the national-price ratio: a net stock at current national prices over GDP at current prices
-  (the national accounts' own stock table, or a cross-country source with national-price detail such
-  as the Penn World Table's capital file). Compute a PPP ratio only to show how much the choice
+  (the national accounts' own stock table, or a cross-country source with national-price detail; the
+  Penn World Table's main-table stock is at PPPs, its national-price stock is in the capital-detail
+  file). Compute a PPP ratio only to show how much the choice
   matters.
 - The national-price ratio moves when a devaluation revalues the stock at replacement cost: average
   several years, or say why one year is used.

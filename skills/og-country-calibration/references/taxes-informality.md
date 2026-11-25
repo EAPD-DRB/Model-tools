@@ -158,10 +158,10 @@ model, mapped to the instrument that prices the same margin and tuned to collect
 - fees and charges to `tau_c`.
 
 **Check.** Recurring flows only: exclude one-offs (privatisation, fund transfers, concession fees).
-Estate and gift taxes (OECD code 4300) sit under property taxes, and inside an "other" residual in
-some country notes: net them out so they do not count twice against `tau_bq`. The OECD income-tax
-total can exceed personal plus corporate income tax; the gap (unallocable, 1300) is real revenue
-for the capital side. If you net a stream against spending instead, say so (fiscal-consistency.md).
+Estate and gift taxes are classed under property taxes (OECD heading 4300), and inside an "other"
+residual in some country notes: net them out so they do not count twice against `tau_bq`. Total
+income tax can exceed personal plus corporate income tax; the gap, income tax not allocable
+between persons and companies (OECD 1300), is real revenue for the capital side. If you net a stream against spending instead, say so (fiscal-consistency.md).
 
 **Why.** Left out, the budget identity pushes model spending too low. [PHL]
 

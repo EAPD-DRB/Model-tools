@@ -6,7 +6,7 @@ documents where existing ones came from.
 
 In the EAPD-DRB repos many values were derived in standalone notebooks and hard-coded with no trace
 back. Where the notebooks are available, look for a survey of which notebook derives which
-parameter (the Model-tools repo keeps a dated one in `docs/`); re-verify any row before relying on
+parameter (for example, Model-tools keeps a dated one in `docs/`); re-verify any row before relying on
 it.
 
 ## The three provenance patterns (classify first)

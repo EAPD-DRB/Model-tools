@@ -8,8 +8,8 @@ fail silently. [KOR] Before any solve:
 - **Search, do not trust the rename.** After renaming the package, grep code, tests and docs for the
   sibling's ISO code, UN code, country name and demonym, and currency symbol; list every hit in the
   work log and resolve each. Known carriers: the UN `country_id`; ISO codes defaulted inside
-  live-download functions (`macro_params`); survey-derived constants (a Gini default in
-  `get_e_interp`, remittance-allocation shares in the demographics tool); currency labels; SAM/IO
+  live-download functions (for example a macro-parameters module); survey-derived constants (a Gini
+  default in the earnings code, remittance-allocation shares in the demographics code); currency labels; SAM/IO
   data; sibling-specific tests, which either fail or, the worse case, pass on the sibling's numbers.
 - **Make the new example offline.** If the sibling's example calls `Calibration(p,
   update_from_api=True)` when online, the copy downloads data with the sibling's codes and writes it
@@ -26,7 +26,7 @@ fail silently. [KOR] Before any solve:
   | Inherited | Replace with |
   |---|---|
   | `start_year` | the latest year with observed data |
-  | demographic window | the archive's last year minus one; check `g_n_ss` against the UN growth |
+  | demographic window | the last year of the demographic data you use, minus one; check `g_n_ss` against the UN growth |
   | every tax rate, `tau_bq` included | effective = collections / the model's base, by instrument |
   | `alpha_G`, `alpha_T`, `alpha_I`, pensions | the budget identity at `debt_ratio_ss` (fiscal-consistency.md) |
   | `K/Y` target, `delta` | private capital at current national prices; CFC less government's (macro-open-economy.md) |
