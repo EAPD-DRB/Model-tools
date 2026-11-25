@@ -30,3 +30,5 @@ before a run (S1 point 7), nor the progressive income-tax form (S2 point 3). Mis
 choices with the guidance present: S10 point 2, S11 point 5, S18 point 4.
 
 Answers, blind file, key and grades: og-analysis/skill-review/eval-run/ (local).
+
+Note: after scoring, S14's prompt was changed so the PPP ratio is the higher one (3.0 against 2.2), as in the case behind it; the answers above used the earlier numbers.
