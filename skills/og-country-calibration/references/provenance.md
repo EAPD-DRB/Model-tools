@@ -36,8 +36,8 @@ The same parameter can have different traceability in different repos:
      echo "$c $(git show $c:<path/to/params.json> | python3 -c 'import json,sys; print(json.load(sys.stdin).get("<param>"))')"
    done
    ```
-2. **Find the writer.** In-repo first: `macro_params.py`, `calibrate.py`, `income.py`, builder
-   scripts; check whether the live-API path can overwrite the value. Then outward: notebooks,
+2. **Find the writer.** In-repo first: the modules and builder scripts that assemble the
+   parameters; check whether the live-API path can overwrite the value. Then outward: notebooks,
    archived parameter scripts, R or Stata pipelines, `git log -S` on the JSON. Where the repo's own
    code has since moved to a live API, follow the repo's writer before an older notebook chain.
 3. **Walk to the ultimate source.** Intermediate CSVs are links, not sources; find who wrote

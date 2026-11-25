@@ -79,15 +79,17 @@ delta_g     = government CFC / public capital     (parameter delta_g_annual)
 ```
 
 **Check.**
-- Use the national-price ratio (the national accounts' own stock, or the PWT capital-detail stock
-  over `v_gdp`); compute the PPP ratio (PWT `cn/cgdpo`) only to show how much the choice matters.
+- Use the national-price ratio: a net stock at current national prices over GDP at current prices
+  (the national accounts' own stock table, or a cross-country source with national-price detail such
+  as the Penn World Table's capital file). Compute a PPP ratio only to show how much the choice
+  matters.
 - The national-price ratio moves when a devaluation revalues the stock at replacement cost: average
   several years, or say why one year is used.
 - On that basis, steady-state investment `(e^{g_y}(1+g_n) − 1 + delta)·K/Y` should be close to the
   measured private investment share (a trend in the relative price of capital goods opens a gap
   here), and the return on capital plausible (the capital share, below). All use the same `K`.
-- Public capital in nominal terms (for example the IMF ICSD stock in national currency, `_V_XDC`,
-  over nominal GDP), not a constant-price series.
+- Public capital in nominal terms over nominal GDP (the national accounts, or the IMF's investment
+  and capital stock dataset, which has national-currency series), not a constant-price series.
 - After a rebasing, every stock and flow on one GDP basis.
 
 **Why.** OG-Core has one good, so capital, investment and depreciation are consistent only at one

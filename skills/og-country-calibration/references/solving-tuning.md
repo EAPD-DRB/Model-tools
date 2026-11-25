@@ -37,7 +37,8 @@ cost fourteen rounds on one country and many on others. [JPN, ETH, PHL]
 
 **Rule.** Tune with real solves through the repo's tuning script: it loads the packaged JSON plus
 an overrides file, solves, prints model against target, and writes the next round's overrides with
-every setting carried forward. If the repo has no such script, add one as its own change. [ZAF,
+every setting carried forward. Several repos have one (for example `examples/tune.py` or
+`examples/tune_ss.py`); if yours has none, add one as its own change. [ZAF,
 ETH, PHL] Static dials (the income-tax scale; `tau_c`, an effective rate matched in the model
 because its base is the model's own consumption; the corporate factor; `p_wealth`; `tau_bq`;
 `r_gov_shift`; `zeta_K`) are tuned on warm-started steady states with secant steps, usually in three

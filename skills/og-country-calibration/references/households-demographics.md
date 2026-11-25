@@ -38,9 +38,9 @@ data's groups; a legal age entered as a parameter gives the intended row.
 measured on the same income concept as the reference you start from. Three rungs, best first:
 1. Age shape from the National Transfer Accounts' labour income by age, country against the
    reference country, same variable and type, normalised over ages 20 to 64, the ratio capped where
-   both near zero; group spread from income shares by group (for example WID pre-tax shares). NTA
-   has no API (a session form with a `Referer` header; the US is "US"); the ETH and JPN cases cite
-   the code that does it. [ETH, KOR, JPN]
+   both near zero; group spread from income shares by group (for example the World Inequality
+   Database's pre-tax shares). The NTA data have no API, so expect a browser download; earlier
+   implementations, cited in the ETH and JPN cases, can help. [ETH, KOR, JPN]
 2. The reference matrix with one exponential tilt, `e·exp(a·e)`, as the country repos'
    `get_e_interp(gini_to_match=…)` does: it solves `a` so that the Gini of the tilted ability matrix
    over the US matrix's equals the country's data Gini over a hard-coded US 41.5 (World Bank, income
@@ -62,10 +62,9 @@ used at every call site, and test that the constant equals the country's code.
 
 **Check.**
 - A test asserts the literal code ("231", "608"), not only that the call uses the constant. [ETH]
-- Without a UN API token (passed as `un_token`, set in `UN_API_TOKEN`, or stored with `og-token`),
-  ogcore falls back to the EAPD-DRB Population-Data archive, which holds a fixed list of countries:
-  for a new country, check it is there, or every run without a token fails with `KeyError` on the
-  code.
+- Without UN API access (a token), ogcore falls back to a helper archive of UN population data,
+  EAPD-DRB/Population-Data, which covers a set list of countries: for a new country, check it is
+  there, or runs without a token fail with an error that names the country code, not the cause.
 - Cache the processed arrays: ogcore refetches the series on every call, which is slow and makes
   the endpoint fail intermittently.
 
@@ -81,8 +80,7 @@ Run the window to the last usable year of the projection, not two years past the
   outside it is a short window, not a demographic fact.
 - The last usable year is one before the last year of data you have (immigration is inferred from
   the year after), and the fallback archive can end earlier than the API. Put the year in a named
-  constant with that reason; too late a year fails far from the cause (an `UnboundLocalError` in
-  `pop_rebin`).
+  constant with that reason; too late a year fails with an error far from the cause.
 
 **Why.** The long-run growth rate decides `pb*`, saving and the whole steady state; on an ageing
 country a two-year window more than doubled the long-run population decline. [JPN, KOR]
@@ -214,8 +212,8 @@ netting to zero within each group. The target concept: OG-Core's households star
 `starting_age` and have no children, so each adult carries the consumption of the children they
 support, not only their own (the National Transfer Accounts' own-consumption profile hands young
 adults transfers that go to their children). Where no survey links children to parents, build the
-target from a cross-country model of the NTA profiles (knots regressed on log GDP per capita at PPP
-and the old-age dependency ratio; out-of-sample error about 0.07), with children's consumption
+target from a cross-country model of the NTA profiles (consumption by age predicted from income
+per head and the old-age dependency ratio), with children's consumption
 assigned to parents by fertility by age and spousal age gaps; where a survey exists, use it, with the
 default as a check; the ETH case cites one build.
 

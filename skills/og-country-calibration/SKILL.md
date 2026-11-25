@@ -144,6 +144,15 @@ one is not available, do the job directly and say which skill would have covered
 
 ## Lessons and their history
 
+Lessons name the data concept, the transformation and the check. Sources and scripts they mention
+are examples and helpers, not requirements: any source that measures the same concept, or any
+method that passes the check, will do. Helpers worth knowing: EAPD-DRB/Population-Data (UN
+population data, OG-Core's fallback), EAPD-DRB/Demographic-Gradients (fertility and mortality by
+income), the National Transfer Accounts (age profiles), the Penn World Table (capital, labour
+share, returns), the World Inequality Database (income shares), the IMF's fiscal and capital-stock
+data, and the OECD Revenue Statistics; a country repo's own tuning and documentation scripts where
+it has them.
+
 A tag such as `[PHL]` records where a lesson was learned, not where it applies; each lesson states
 its condition as a country feature (informal economy, net creditor, concessional debt). Each
 country's cases, with numbers and evidence, are in `references/lessons/<CODE>.md`; start from the

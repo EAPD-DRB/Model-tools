@@ -45,6 +45,11 @@ Each lesson is short and has the same parts, in this order:
 5. **History:** the country tag (`[KOR]`), plus a `(history: KOR)` marker where the lesson's own
    numbers live in `docs/og-lessons/KOR.md` rather than in the skill.
 
+Write each lesson so an assistant can act on it without the code it came from: the data concept,
+the transformation, and the check. Name sources and scripts only as examples or helpers ("for
+example", "if the repo has one"), never as the one required route; OG-Core's own parameter and
+function names stay, since they are the interface.
+
 Not in the skill:
 - A country's own values (targets, data years, tuned parameters). They go in its history entry.
 - Repo status ("OG-X still ships 0.9", "checked on <date>"). It becomes a Check, and the status
