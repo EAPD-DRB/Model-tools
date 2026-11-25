@@ -29,15 +29,17 @@ for skill_md in sorted(SKILLS.glob("*/SKILL.md")):
     name = re.search(r"^name:\s*(\S+)", fm, re.M)
     if not name or name.group(1) != folder.name:
         problems.append(f"{skill_md}: name does not match folder {folder.name}")
-    d = re.search(r"^description:\s*(?:>-?\s*\n((?:[ \t]+.*\n?)+)|\"(.*?)\"|(.*))", fm, re.M)
+    d = re.search(r"^description:\s*(?:[>|][-+]?\s*\n((?:[ \t]+.*\n?)+)|\"(.*?)\"|(.*))", fm, re.M)
     desc = ""
     if d:
         desc = " ".join(x.strip() for x in (d.group(1) or d.group(2) or d.group(3) or "").splitlines())
     if not 1 <= len(desc) <= 1024:
         problems.append(f"{skill_md}: description length {len(desc)} (must be 1-1024)")
     for md in folder.rglob("*.md"):
-        body = re.sub(r"```.*?```", "", md.read_text(), flags=re.S)
-        for target in re.findall(r"\]\(([^)#\s]+)(?:#[^)]*)?\)", body):
+        body = re.sub(r"(```|~~~).*?\1", "", md.read_text(), flags=re.S)
+        body = re.sub(r"`[^`\n]*`", "", body)
+        for target in re.findall(r"\]\(\s*<?([^)#\s>]+)>?(?:#[^)\s]*)?(?:\s+\"[^\"]*\")?\s*\)", body) + \
+                re.findall(r"^\s*\[[^\]]+\]:\s*<?([^\s>#]+)", body, re.M):
             if re.match(r"[a-z]+://|mailto:", target):
                 continue
             path = (md.parent / target).resolve()
