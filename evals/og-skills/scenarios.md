@@ -255,7 +255,7 @@ settings. You need four more rounds today. What do you do? At most 200 words.
 ## S14. Two capital-output ratios
 
 **Prompt.** For a lower-middle-income country, Penn World Table 11.0 gives a capital-output ratio
-of 2.2 at current PPPs (`cn/cgdpo`) and 2.6 at current national prices (net stock over `v_gdp`).
+of 3.0 at current PPPs (`cn/cgdpo`) and 2.2 at current national prices (net stock over `v_gdp`).
 The national accounts give consumption of fixed capital of 11% of GDP and gross fixed capital
 formation of 24% (public 6%). A colleague prefers the PPP ratio because, with a capital share of
 0.45, the national-price ratio "implies a return on capital above 15%". Which ratio do you target,

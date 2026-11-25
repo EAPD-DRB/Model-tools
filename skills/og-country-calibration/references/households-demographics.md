@@ -39,7 +39,7 @@ measured on the same income concept as the reference you start from. Three rungs
 1. Age shape from the National Transfer Accounts' labour income by age, country against the
    reference country, same variable and type, normalised over ages 20 to 64, the ratio capped where
    both near zero; group spread from income shares by group (for example WID pre-tax shares). NTA
-   has no API (a session form with a `Referer` header; the US is "US"); the JPN and KOR cases cite
+   has no API (a session form with a `Referer` header; the US is "US"); the ETH and JPN cases cite
    the code that does it. [ETH, KOR, JPN]
 2. The reference matrix with one exponential tilt, `e·exp(a·e)`, as the country repos'
    `get_e_interp(gini_to_match=…)` does: it solves `a` so that the Gini of the tilted ability matrix
@@ -197,7 +197,7 @@ or at least rebuild them from the country's own population, and say which.
 transition, not only the aggregate. With `eta` fixed, transfers per person move inversely with each
 cell's population share: where today's population is younger than the one `eta` was built for, the
 old are overpaid in the early decades. If your ogcore accepts `eta` by year (its `number_dims` in
-`default_parameters.json` is 3; released builds take 2), build it from each year's population. The
+`default_parameters.json` is 3), build it from each year's population. The
 same holds for family transfers, also divided by the population.
 
 **Why.** A fixed share overpaid the oldest by five to over a hundred times in the early decades.
@@ -205,9 +205,9 @@ same holds for family transfers, also divided by the population.
 
 ## Family support and consumption by age
 
-**Applies when** many older people or young adults live on support from relatives. Net family
-transfers (`phi_FT`) are not in released OG-Core; check with `hasattr(Specifications(), "phi_FT")`,
-and see the ETH history for the build that has them.
+**Applies when** many older people or young adults live on support from relatives. Check whether
+your ogcore has net family transfers (`hasattr(Specifications(), "phi_FT")`); without them, report
+the consumption-by-age gap rather than forcing another parameter.
 
 **Rule.** Fit `phi_FT` by age and group so that consumption per adult by age follows a target,
 netting to zero within each group. The target concept: OG-Core's households start at

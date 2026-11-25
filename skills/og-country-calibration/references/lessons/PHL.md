@@ -425,8 +425,8 @@ Contents (by the skill file each entry backs; search a file for its `###` headin
 
 ### GDP price basis: ratios to market-price GDP
 
-- **Lesson:** compare model and data ratios on one price basis (validation-dashboard.md, "One price
-  basis and one GDP basis").
+- **Lesson:** compare model and data ratios on one price basis (validation-dashboard.md, "One GDP
+  basis: market prices").
 - **What happened:** OG-Core's `Y` is the sum of `p_m Y_m`, with the consumption tax paid on top, so
   it excludes product taxes, while every Philippine target is a share of market-price GDP. With a
   consumption tax near 7.9% of GDP, every model ratio over `Y` sat about 8% above the same quantity

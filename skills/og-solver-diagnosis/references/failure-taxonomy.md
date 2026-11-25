@@ -186,8 +186,8 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   transition, patchy by age and income group; those households' first-year labour equals the
   solver's seed exactly. The run converges and its reported Euler error is small.
 - **Cause**: OG-Core solves households already alive at t=0 with `opt.root` and uses the result
-  without checking it (PSLmodels/OG-Core#1247). The reported Euler error covers only cohorts born
-  at t=0 or later, so the failures are invisible. On KOR, solving those cohorts moved year-two
+  without checking it. Where it does, the reported Euler error covers only cohorts born at t=0 or later and the constraint checker only
+  logs, so the failures are invisible. On KOR, solving those cohorts moved year-two
   consumption from 62.9% to 50.5% of GDP (history: KOR). It looks exactly like an
   initial-wealth problem.
 - **Remedy**: check whether your ogcore has the fix (a `_solve_household` retry and a reported
@@ -200,10 +200,10 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   takes far longer than the household solves explain. For most of an iteration one worker is busy
   while the others wait, or the workers start their tasks seconds apart.
 - **Cause**: state kept on one worker, not the economics. Two seen so far: each worker caches the
-  sparsity pattern of the household Jacobian from the first problem it solves, and an ogcore without
-  PSLmodels/OG-Core#1276 could build a pattern that misses real links (for a high-productivity income group, or groups
-  with and without a pension), so every solve on that worker falls back to Levenberg-Marquardt
-  (fixed by PSLmodels/OG-Core#1276); and dask's memory manager can delete the workers' copies of
+  sparsity pattern of the household Jacobian from the first problem it solves, and the pattern can miss real
+  links (for a high-productivity income group, or groups with and without a pension), so every solve
+  on that worker falls back to Levenberg-Marquardt (check whether your ogcore builds the pattern
+  from more than one problem); and dask's memory manager can delete the workers' copies of
   the broadcast parameters between iterations, so they fetch them again before starting.
 - **Check**: time each income group's task per iteration, with its count of residual evaluations
   and fallbacks (dask's task stream from the run). A slow task that follows one
@@ -220,7 +220,7 @@ Model-tools [`docs/og-lessons/<CODE>.md`](https://github.com/EAPD-DRB/Model-tool
   single-period spikes of class I. Check the population law of motion (og-country-calibration,
   households-demographics, "The two population breaks and the run's tolerance") before accepting them.
 
-- In ogcore before 0.17, TPI applied year-0 compliance/filer values to the whole path's revenue
-  accounting (a time-varying compliance reform shows behaviour responding while revenue tracks the
-  baseline), and `SS.py` tiled capital non-compliance from the labour rate in the post-solve
-  `mtry_ss` diagnostic. Both are fixed upstream; on an older build, upgrade.
+- A time-varying compliance reform whose behaviour responds while revenue tracks the baseline means
+  the installed ogcore applies the first year's compliance and filer values to the whole path's
+  revenue accounting; a post-solve `mtry_ss` that ignores capital non-compliance means it tiles the
+  labour rate. Check `tax.py` and `SS.py` in your build; the fix is an upgrade, not a setting.

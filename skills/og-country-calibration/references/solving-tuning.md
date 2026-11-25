@@ -27,7 +27,7 @@ transition.
 
 **Check.** Before tuning, every parameter is in one of three states: sourced, tuned to a named
 moment, or defaulted with a written reason. After a tax change, re-tune `zeta_K`; after a sourced
-input changes, redo the tax dials and then patience. A sourced value is never moved to hit a
+input changes, redo the tax dials, then `zeta_K`, then patience. A sourced value is never moved to hit a
 target.
 
 **Why.** Every tuned dial is fitted against the inputs below it; correcting inputs after tuning
@@ -37,10 +37,10 @@ cost fourteen rounds on one country and many on others. [JPN, ETH, PHL]
 
 **Rule.** Tune with real solves through the repo's tuning script: it loads the packaged JSON plus
 an overrides file, solves, prints model against target, and writes the next round's overrides with
-every setting carried forward. If the repo has none, add one to that contract as its own change.
-[ZAF, ETH, PHL] Static dials (tax scales, `tau_c` (effective rate matched in the model, since its base is the
-model's own consumption), the corporate factor, `p_wealth`,
-`r_gov_shift`, `zeta_K`) are tuned on warm-started steady states with secant steps, usually in three
+every setting carried forward. If the repo has no such script, add one as its own change. [ZAF,
+ETH, PHL] Static dials (the income-tax scale; `tau_c`, an effective rate matched in the model
+because its base is the model's own consumption; the corporate factor; `p_wealth`; `tau_bq`;
+`r_gov_shift`; `zeta_K`) are tuned on warm-started steady states with secant steps, usually in three
 to five rounds; spend transition rounds only on what the transition judges (patience, initial
 wealth, spending paths). When the dials settle, fold them into the JSON (and any scales into the
 code that builds it), commit, re-install, and solve the packaged JSON with no overrides.
@@ -98,7 +98,7 @@ difference between two unfinished calibrations. [ETH]
   `hasattr(Specifications(), name)` in that environment, and load the packaged JSON against a new
   ogcore before anything else. Treat an ogcore upgrade as its own change.
 - **Before a long tuning campaign,** look for OG-Core changes that speed the solve (open or merged)
-  and run on a build that carries them, installed the official way (og-run).
+  and run on a version that carries them, installed the official way (og-run).
 - **The repo's setup instructions** (`AGENTS.md`, contributor guide) and its lockfile conventions
   apply; calibration work does not change dependencies.
 

@@ -46,8 +46,8 @@ validator cap. Measured on JPN, identical parameters, same 7-worker client:
 
 `b` and `n` are in model units, so a seed stays valid across changes to the currency scale, the
 demographic window and modest parameter moves. Ship the seed with the repo (~9 KB) and regenerate it
-after any large recalibration; without it a fresh checkout may not solve. Reference implementation:
-OG-JPN's `ogjpn/warm_start.py` + `examples/save_warm_start.py`. Code shipped in the country repo,
+after any large recalibration; without it a fresh checkout may not solve. The JPN and ETH cases in
+og-country-calibration's history cite implementations. Code shipped in the country repo,
 like this, is part of how that repo runs, so the repo's own scripts use it within the run rules; a
 driver or patch outside the repo is outside them. When an ogcore release ships the same fix, retire
 the repo's patch: grep the repo for patched ogcore
@@ -97,8 +97,7 @@ Recent ogcore logs a diagnosis when the TPI outer loop stops improving over
 
 ## Running against an unreleased ogcore
 
-**Preferred: keep the official installer, pin ogcore by commit on a test branch** [KOR; ETH's
-main already pins this way]. On a throwaway branch of the country repo, add
+**Preferred: keep the official installer, pin ogcore by commit on a test branch** [KOR, ETH]. On a throwaway branch of the country repo, add
 `[tool.uv.sources] ogcore = { git = "<URL>", rev = "<full sha>" }` (a fork URL, or
 `file:///<path to an OG-Core clone>` for a local integration commit that is not pushed), run
 `uv lock`, commit, and install that branch with OG-Core's installer like any other. The run is then

@@ -6,7 +6,7 @@ Contents
 - What the dashboard is for
 - Every tuned dial has its own scored moment
 - Rows to include
-- One price basis and one GDP basis
+- One GDP basis: market prices
 - Reading the model side
 - The expenditure identity and the current account
 - Steady state or early transition: say which
@@ -57,14 +57,14 @@ rounds because the foreign-owned share was not a row. [JPN]
 
 Input checks, not moments: first-year debt (`initial_debt_ratio`); first-year foreign share of debt
 and its steady-state share (`zeta_D` by construction); `G/Y` before `tG1`, `TR/Y` and `RM/Y`, which
-equal their input shares up to the price basis. `factor` sets the currency income at which taxes
+equal their input shares up to the GDP basis. `factor` sets the currency income at which taxes
 are evaluated, so a wrong `mean_income_data` shows in the revenue rows.
 
 **Wealth by age.** `chi_b` moves the old end of the profile, and also `K/Y` and bequest revenue:
 re-tune patience and `tau_bq` with it. Where the young end falls short because young households
 hold leveraged housing, which OG-Core does not model, document it. [KOR]
 
-## One price basis and one GDP basis
+## One GDP basis: market prices
 
 **Rule.** Compare model and data on GDP at market prices, on one national-accounts vintage. OG-Core's
 `Y` is output at producer prices, and the model puts every tax on products on consumption. So:
@@ -157,7 +157,7 @@ wealth), and a steady-state miss can be right for a country still in transition.
   times a wrong base, which gives the wrong reform response; size reforms by the revenue they must
   raise where the base is uncertain. [JPN]
 - **A gap called a "family trait".** Before calling a gap structural, run method.md's lever rules
-  and check the price and GDP basis: one capital-output "trait" was an untuned `zeta_K`, and part of
+  and check the GDP basis (market prices): one capital-output "trait" was an untuned `zeta_K`, and part of
   another was producer-price `Y`. A gap that survives both is reported with its reason, not chased
   by distorting a sourced parameter. [JPN, PHL]
 
@@ -195,4 +195,4 @@ with their sources, or, where the repo can rebuild its packaged JSON offline, a 
 equals the rebuilt one, catches silent drift.
 
 **Why.** Hand-typed numbers drifted from the shipped JSON in several repos, and docs written while
-tuning went through repeated audits. [ETH, ZAF, BRA]
+tuning went through repeated audits. [ETH]

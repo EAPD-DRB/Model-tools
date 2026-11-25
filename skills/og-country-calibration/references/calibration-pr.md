@@ -28,7 +28,8 @@ calibration PRs for length and layout.
   runs, tuning rounds, other countries or alternatives tried, unless the maintainers' convention
   asks for a comparison with the previous release; no
   reform results (a calibration is judged by its fit; reform results belong to scenario work); no
-  internal labels ("round", "dial", "official run").
+  internal labels ("round", "dial", "official run"); no test counts or run times (the repo's CI
+  reports them).
 - Every term a reader outside the project would not know is explained where it first appears.
 - Before the push, an independent reviewer checks every number and claim against the run and the
   sources, and the findings are fixed. [ETH]

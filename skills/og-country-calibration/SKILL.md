@@ -132,7 +132,7 @@ Read the one for the block you are working on.
 | [households-demographics.md](references/households-demographics.md) | Dimensions, earnings matrix, demographics, pensions, hours by age, transfers by age, family support, preferences |
 | [fiscal-consistency.md](references/fiscal-consistency.md) | The budget identity, the baseline fiscal stance and debt anchor, the closure, the fiscal path panel |
 | [taxes-informality.md](references/taxes-informality.md) | Any tax rate, the corporate block, the income-tax form, informality, non-tax revenue |
-| [validation-dashboard.md](references/validation-dashboard.md) | Building or scoring the dashboard, price and GDP basis, reading output, numbers in docs |
+| [validation-dashboard.md](references/validation-dashboard.md) | Building or scoring the dashboard, the GDP basis (market prices), reading output, numbers in docs |
 | [solving-tuning.md](references/solving-tuning.md) | The tuning loop, spending runs while exploring, the environment |
 | [calibration-pr.md](references/calibration-pr.md) | Writing the calibration PR |
 | [provenance.md](references/provenance.md) | Tracing where an existing value came from |
@@ -162,7 +162,7 @@ in Model-tools describes.
 - **Patience judged on the steady state where the population is far from stationary, or pushed past
   the long-run return bound:** with measured starting wealth its effect shows in the first years
   (macro-open-economy.md).
-- **The wrong consumption series or price basis:** with a subsistence floor score `C_i`, on market
+- **The wrong consumption series or GDP basis:** with a subsistence floor score `C_i`, on market
   prices, and check that the expenditure shares add up (validation-dashboard.md).
 - **Placeholder `zeta_K`, or `zeta_K` used to close an investment gap:** tune it to the measured
   foreign-owned share.

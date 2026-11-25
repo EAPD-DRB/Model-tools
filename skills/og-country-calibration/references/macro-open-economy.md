@@ -53,10 +53,9 @@ fiscal-consistency.md). Use one debt concept, paired with the interest paid on t
 in which case use a projected medium-term flow. In the steady state the foreign share equals
 `zeta_D` by construction: an input, not a moment to score.
 
-**Applies when** much public debt is owed to official lenders abroad on concessional terms. Debt
-contracted abroad at its own rate (`alpha_D_ext`, `r_D_ext_annual`) is not in released OG-Core;
-check with `hasattr(Specifications(), "alpha_D_ext")`, and see the ETH history for the build that
-has it. Where you have it, model that debt as its own stock at its own real rate (the
+**Applies when** much public debt is owed to official lenders abroad on concessional terms. Check whether
+your ogcore models debt contracted abroad at its own rate (`hasattr(Specifications(),
+"alpha_D_ext")`). If it does, model that debt as its own stock at its own real rate (the
 foreign-currency rate less foreign inflation, plus expected real depreciation), with market debt,
 `debt_ratio_ss` and `zeta_D` covering the rest, and decide what happens after the sustainability
 analysis's last year: held at a share of GDP with a rate below growth, it is a permanent inflow from
@@ -240,8 +239,8 @@ spurious trade surplus and a fiscal squeeze.
   central bank's headline ratio is often the narrower cash series, about a point of GDP lower. Aid
   to the government goes in `alpha_FA`.
 - Path: remittances start at `alpha_RM_1·Y` in the first year; until `tG1`, `get_RM` compounds them
-  by `(1 + g_RM)/(e^{g_y}(1 + g_n))`; from `tG1` to `tG2` it blends linearly toward `alpha_RM_T·Y`,
-  which holds from `tG2` and in the steady state. Before `tG1`,
+  by `(1 + g_RM)/(e^{g_y}(1 + g_n))`; from `tG1` it blends linearly toward `alpha_RM_T·Y`, which
+  holds from period `tG2 − 1` and in the steady state. Before `tG1`,
   `g_RM[t] = e^{g_y}(1 + g_n[t−1]) − 1` holds remittances constant in model units, a path
   regenerated with the demographics. `g_RM` is in model growth units, not a nominal currency growth
   rate.
@@ -288,8 +287,8 @@ first period agree, and report the gap that remains. Keep the shape smooth acros
   outer loop stalls with the level anchored inside the loop, compare with the level fixed before the
   solve. [KOR]
 - Minimum household consumption in the pickle is positive, and the start cohorts' first-order
-  conditions hold (og-solver-diagnosis, class M); OG-Core's constraint checker does not watch
-  those cohorts. [KOR]
+  conditions hold (og-solver-diagnosis, class M): builds without the start-cohort fix leave them out
+  of the reported Euler error, and the constraint checker only logs a warning. [KOR]
 - The first-year foreign-owned share `K_f(0)/K(0)` against the investment position; it is not
   targeted, and where model `K/Y` exceeds the data, measured wealth and the measured foreign share
   cannot both hold. [PHL]

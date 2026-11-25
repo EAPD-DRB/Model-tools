@@ -247,6 +247,7 @@ Contents (by the skill file each entry backs; search a file for its `###` headin
 - **Evidence:** https://github.com/EAPD-DRB/OG-ETH/commit/5a39a86c9486c3ab4c3599f6bbf27fa3134c739e
   (https://github.com/EAPD-DRB/OG-ETH/pull/70); https://github.com/EAPD-DRB/OG-ETH/issues/33
   (still open).
+- **Code:** [ogeth/income.py at 402b71d](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/ogeth/income.py) (NTA age factor and WID group shares).
 - **When:** tilt until 2026-09; replaced in 0.3.0 (merged 2026-09-26).
 
 ### Demographics: method and country_id: the wrong literal, twice
@@ -438,6 +439,8 @@ Contents (by the skill file each entry backs; search a file for its `###` headin
 
 ### Running against an unreleased ogcore: ETH's main pins ogcore by commit
 
+- **Superseded (2026-11-25)** for the build: OG-ETH 0.4.0 pins the integration build in the next entry; the method (pin by commit, official installer) is unchanged.
+
 - **Lesson:** to run on an unreleased ogcore, keep the official installer and pin ogcore by commit
   in `[tool.uv.sources]`.
 - **What happened:** OG-ETH 0.3.0 needs two OG-Core changes its PR calls unreleased,
@@ -450,6 +453,13 @@ Contents (by the skill file each entry backs; search a file for its `###` headin
   https://github.com/EAPD-DRB/OG-ETH/blob/49ec411ab7e6fe36938d402b5280aa2e84084516/pyproject.toml;
   https://github.com/EAPD-DRB/OG-ETH/pull/70.
 - **When:** 2026-09.
+
+### The integration build with debt abroad, transfer shares by year and family transfers
+
+- **Lesson:** features the calibration needs before they are released (debt contracted abroad, `eta` by year, net family transfers) come from one integration build of OG-Core pinned by commit, installed the official way; a lesson that needs them says how to check a build for them.
+- **What happened:** OG-ETH 0.4.0 pins `marcelolafleur/OG-Core` at `e0415472` (branch `int/eth-pin-v2`): OG-Core 0.25.2 plus PSLmodels/OG-Core#1279 (`alpha_D_ext`, `r_D_ext_annual`), #1297 (`eta` and `eta_RM` by year; `number_dims` 3) and #1298 (`phi_FT`), all open on 2026-11-25.
+- **Evidence:** [pyproject.toml at 402b71d](https://github.com/marcelolafleur/OG-ETH/blob/402b71d3518bccf5943b1d38e7f82be227b61c35/pyproject.toml) (`[tool.uv.sources]`); https://github.com/PSLmodels/OG-Core/pull/1279, /1297, /1298.
+- **When:** 2026-11.
 
 ## shared/og-run-rules.md
 

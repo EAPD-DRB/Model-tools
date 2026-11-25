@@ -142,8 +142,8 @@ rate in a test as a bound, not an equality.
   below the threshold. They act the same way in the income-tax arithmetic; the choice documents the
   reason. [ZAF]
 - Revenue against collections with the compliance settings in place. For a reform that changes
-  compliance over time, transition revenue moves with it (ogcore before 0.17 applied the first
-  year's compliance to the whole path).
+  compliance over time, transition revenue moves with it; if it tracks the baseline while labour
+  supply moves, your ogcore applies the first year's compliance to the whole path.
 
 ## Revenue OG-Core has no line for
 
