@@ -21,6 +21,34 @@ A skill that is useful to anyone working on an OG-Core country model, new or old
 every lesson the family has learned, and that points to the history behind each lesson for
 anyone who needs to look deeper.
 
+## How the skills guide the assistant
+
+Structure before the assistant is a blindfold; structure after it is useful persistence.
+
+Give the assistant the objective, the principles with examples and warnings, the tools, and access
+to the complete material (data, code, calibrations, papers, earlier work). Then let it read, judge
+and decide. Country economies, data and questions differ too much for a fixed procedure to fit them,
+and a capable assistant judges better from the evidence than from a summary of it.
+
+Match the freedom to the fragility. Analysis is open ground: what matters in a dataset, which method
+the data support, what a result means. Leave that to the assistant. A few steps are fragile because
+a mistake there is costly, hard to undo or breaks reproducibility. For these, state the step exactly
+and say why: keep originals unchanged; tie every claim to its source and compute every number from
+the actual outputs; keep references stable and runs reproducible; respect cost limits; keep a
+lasting record; release nothing without the user's go. The operating skills spell these out.
+
+Structure placed after the assistant keeps its work: decision records with their evidence,
+histories, tests that pin decided values, run provenance. Records are an index and a history; read
+the material itself.
+
+Before adding structure to a skill or tool, ask which side of the assistant it sits on. If it sits
+before the assistant and is not one of the fragile steps, it has to justify itself.
+
+This follows the skill-writing guidance of Anthropic (Agent Skills best practices: set the degree of
+freedom by the task's fragility; explain why; concise, consistent terms) and OpenAI (prefer
+instructions to scripts unless the behaviour must be deterministic; avoid contradictory or
+over-emphatic instructions).
+
 ## Three layers
 
 | Layer | Holds | Lives in | Installed with the skill |
