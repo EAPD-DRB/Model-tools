@@ -62,27 +62,36 @@ nothing else.
 
 ## What a lesson in the skill looks like
 
-Each lesson is short and has the same parts, in this order:
+A lesson equips the assistant's judgment; it does not replace it (see "How the skills guide the
+assistant"). Each lesson is short and uses these parts, leaving out any that add nothing:
 
-1. **Rule:** what to do, in one or two sentences.
+1. **Principle:** the objective and the concept: what a good answer is and why, in one or two
+   sentences.
 2. **Applies when:** the condition, as a country characteristic (old population, net creditor,
    high-denomination currency, informal economy), never a country name. Omit if it always applies.
-3. **Check:** a command, test or number the agent can verify (a grep, a closed form, a dashboard
-   row, a test to add).
-4. **Why:** one sentence, at most one size example ("on JPN this moved K/Y from 3.67 to 3.81").
-5. **History:** the country tag (`[KOR]`), plus a `(history: KOR)` marker where the lesson's own
+3. **Examples:** the methods that have worked, as a ladder from the best the data allow down to a
+   documented fallback, each with where it was used and what it needs.
+4. **Warnings:** the traps seen, each with its size where known ("on JPN this moved K/Y from 3.67
+   to 3.81").
+5. **Check:** what a good answer passes, as something the assistant can verify (a closed form, a
+   dashboard row, a test to add, a grep).
+6. **History:** the country tag (`[KOR]`), plus a `(history: KOR)` marker where the lesson's own
    numbers live in `docs/og-lessons/KOR.md` rather than in the skill.
 
-Write each lesson so an assistant can act on it without the code it came from: the data concept,
-the transformation, and the check. Name sources and scripts only as examples or helpers ("for
-example", "if the repo has one"), never as the one required route; OG-Core's own parameter and
-function names stay, since they are the interface.
+State an exact step only where the step is fragile: a mistake there is costly, hard to undo or
+breaks reproducibility. Then give the step and its reason. Everywhere else, describe the objective
+and the evidence and let the assistant choose.
+
+Write each lesson so an assistant can use it without the code it came from: the data concept, the
+transformation, and the check. Name sources and scripts only as examples or helpers ("for example",
+"if the repo has one"), never as the one required route; OG-Core's own parameter and function names
+stay, since they are the interface.
 
 Not in the skill:
 - A country's own values (targets, data years, tuned parameters). They go in its history entry.
 - Repo status ("OG-X still ships 0.9", "checked on <date>"). It becomes a Check, and the status
   goes to that repo's issues.
-- Stories. The story goes in the history entry; the skill keeps the rule.
+- Stories. The story goes in the history entry; the skill keeps the principle and the warning.
 - Dated or pending facts ("not yet upstream"). Write the check ("does your ogcore have X?") and
   keep the date in the history entry.
 
@@ -90,7 +99,7 @@ Not in the skill:
 
 `docs/og-lessons/<CODE>.md`, one `##` entry per lesson, with a stable anchor:
 
-- **Lesson:** the rule as the skill states it, and the skill file and section.
+- **Lesson:** the principle as the skill states it, and the skill file and section.
 - **What happened:** the case, with its numbers.
 - **Evidence:** links to the PR, issue, commit, log or run that shows it.
 - **Date** and the ogcore version, where it matters.
@@ -102,7 +111,7 @@ Not in the skill:
    lesson and stop.
 3. If it is a new method, add a lesson in the shape above, in the reference file for its block.
 4. Re-read the skill as someone new to the country would: does the lesson sit where that person
-   will look, and does it say what to do in plain words?
+   will look, and does it say plainly what a good answer is, what has worked and what to watch for?
 
 ## Learning from use
 
