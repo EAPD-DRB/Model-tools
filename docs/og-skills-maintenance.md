@@ -21,7 +21,7 @@ A skill that is useful to anyone working on an OG-Core country model, new or old
 every lesson the family has learned, and that points to the history behind each lesson for
 anyone who needs to look deeper.
 
-## How the skills guide the assistant
+## F.69: how the skills guide the assistant
 
 Structure before the assistant is a blindfold; structure after it is useful persistence.
 
@@ -63,7 +63,7 @@ nothing else.
 ## What a lesson in the skill looks like
 
 A lesson equips the assistant's judgment; it does not replace it (see "How the skills guide the
-assistant"). Each lesson is short and uses these parts, leaving out any that add nothing:
+assistant", F.69). Each lesson is short and uses these parts, leaving out any that add nothing:
 
 1. **Principle:** the objective and the concept: what a good answer is and why, in one or two
    sentences.
